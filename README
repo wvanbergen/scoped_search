@@ -1,0 +1,30 @@
+scoped_search
+=========================================================
+This simple plugin will make it easy to search your ActiveRecord models. 
+A simple example to demonstrate its use:
+
+-- 
+class Project < ActiveRecord::Base
+	searchable_on :name, :description
+end
+
+Project.search_for(params[:q]).each { |project| ... }
+-- 
+
+This functionality is build on named_scope. The searchable_on statement creates 
+a named_scope "search_for". Because of this, you can actually chain the call with
+other scopes. For example, this can be very useful if you only want to search in 
+projects that are accessible by a given user.
+
+-- 
+class Project < ActiveRecord::Base
+	searchable_on :name, :description
+	named_scope :accessible_by, lambda { |user| ... }
+end
+
+Project.accessible_by(current_user).search_for(params[:q]).find(:all, :include => :tasks)
+-- 
+
+This Rails plugin is written by Willem van Bergen for the Floorplanner.com website. 
+It is released under the BSD license. Please contact me if you have any suggestions 
+or remarks.
