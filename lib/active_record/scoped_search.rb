@@ -15,17 +15,27 @@ module ActiveRecord::ScopedSearch
       return { :conditions => nil }
     else
       conditions = []
-      params = {}
-      # Split the search string into keywords. TODO: support quoted phrases
-      search_string.strip.split(' ').each_with_index do |keyword, index|
-        keyword_name = "keyword_#{index}".to_sym
-        params[keyword_name] = "%#{keyword}%"        
-        keyword_conditions = self.scoped_search_fields.map { |field| "#{connection.quote_column_name(field)} LIKE :#{keyword_name.to_s}" }
-        # a keyword may be found in any of the provided fields, so join the conitions with OR         
-        conditions << '(' + (keyword_conditions * ' OR ') + ')'
+      query_params = {}
+
+      
+      class << search_string
+        include ActiveRecord::ScopedSearch::QueryStringParser
       end
+        
+      search_string.to_search_query.each_with_index do |search_condition, index|
+        keyword_name = "keyword_#{index}".to_sym
+        query_params[keyword_name] = "%#{search_condition.first}%" 
+        keyword_conditions = self.scoped_search_fields.map { |field| "#{connection.quote_column_name(field)} LIKE :#{keyword_name.to_s}" }
+
+        # a keyword may be found in any of the provided fields, so join the conitions with OR
+        cond = (keyword_conditions * ' OR ')
+        cond = "NOT(#{cond})" if search_condition.length == 2 && search_condition.last == :not
+
+        conditions << "(#{cond})"
+      end
+            
       # all keywords must be matched, so join the conditions with AND
-      return { :conditions => [conditions * ' AND ', params] } 
+      return { :conditions => [conditions * ' AND ', query_params] } 
     end
   end
   
