@@ -16,7 +16,7 @@ module ActiveRecord::ScopedSearch
     else
       conditions = []
       query_params = {}
-
+      puts conditions.inspect
       class << search_string; include ActiveRecord::ScopedSearch::QueryStringParser; end
         
       search_string.to_search_query.each_with_index do |search_condition, index|
@@ -24,18 +24,21 @@ module ActiveRecord::ScopedSearch
         query_params[keyword_name] = "%#{search_condition.first}%" 
 
         # a keyword may be found in any of the provided fields, so join the conitions with OR
-
         if search_condition.length == 2 && search_condition.last == :not
-          keyword_conditions = self.scoped_search_fields.map { |field| 
-              "(%{f} NOT LIKE :#{keyword_name.to_s} OR %{f} IS NULL)" % {:f => connection.quote_column_name(field) } } 
+          keyword_conditions = self.scoped_search_fields.map do |field| 
+            field_name = connection.quote_table_name(table_name) + "." + connection.quote_column_name(field)
+            "(#{field_name} NOT LIKE :#{keyword_name.to_s} OR #{field_name} IS NULL)"
+          end
           conditions << "(#{keyword_conditions.join(' AND ')})" 
         else
-          keyword_conditions = self.scoped_search_fields.map { |field| 
-              "#{connection.quote_column_name(field)} LIKE :#{keyword_name.to_s}" }
+          keyword_conditions = self.scoped_search_fields.map do |field| 
+            field_name = connection.quote_table_name(table_name) + "." + connection.quote_column_name(field)
+            "#{field_name} LIKE :#{keyword_name.to_s}"
+          end
           conditions << "(#{keyword_conditions.join(' OR ')})"
         end
       end
-            
+      
       # all keywords must be matched, so join the conditions with AND
       return { :conditions => [conditions.join(' AND '), query_params] } 
     end
