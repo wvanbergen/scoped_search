@@ -26,6 +26,13 @@ end
 Project.accessible_by(current_user).search_for(params[:q]).paginate(:page => params[:page], :include => :tasks)
 -- 
 
+The search query language is simple. It supports these constructs:
+- words: some search keywords
+- phrases: "a single search phrase"
+- negation: "look for this" -"but do not look for this phrase and this" -word
+
+
+
 This Rails plugin is written by Willem van Bergen for the Floorplanner.com website. 
 It is released under the BSD license. Please contact me if you have any suggestions 
 or remarks.
