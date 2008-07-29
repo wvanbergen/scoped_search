@@ -22,7 +22,8 @@ class Project < ActiveRecord::Base
 	named_scope :accessible_by, lambda { |user| ... }
 end
 
-Project.accessible_by(current_user).search_for(params[:q]).find(:all, :include => :tasks)
+# using chained named_scopes and will_paginate
+Project.accessible_by(current_user).search_for(params[:q]).paginate(:page => params[:page], :include => :tasks)
 -- 
 
 This Rails plugin is written by Willem van Bergen for the Floorplanner.com website. 
