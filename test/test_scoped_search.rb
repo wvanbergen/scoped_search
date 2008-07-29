@@ -47,6 +47,7 @@ class ScopedSearchTest < Test::Unit::TestCase
     SearchTest.create!(:string_field => "123", :text_field => "Hallo",     :ignored_field => "123 willem")
     SearchTest.create!(:string_field => "456", :text_field => "Hallo 123", :ignored_field => "123")
     SearchTest.create!(:string_field => "789", :text_field => "HALLO",     :ignored_field => "123456");
+    SearchTest.create!(:string_field => "123", :text_field => nil,         :ignored_field => "123456");
   end
 
   def teardown
@@ -54,15 +55,16 @@ class ScopedSearchTest < Test::Unit::TestCase
   end
   
   def test_search
-    assert_equal 2, SearchTest.search_for('123').count
+    assert_equal 3, SearchTest.search_for('123').count
     assert_equal 3, SearchTest.search_for('haLL').count
     assert_equal 1, SearchTest.search_for('456').count    
     assert_equal 2, SearchTest.search_for('ha 23').count        
     assert_equal 0, SearchTest.search_for('wi').count 
     
-    assert_equal 0, SearchTest.search_for('-hallo').count
-    assert_equal 3, SearchTest.search_for('-wi').count
-    assert_equal 1, SearchTest.search_for('123 -456').count    
+    assert_equal 1, SearchTest.search_for('-hallo').count
+    assert_equal 4, SearchTest.search_for('-wi').count
+    assert_equal 3, SearchTest.search_for('-789').count    
+    assert_equal 2, SearchTest.search_for('123 -456').count
   end
 
 end
