@@ -16,7 +16,6 @@ module ActiveRecord::ScopedSearch
     else
       conditions = []
       query_params = {}
-      puts conditions.inspect
       class << search_string; include ActiveRecord::ScopedSearch::QueryStringParser; end
         
       search_string.to_search_query.each_with_index do |search_condition, index|
