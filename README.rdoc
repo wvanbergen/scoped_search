@@ -1,6 +1,6 @@
 = scoped_search
 
-This simple plugin will make it easy to search your ActiveRecord models. Searching is performed using a query string, which should be passed to the named_scope +search_for+ that uses SQL %LIKE% conditions for searching.
+This simple plugin will make it easy to search your ActiveRecord models. Searching is performed using a query string, which should be passed to the named_scope +search_for+ that uses SQL %LIKE% conditions for searching. You can specify what fields should be used for searching.
 
 == Installation
 
