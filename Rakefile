@@ -28,7 +28,7 @@ namespace :gem do
     new_version = ENV['VERSION']
     raise "VERSION is required" unless /\d+(\.\d+)*/ =~ new_version
         
-    sh "git add scoped_search.gemspec"
+    sh "git add scoped_search.gemspec .manifest"
     sh "git commit -m \"Set gem version to #{new_version}\""
     sh "git push origin"    
     sh "git tag -a \"scoped_search-#{new_version}\" -m \"Tagged version #{new_version}\""
