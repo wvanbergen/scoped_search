@@ -17,10 +17,7 @@ def setup_db
 end
 
 def teardown_db
-  ActiveRecord::Base.connection.tables.each do |table|
-    ActiveRecord::Base.connection.drop_table(table)
-  end
-  ActiveRecord::Base.close_connection
+  ActiveRecord::Base.connection.tables.each { |table| ActiveRecord::Base.connection.drop_table(table) }
 end
 
 class SearchTestModel < ActiveRecord::Base

@@ -15,6 +15,9 @@ class ScopedSearchTest < Test::Unit::TestCase
     assert !SearchTestModel.respond_to?(:search_for)
     SearchTestModel.searchable_on :string_field, :text_field
     assert SearchTestModel.respond_to?(:search_for)
+    
+    assert_equal ActiveRecord::NamedScope::Scope, SearchTestModel.search_for.class
+    
   end
   
   def test_search
