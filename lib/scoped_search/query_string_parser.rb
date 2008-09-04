@@ -1,4 +1,4 @@
-module ActiveRecord::ScopedSearch::QueryStringParser
+module ScopedSearch::QueryStringParser
   
   def to_search_query
     items = lex_for_query_string_parsing

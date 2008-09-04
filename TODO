@@ -9,9 +9,6 @@ New functionality:
 
 Refactoring:
 - Better separation of query building and query string parser
-- Distribute as gem instead of plugin
 
 Testing:
-- Add rake testing tasks
 - More tests for the query string parser
-- Rails inclusion & activation tests

@@ -2,7 +2,7 @@ require 'test/unit'
 require 'rubygems'
 require 'active_record'
 
-require "#{File.dirname(__FILE__)}/../init"
+require "#{File.dirname(__FILE__)}/../lib/scoped_search"
 
 def setup_db
   ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :dbfile => ":memory:")

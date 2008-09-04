@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
 
 class String
-  include ActiveRecord::ScopedSearch::QueryStringParser
+  include ScopedSearch::QueryStringParser
 end
 
 class QueryStringParserTest < Test::Unit::TestCase
