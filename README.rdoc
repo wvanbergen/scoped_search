@@ -1,6 +1,6 @@
 = scoped_search
 
-This simple plugin will make it easy to search your ActiveRecord models. 
+This simple plugin will make it easy to search your ActiveRecord models. Searching is performed using a query string, which should be passed to the named_scope +search_for+ that uses SQL %LIKE% conditions for searching.
 
 == Installation
 
@@ -9,7 +9,7 @@ You can enable scoped_search as a Ruby gem. First, you have to install the gem o
   gem sources -a http://gems.github.com
   sudo gem install wvanbergen-scoped_search
 
-Now, you must enable the gem in your environment.rb configuration
+Now, you must enable the gem in your +environment.rb+ configuration:
   
   Rails::Initializer.run do |config|
     ...
@@ -17,7 +17,7 @@ Now, you must enable the gem in your environment.rb configuration
   end
 
 You can use scoped_search as a Rails plugin as well, but this is deprecated. Simply download or
-clone scoped_search into your vendor/plugin directory of your project.
+clone scoped_search into your +vendor/plugins+ directory of your project.
 
 == Usage
 
@@ -27,16 +27,20 @@ First, you have to specify in what columns should be searched:
     searchable_on :name, :description
   end
 
-Now, the search_for scope is available for queries.
+Now, the +search_for+ scope is available for queries. You should pass a query string to the scope. This can be empty or nil, in which case all no search conditions are set (and all records will be returned).
 
   Project.search_for(params[:q]).each { |project| ... }
 
+The search query language is simple. It supports these constructs:
+
+* words: some search keywords
+* phrases: "a single search phrase"
+* negation: "look for this" -"but do not look for this phrase and this" -word
 
 This functionality is build on named_scope. The searchable_on statement creates 
 a named_scope "search_for". Because of this, you can actually chain the call with
 other scopes. For example, this can be very useful if you only want to search in 
 projects that are accessible by a given user.
-
 
   class Project < ActiveRecord::Base
     searchable_on :name, :description
@@ -46,15 +50,8 @@ projects that are accessible by a given user.
   # using chained named_scopes and will_paginate
   Project.accessible_by(current_user).search_for(params[:q]).paginate(:page => params[:page], :include => :tasks)
 
-The search query language is simple. It supports these constructs:
-
-* words: some search keywords
-* phrases: "a single search phrase"
-* negation: "look for this" -"but do not look for this phrase and this" -word
-
-
 == Disclaimer
 
-This Rails plugin is written by Willem van Bergen for the Floorplanner.com website. 
-It is released under the MIT license. Please contact me if you have any suggestions 
-or remarks.
+This Rails plugin is written by Willem van Bergen for the Floorplanner.com website. It is 
+released under the <b>MIT license</b>. Please contact me (willem AT vanbergen DOT org if 
+you have any suggestions or remarks.
