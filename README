@@ -34,5 +34,5 @@ The search query language is simple. It supports these constructs:
 
 
 This Rails plugin is written by Willem van Bergen for the Floorplanner.com website. 
-It is released under the BSD license. Please contact me if you have any suggestions 
+It is released under the MIT license. Please contact me if you have any suggestions 
 or remarks.
