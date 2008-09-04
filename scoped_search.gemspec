@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name    = 'scoped_search'
-  s.version = '0.1.1'
+  s.version = '0.1.2'
   s.date    = '2008-09-04'
   
   s.summary = "A Rails plugin to search your models using a named_scope"
@@ -10,6 +10,6 @@ Gem::Specification.new do |s|
   s.email    = 'willem@vanbergen.org'
   s.homepage = 'http://github.com/wvanbergen/scoped_search/wikis'
   
-  s.files = %w(LICENSE README Rakefile TODO init.rb lib lib/scoped_search lib/scoped_search.rb lib/scoped_search/query_string_parser.rb test test/query_building_test.rb test/query_string_parser_test.rb test/tasks.rake test/test_helper.rb)
+  s.files = %w(LICENSE README.rdoc Rakefile TODO init.rb lib lib/scoped_search lib/scoped_search.rb lib/scoped_search/query_string_parser.rb test test/query_building_test.rb test/query_string_parser_test.rb test/tasks.rake test/test_helper.rb)
   s.test_files = %w(test/query_building_test.rb test/query_string_parser_test.rb)
 end
