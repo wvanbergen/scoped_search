@@ -7,8 +7,8 @@ task :default => :test
 
 namespace :gem do
 
-  desc "Sets the version and date of the gem"
-  task :version do
+  desc "Sets the version and date of the scoped_search gem. Requires the VERSION environment variable."
+  task :version => [:manifest] do
     
     require 'date'
     
