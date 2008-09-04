@@ -4,17 +4,14 @@ This simple plugin will make it easy to search your ActiveRecord models. Searchi
 
 == Installation
 
-You can enable scoped_search as a Ruby gem. First, you have to install the gem on your system.
-
-  gem sources -a http://gems.github.com
-  sudo gem install wvanbergen-scoped_search
-
-Now, you must enable the gem in your +environment.rb+ configuration:
+You can enable scoped_search as a Ruby gem. You must enable the gem in your +environment.rb+ configuration:
   
   Rails::Initializer.run do |config|
     ...
-    config.gem 'wvanbergen-scoped_search', :lib => 'scoped_search'
+    config.gem 'wvanbergen-scoped_search', :lib => 'scoped_search', :source => 'http://gems.github.com/'
   end
+
+Make sure the gem is installed by running <tt>rake gems:install</tt> in you project root. You can also install the gem by running <tt>sudo gem install wvanbergen-scoped_search -s http://gems.github.com</tt>
 
 You can use scoped_search as a Rails plugin as well, but this is deprecated. Simply download or
 clone scoped_search into your +vendor/plugins+ directory of your project.
