@@ -6,9 +6,9 @@ init.rb
 lib
 lib/scoped_search
 lib/scoped_search.rb
-lib/scoped_search/query_string_parser.rb
+lib/scoped_search/query_language_parser.rb
 test
-test/query_building_test.rb
-test/query_string_parser_test.rb
+test/query_language_test.rb
+test/search_for_test.rb
 test/tasks.rake
 test/test_helper.rb
