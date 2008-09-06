@@ -1,8 +1,10 @@
-
-
 module ScopedSearch
   
   module ClassMethods
+  
+    def self.extended(base)
+      require 'scoped_search/query_language_parser'
+    end
   
     # Creates a named scope in the class it was called upon
     def searchable_on(*fields)
@@ -48,5 +50,4 @@ module ScopedSearch
   end
 end
 
-require 'scoped_search/query_language_parser'
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
