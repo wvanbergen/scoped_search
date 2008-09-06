@@ -30,7 +30,7 @@ class QueryLanguageTest < Test::Unit::TestCase
     assert_equal 2, parsed.length
     assert_equal 'willem', parsed.last.first
     
-    parsed = parse_query('  hallo  willem   van  bergen ')
+    parsed = parse_query("  hallo  willem   van\tbergen ")
     assert_equal 4, parsed.length    
     assert_equal 'hallo',  parsed[0].first
     assert_equal 'willem', parsed[1].first
