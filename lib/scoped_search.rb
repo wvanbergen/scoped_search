@@ -20,9 +20,8 @@ module ScopedSearch
       else
         conditions = []
         query_params = {}
-        class << search_string; include ScopedSearch::QueryStringParser; end # TODO: fix me!
-        
-        search_string.to_search_query.each_with_index do |search_condition, index|
+      
+        QueryLanguageParser.parse(search_string).each_with_index do |search_condition, index|
           keyword_name = "keyword_#{index}".to_sym
           query_params[keyword_name] = "%#{search_condition.first}%" 
 
@@ -49,5 +48,5 @@ module ScopedSearch
   end
 end
 
-require 'scoped_search/query_string_parser'
+require 'scoped_search/query_language_parser'
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
