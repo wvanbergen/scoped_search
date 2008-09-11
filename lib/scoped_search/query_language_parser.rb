@@ -30,51 +30,14 @@ module ScopedSearch
   
     def tokenize(query)
       tokens = []
-      current_token = ""
-      quoted_string_openend = false
-    
-      query.each_char do |char|
-      
-        case char
-        when /\s/
-          if quoted_string_openend
-            current_token << char
-          elsif current_token.length > 0
-            tokens << current_token
-            current_token = ""
-          end
-      
-        when '-'
-          if quoted_string_openend || current_token.length > 0
-            current_token << char
-          else
-            tokens << :not
-          end
-        
-        when '"'
-          if quoted_string_openend
-            if current_token.length > 0
-              if current_token[-1,1] == "\\"
-                current_token[-1] = char
-              else
-                tokens << current_token
-                current_token = ""
-                quoted_string_openend = false
-              end
-            else 
-              quoted_string_openend = false
-            end
-
-          else
-            quoted_string_openend = true
-          end
-        
-        else
-          current_token << char
-        end
-      
-      end
-      tokens << current_token if current_token.length > 0
+      pattern = /([-]?[\w]+)|([-]?["][\w ]+["])/ # Wes -Hays "dog man" -"cat woman"
+      matches = query.scan(pattern).flatten.compact
+      matches.each { |match|
+        tokens << :not unless match.index('-').nil?
+        # Remove any escaped quotes and any dashes - the dash usually the first character.
+        # Remove any additional spaces - more that one.
+        tokens << match.gsub(/[-"]/,'').gsub(/[ ]{2,}/, ' ')
+      }
       return tokens
     end
   end
