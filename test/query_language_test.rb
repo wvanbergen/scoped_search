@@ -85,4 +85,56 @@ class QueryLanguageTest < Test::Unit::TestCase
     assert_equal '456 789', parsed[1].first
     assert_equal :not,      parsed[1].last
   end
+  
+  def test_or
+    parsed = parse_query('Wes OR Hays')
+    assert_equal 1, parsed.length
+    assert_equal 'Wes OR Hays', parsed[0][0]
+    assert_equal :or, parsed[0][1]
+    
+    parsed = parse_query('"Man made" OR Dogs')
+    assert_equal 1, parsed.length
+    assert_equal 'Man made OR Dogs', parsed[0][0]
+    assert_equal :or, parsed[0][1]    
+    
+    parsed = parse_query('Cows OR "Frog Toys"')
+    assert_equal 1, parsed.length
+    assert_equal 'Cows OR Frog Toys', parsed[0][0]
+    assert_equal :or, parsed[0][1]
+    
+    parsed = parse_query('"Happy cow" OR "Sad Frog"')
+    assert_equal 1, parsed.length
+    assert_equal 'Happy cow OR Sad Frog', parsed[0][0]
+    assert_equal :or, parsed[0][1]        
+  end 
+  
+  def test_long_string
+    str = 'Wes -Hays "Hello World" -"Goodnight Moon" Bob OR Wes "Happy cow" OR "Sad Frog" "Man made" OR Dogs Cows OR "Frog Toys"'
+    parsed = parse_query(str)
+    assert_equal 8, parsed.length
+    
+    assert_equal 'Wes', parsed[0].first
+    assert_equal :like,   parsed[0].last
+    
+    assert_equal 'Hays', parsed[1].first
+    assert_equal :not,   parsed[1].last
+    
+    assert_equal 'Hello World', parsed[2].first
+    assert_equal :like, parsed[2].last
+    
+    assert_equal 'Goodnight Moon', parsed[3].first
+    assert_equal :not, parsed[3].last      
+    
+    assert_equal 'Bob OR Wes', parsed[4].first
+    assert_equal :or,   parsed[4].last    
+    
+    assert_equal 'Happy cow OR Sad Frog', parsed[5].first
+    assert_equal :or,   parsed[5].last
+    
+    assert_equal 'Man made OR Dogs', parsed[6].first
+    assert_equal :or,   parsed[6].last
+    
+    assert_equal 'Cows OR Frog Toys', parsed[7].first
+    assert_equal :or,   parsed[7].last                  
+  end
 end

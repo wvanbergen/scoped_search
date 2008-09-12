@@ -23,16 +23,19 @@ class ScopedSearchTest < Test::Unit::TestCase
   def test_search
     SearchTestModel.searchable_on :string_field, :text_field
     
-    assert_equal 3, SearchTestModel.search_for('123').count
-    assert_equal 3, SearchTestModel.search_for('haLL').count
-    assert_equal 1, SearchTestModel.search_for('456').count    
-    assert_equal 2, SearchTestModel.search_for('ha 23').count        
-    assert_equal 0, SearchTestModel.search_for('wi').count 
-    
-    assert_equal 1, SearchTestModel.search_for('-hallo').count
-    assert_equal 4, SearchTestModel.search_for('-wi').count
-    assert_equal 3, SearchTestModel.search_for('-789').count    
-    assert_equal 2, SearchTestModel.search_for('123 -456').count
+    assert_equal 15, SearchTestModel.search_for('').count
+    assert_equal 0, SearchTestModel.search_for('456').count   
+    assert_equal 2, SearchTestModel.search_for('hays').count 
+    assert_equal 1, SearchTestModel.search_for('hay ob').count        
+    assert_equal 13, SearchTestModel.search_for('o').count    
+    assert_equal 2, SearchTestModel.search_for('-o').count
+    assert_equal 13, SearchTestModel.search_for('-Jim').count
+    assert_equal 1, SearchTestModel.search_for('Jim -Bush').count
+    assert_equal 1, SearchTestModel.search_for('"Hello World" -"Goodnight Moon"').count    
+    assert_equal 2, SearchTestModel.search_for('Wes OR Bob').count
+    assert_equal 3, SearchTestModel.search_for('"Happy cow" OR "Sad Frog"').count
+    assert_equal 3, SearchTestModel.search_for('"Man made" OR Dogs').count
+    assert_equal 2, SearchTestModel.search_for('Cows OR "Frog Toys"').count   
   end
 
 end
