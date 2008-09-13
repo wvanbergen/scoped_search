@@ -5,7 +5,7 @@ Contact willem AT vanbergen DOT org if you want to help out
 
 New functionality:
 - Search model associations as well
-- Allow OR-queries
+- Allow other search operators than %LIKE% 
 
 Refactoring:
 - Better separation of query building and query string parser
