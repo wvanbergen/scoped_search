@@ -3,6 +3,7 @@ module ScopedSearch
   module ClassMethods
   
     def self.extended(base)
+      require 'scoped_search/reg_tokens'
       require 'scoped_search/query_language_parser'
     end
   
@@ -22,11 +23,11 @@ module ScopedSearch
       else
         conditions = []
         query_params = {}
-      
+        
         QueryLanguageParser.parse(search_string).each_with_index do |search_condition, index|
           keyword_name = "keyword_#{index}".to_sym
           query_params[keyword_name] = "%#{search_condition.first}%" 
-
+        
           # a keyword may be found in any of the provided fields, so join the conitions with OR
           if search_condition.length == 2 && search_condition.last == :not
             keyword_conditions = self.scoped_search_fields.map do |field| 
@@ -56,7 +57,7 @@ module ScopedSearch
             conditions << "(#{keyword_conditions.join(' OR ')})"
           end       
         end
-      
+              
         # all keywords must be matched, so join the conditions with AND
         return { :conditions => [conditions.join(' AND '), query_params] }
       end
