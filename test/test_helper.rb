@@ -1,6 +1,7 @@
 require 'test/unit'
 require 'rubygems'
 require 'active_record'
+require 'ruby-debug'
 
 require "#{File.dirname(__FILE__)}/../lib/scoped_search"
 
