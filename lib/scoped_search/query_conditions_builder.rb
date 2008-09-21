@@ -35,24 +35,20 @@ module ScopedSearch
       search_conditions.each_with_index do |search_condition, index|
         keyword_name = "keyword_#{index}".to_sym
         conditions << case search_condition.last
-                        when :integer: integer_conditions(keyword_name, search_condition.first)
+                        #when :integer: integer_conditions(keyword_name, search_condition.first)
           
                         when :like: like_condition(keyword_name, search_condition.first)
                         when :not: not_like_condition(keyword_name, search_condition.first)
             
                         when :or: or_condition(keyword_name, search_condition.first)
       
-                        when :before_date: before_date(keyword_name, search_condition.first)
-                        #when :before_datetime: before_datetime(keyword_name, search_condition.first)
-      
-                        when :as_of_date: as_of_date(keyword_name, search_condition.first)
-                        #when :as_of_datetime: as_of_date(keyword_name, search_condition.first)
-      
-                        when :after_date: after_date(keyword_name, search_condition.first)
-                        #when :after_datetime: after_datetime(keyword_name, search_condition.first)        
-            
-                        when :between_dates: as_of_date(keyword_name, search_condition.first)
-                        #when :between_datetimes: as_of_datetime(keyword_name, search_condition.first)                                                              
+                        when :less_than_date: less_than_date(keyword_name, search_condition.first)      
+                        when :less_than_or_equal_to_date: less_than_or_equal_to_date(keyword_name, search_condition.first)   
+                        when :as_of_date: as_of_date(keyword_name, search_condition.first)      
+                        when :greater_than_date: greater_than_date(keyword_name, search_condition.first) 
+                        when :greater_than_or_equal_to_date: greater_than_or_equal_to_date(keyword_name, search_condition.first)   
+                        
+                        when :between_dates: between_dates(keyword_name, search_condition.first)                                                        
                       end          
       end
 
@@ -102,73 +98,61 @@ module ScopedSearch
       "(#{retVal.join(' OR ')})"     
     end
     
-    # def before_date(keyword_name, value)
-    # end
-    # alias :bafore_datetime :before_date
+    def less_than_date(keyword_name, value)
+      helper_date_operation('<', keyword_name, value)     
+    end
+    
+    def less_than_or_equal_to_date(keyword_name, value)
+      helper_date_operation('<=', keyword_name, value)     
+    end    
     
     def as_of_date(keyword_name, value)
-      dt = Date.parse(value) # This will throw an exception if it is not valid
-      @query_params[keyword_name] = "#{dt.to_s}"
+      helper_date_operation('=', keyword_name, value)
+    end
+    
+    def greater_than_date(keyword_name, value)
+      helper_date_operation('>', keyword_name, value)
+    end
+    
+    def greater_than_or_equal_to_date(keyword_name, value)
+      helper_date_operation('>=', keyword_name, value)
+    end    
+    
+    def between_dates(keyword_name, value)
+      date1, date2 = value.split(' TO ')      
+      dt1 = Date.parse(date1) # This will throw an exception if it is not valid
+      dt2 = Date.parse(date2) # This will throw an exception if it is not valid
+      keyword_name_a = "#{keyword_name.to_s}a".to_sym
+      keyword_name_b = "#{keyword_name.to_s}b".to_sym 
+      @query_params[keyword_name_a] = dt1.to_s
+      @query_params[keyword_name_b] = dt2.to_s           
+
       retVal = []
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :date or field_type == :datetime or field_type == :timestamp
-          retVal << "#{field} = :#{keyword_name.to_s}"
+          retVal << "(#{field} BETWEEN :#{keyword_name_a.to_s} AND :#{keyword_name_b.to_s})"
         end
       end
       "(#{retVal.join(' OR ')})"  
     rescue
       # The date is not valid so just ignore it
-      return nil
-    end
-    alias :as_of_datetime :as_of_date 
+      return nil      
+    end  
     
-    # def after_date(keyword_name, value)
-    # end
-    # alias :after_datetime :after_date
-    # 
-    # def between_dates(keyword_name, value)
-    # end
-    # alias :between_datetimes :between_dates    
+
+    def helper_date_operation(operator, keyword_name, value)
+      dt = Date.parse(value) # This will throw an exception if it is not valid
+      @query_params[keyword_name] = dt.to_s
+      retVal = []
+      @query_fields.each do |field, field_type|  #|key,value| 
+        if field_type == :date or field_type == :datetime or field_type == :timestamp
+          retVal << "#{field} #{operator} :#{keyword_name.to_s}"
+        end
+      end
+      "(#{retVal.join(' OR ')})"  
+    rescue
+      # The date is not valid so just ignore it
+      return nil      
+    end
   end
 end
-
-#  def other_method
-# 
-#    conditions = []
-#    query_params = {}
-#  
-#    QueryLanguageParser.parse(search_string).each_with_index do |search_condition, index|
-#      keyword_name = "keyword_#{index}".to_sym
-#      query_params[keyword_name] = "%#{search_condition.first}%"
-# 
-#   
-#     # a keyword may be found in any of the provided fields, so join the conitions with OR
-#     if search_condition.length == 2 && search_condition.last == :not
-#       keyword_conditions = self.scoped_search_fields.map do |field| 
-#         field_name = connection.quote_table_name(table_name) + "." + connection.quote_column_name(field)
-#         "(#{field_name} NOT LIKE :#{keyword_name.to_s} OR #{field_name} IS NULL)"
-#       end
-#       conditions << "(#{keyword_conditions.join(' AND ')})" 
-#     elsif search_condition.length == 2 && search_condition.last == :or
-#       word1, word2 = query_params[keyword_name].split(' OR ')
-#       
-#       query_params.delete(keyword_name)
-#       keyword_name_a = "#{keyword_name.to_s}a".to_sym
-#       keyword_name_b = "#{keyword_name.to_s}b".to_sym
-#       query_params[keyword_name_a] = word1
-#       query_params[keyword_name_b] = word2
-#       
-#       keyword_conditions = self.scoped_search_fields.map do |field| 
-#         field_name = connection.quote_table_name(table_name) + "." + connection.quote_column_name(field)
-#         "(#{field_name} LIKE :#{keyword_name_a.to_s} OR #{field_name} LIKE :#{keyword_name_b.to_s})"
-#       end
-#       conditions << "(#{keyword_conditions.join(' OR ')})"            
-#     else
-#       keyword_conditions = self.scoped_search_fields.map do |field| 
-#         field_name = connection.quote_table_name(table_name) + "." + connection.quote_column_name(field)
-#         "#{field_name} LIKE :#{keyword_name.to_s}"
-#       end
-#       conditions << "(#{keyword_conditions.join(' OR ')})"
-#     end       
-#   end
-# end

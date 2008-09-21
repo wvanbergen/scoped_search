@@ -23,6 +23,26 @@ module ScopedSearch
           else
             if /^.+[ ]OR[ ].+$/ =~ item
               conditions_tree << [item, :or]
+            elsif /^#{RegTokens::BetweenDateFormatMMDDYYYY}$/ =~ item or
+                  /^#{RegTokens::BetweenDateFormatYYYYMMDD}$/ =~ item or
+                  /^#{RegTokens::BetweenDatabaseFormat}$/ =~ item
+              conditions_tree << [item, :between_dates]              
+            elsif /^#{RegTokens::GreaterThanOrEqualToDateFormatMMDDYYYY}$/ =~ item or
+                  /^#{RegTokens::GreaterThanOrEqualToDateFormatYYYYMMDD}$/ =~ item or
+                  /^#{RegTokens::GreaterThanOrEqualToDatabaseFormat}$/ =~ item
+              conditions_tree << [item, :greater_than_or_equal_to_date] 
+            elsif /^#{RegTokens::LessThanOrEqualToDateFormatMMDDYYYY}$/ =~ item or
+                  /^#{RegTokens::LessThanOrEqualToDateFormatYYYYMMDD}$/ =~ item or
+                  /^#{RegTokens::LessThanOrEqualToDatabaseFormat}$/ =~ item
+              conditions_tree << [item, :less_than_or_equal_to_date]              
+            elsif /^#{RegTokens::GreaterThanDateFormatMMDDYYYY}$/ =~ item or
+                  /^#{RegTokens::GreaterThanDateFormatYYYYMMDD}$/ =~ item or
+                  /^#{RegTokens::GreaterThanDatabaseFormat}$/ =~ item
+              conditions_tree << [item, :greater_than_date] 
+            elsif /^#{RegTokens::LessThanDateFormatMMDDYYYY}$/ =~ item or
+                  /^#{RegTokens::LessThanDateFormatYYYYMMDD}$/ =~ item or
+                  /^#{RegTokens::LessThanDatabaseFormat}$/ =~ item
+              conditions_tree << [item, :less_than_date]                           
             elsif /^#{RegTokens::DateFormatMMDDYYYY}$/ =~ item or
                   /^#{RegTokens::DateFormatYYYYMMDD}$/ =~ item or
                   /^#{RegTokens::DatabaseFormat}$/ =~ item
@@ -38,9 +58,24 @@ module ScopedSearch
     end
     
     def tokenize(query)
-      pattern = [RegTokens::DateFormatMMDDYYYY,
+      pattern = [RegTokens::BetweenDateFormatMMDDYYYY,
+                 RegTokens::BetweenDateFormatYYYYMMDD,
+                 RegTokens::BetweenDatabaseFormat,
+                 RegTokens::GreaterThanOrEqualToDateFormatMMDDYYYY,
+                 RegTokens::GreaterThanOrEqualToDateFormatYYYYMMDD,
+                 RegTokens::GreaterThanOrEqualToDatabaseFormat,
+                 RegTokens::LessThanOrEqualToDateFormatMMDDYYYY,
+                 RegTokens::LessThanOrEqualToDateFormatYYYYMMDD,
+                 RegTokens::LessThanOrEqualToDatabaseFormat,
+                 RegTokens::GreaterThanDateFormatMMDDYYYY,
+                 RegTokens::GreaterThanDateFormatYYYYMMDD,
+                 RegTokens::GreaterThanDatabaseFormat,
+                 RegTokens::LessThanDateFormatMMDDYYYY,
+                 RegTokens::LessThanDateFormatYYYYMMDD,
+                 RegTokens::LessThanDatabaseFormat,
+                 RegTokens::DateFormatMMDDYYYY,
                  RegTokens::DateFormatYYYYMMDD,
-                 RegTokens::DatabaseFormat,
+                 RegTokens::DatabaseFormat,           
                  RegTokens::WordOrWord,
                  RegTokens::WordOrString,
                  RegTokens::StringOrWord,

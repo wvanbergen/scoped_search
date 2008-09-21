@@ -39,5 +39,6 @@ class SearchTestModel < ActiveRecord::Base
     create!(:string_field => "Excited Frog",   :text_field => "Sad Frog",       :ignored_field => "123456l", :date_field => '2006-07-15')    
     create!(:string_field => "Man made",       :text_field => "Woman made",     :ignored_field => "123456m", :date_field => '2007-06-13')
     create!(:string_field => "Cat Toys",       :text_field => "Frog Toys",      :ignored_field => "123456n", :date_field => '2008-03-04') 
+    create!(:string_field => "Happy Toys",     :text_field => "Sad Toys",       :ignored_field => "123456n", :date_field => '2008-05-12')
   end
 end
