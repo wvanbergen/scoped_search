@@ -3,14 +3,27 @@ TODO items for named_scope
 Contact willem AT vanbergen DOT org if you want to help out
 
 
-New features:
-- Search fields of associations as well
-- Allow smart searches.  Example: "90 days ago", "Yesterday", "10 days from now" 
-
+0.4.0
 Refactoring:
 - For searchable_on(*fields) make it so that instead of fields it accepts options (a hash) where 
   :only and :except can be values.  That way it is possible for all fields to be loaded except 
   the ones specified with :except.
+
+0.5.0
+New features:
+- Search fields of associations as well
+
+
+0.6.0
+
+0.7.0
+
+0.8.0
+
+0.9.0
+
+1.0.0
+
 
 Documentation & testing:
 - Put something useful in the wiki
