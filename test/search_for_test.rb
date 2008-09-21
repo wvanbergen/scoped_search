@@ -60,8 +60,6 @@ class ScopedSearchTest < Test::Unit::TestCase
     assert_equal 3, SearchTestModel.search_for('1/1/2005 TO 1/1/2007').count 
 
     assert_equal 2, SearchTestModel.search_for('Happy 1/1/2005 TO 1/1/2007').count 
-    
-    assert_equal 2, SearchTestModel.search_for('Happy 1/1/2005 TO 1/1/2007').count 
   end
 
 end
