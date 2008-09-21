@@ -4,23 +4,26 @@ Contact willem AT vanbergen DOT org if you want to help out
 
 
 0.4.0
-Refactoring:
-- For searchable_on(*fields) make it so that instead of fields it accepts options (a hash) where 
-  :only and :except can be values.  That way it is possible for all fields to be loaded except 
-  the ones specified with :except.
+- For searchable_on(*fields) make it so that instead of fields it accepts options (a hash) where :only and :except can be values.  That way it is possible for all fields to be loaded except the ones specified with :except.
+
 
 0.5.0
-New features:
-- Search fields of associations as well
+- Search fields of associations
 
 
 0.6.0
+- Add test for Postgres
+- Add test for MySQL
+
 
 0.7.0
 
+
 0.8.0
 
+
 0.9.0
+
 
 1.0.0
 
