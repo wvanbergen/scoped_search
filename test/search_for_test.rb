@@ -11,16 +11,16 @@ class ScopedSearchTest < Test::Unit::TestCase
     teardown_db
   end
   
-  def test_enabling
-    assert !SearchTestModel.respond_to?(:search_for)
-    SearchTestModel.searchable_on :string_field, :text_field
-    assert SearchTestModel.respond_to?(:search_for)
-    
-    assert_equal ActiveRecord::NamedScope::Scope, SearchTestModel.search_for('test').class
-  end
-  
+  # def test_enabling
+  #   assert !SearchTestModel.respond_to?(:search_for)
+  #   SearchTestModel.searchable_on :string_field, :text_field, :date_field
+  #   assert SearchTestModel.respond_to?(:search_for)
+  #   
+  #   assert_equal ActiveRecord::NamedScope::Scope, SearchTestModel.search_for('test').class
+  # end
+  # 
   def test_search
-    SearchTestModel.searchable_on :string_field, :text_field
+    SearchTestModel.searchable_on :string_field, :text_field, :date_field
     
     assert_equal 15, SearchTestModel.search_for('').count
     assert_equal 0, SearchTestModel.search_for('456').count   
@@ -35,6 +35,15 @@ class ScopedSearchTest < Test::Unit::TestCase
     assert_equal 3, SearchTestModel.search_for('"Happy cow" OR "Sad Frog"').count
     assert_equal 3, SearchTestModel.search_for('"Man made" OR Dogs').count
     assert_equal 2, SearchTestModel.search_for('Cows OR "Frog Toys"').count   
+    
+    assert_equal 1, SearchTestModel.search_for('9/27/1980').count
+  
+    # The date is invalid therefore it will be ignored.  Thus it would be the same 
+    # as searching for an empty string
+    assert_equal 15, SearchTestModel.search_for('2/30/1980').count 
+    
+    assert_equal 1, SearchTestModel.search_for('hays 9/27/1980').count
+    assert_equal 2, SearchTestModel.search_for('hays 2/30/1980').count
   end
 
 end

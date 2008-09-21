@@ -43,22 +43,20 @@ module ScopedSearch
                         when :or: or_condition(keyword_name, search_condition.first)
       
                         when :before_date: before_date(keyword_name, search_condition.first)
-                        when :before_datetime: before_datetime(keyword_name, search_condition.first)
+                        #when :before_datetime: before_datetime(keyword_name, search_condition.first)
       
                         when :as_of_date: as_of_date(keyword_name, search_condition.first)
-                        when :as_of_datetime: as_of_date(keyword_name, search_condition.first)
+                        #when :as_of_datetime: as_of_date(keyword_name, search_condition.first)
       
                         when :after_date: after_date(keyword_name, search_condition.first)
-                        when :after_datetime: after_datetime(keyword_name, search_condition.first)        
+                        #when :after_datetime: after_datetime(keyword_name, search_condition.first)        
             
                         when :between_dates: as_of_date(keyword_name, search_condition.first)
-                        when :between_datetimes: as_of_datetime(keyword_name, search_condition.first)   
-                                                           
-                      end
-          
+                        #when :between_datetimes: as_of_datetime(keyword_name, search_condition.first)                                                              
+                      end          
       end
 
-      [conditions.join(' AND '), @query_params] 
+      [conditions.compact.join(' AND '), @query_params] 
     end    
     
     
@@ -107,11 +105,23 @@ module ScopedSearch
     # def before_date(keyword_name, value)
     # end
     # alias :bafore_datetime :before_date
-    # 
-    # def as_of_date(keyword_name, value)
-    # end
-    # alias :as_of_datetime :as_of_date 
-    # 
+    
+    def as_of_date(keyword_name, value)
+      dt = Date.parse(value) # This will throw an exception if it is not valid
+      @query_params[keyword_name] = "#{dt.to_s}"
+      retVal = []
+      @query_fields.each do |field, field_type|  #|key,value| 
+        if field_type == :date or field_type == :datetime or field_type == :timestamp
+          retVal << "#{field} = :#{keyword_name.to_s}"
+        end
+      end
+      "(#{retVal.join(' OR ')})"  
+    rescue
+      # The date is not valid so just ignore it
+      return nil
+    end
+    alias :as_of_datetime :as_of_date 
+    
     # def after_date(keyword_name, value)
     # end
     # alias :after_datetime :after_date

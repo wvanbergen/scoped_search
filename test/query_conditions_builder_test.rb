@@ -7,11 +7,12 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     ScopedSearch::QueryConditionsBuilder.build_query(search_conditions, query_fields)
   end
   
+  # ** Single query search tests **
   def test_like_search_condition
     search_conditions = [["Wes", :like]]
     query_fields = {'some_table.first_name' => :string}    
     conditions = build_query(search_conditions, query_fields) 
-
+    
     assert_equal '(some_table.first_name LIKE :keyword_0)', conditions.first
     assert_equal '%Wes%', conditions.last[:keyword_0]
   end
@@ -20,7 +21,7 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     search_conditions = [["Wes", :not]]
     query_fields = {'some_table.first_name' => :string}    
     conditions = build_query(search_conditions, query_fields) 
-
+  
     assert_equal '((some_table.first_name NOT LIKE :keyword_0 OR some_table.first_name IS NULL))', conditions.first
     assert_equal '%Wes%', conditions.last[:keyword_0]
   end  
@@ -34,17 +35,27 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     assert_equal '%Wes%', conditions.last[:keyword_0a]
     assert_equal '%Hays%', conditions.last[:keyword_0b]
   end
-    
   
+  # def test_date_search_condition
+  #   search_conditions = [["09/27/1980", :as_of_date]]
+  #   query_fields = {'some_table.event_date' => :datetime}    
+  #   conditions = build_query(search_conditions, query_fields) 
+  #   regExs = build_regex_for_date(['event_date'], 'keyword_0')
+  #   assert_match /^#{regExs}$/, conditions.first
+  #   assert_equal '09/27/1980', conditions.last[:keyword_0a]
+  # end  
+  
+    
+  # ** Multi query search tests **
   def test_like_two_search_condition
     search_conditions = [["Wes", :like],["Hays", :like]]
     query_fields = {'some_table.first_name' => :string,'some_table.last_name' => :string}    
     conditions = build_query(search_conditions, query_fields) 
-
+  
     fields = ['first_name','last_name']
     regExs = [build_regex_for_like(fields,'keyword_0'), 
               build_regex_for_like(fields,'keyword_1')].join('[ ]AND[ ]')
-
+  
     assert_match /^#{regExs}$/, conditions.first
     assert_equal '%Wes%', conditions.last[:keyword_0]
     assert_equal '%Hays%', conditions.last[:keyword_1]
@@ -54,11 +65,11 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     search_conditions = [["Wes", :like],["Hays", :not]]
     query_fields = {'some_table.first_name' => :string,'some_table.last_name' => :string}    
     conditions = build_query(search_conditions, query_fields) 
-
+  
     fields = ['first_name','last_name']
     regExs = [build_regex_for_like(fields,'keyword_0'), 
               build_regex_for_not_like(fields,'keyword_1')].join('[ ]AND[ ]')
-
+  
     assert_match /^#{regExs}$/, conditions.first
     assert_equal '%Wes%', conditions.last[:keyword_0]
     assert_equal '%Hays%', conditions.last[:keyword_1]
@@ -66,7 +77,7 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
   
   
   
-  
+  # ** Helper methods **
   def build_regex_for_like(fields,keyword)
     orFields = fields.join('|')
     regParts = fields.collect { |field| 
@@ -91,5 +102,13 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
                }.join('[ ]OR[ ]')
     
     "[\(]#{regParts}[\)]"
+  end  
+  
+  def build_regex_for_date(fields,keyword)
+    orFields = fields.join('|')
+    regParts = fields.collect { |field| 
+                 "some_table.(#{orFields}) = :#{keyword}" 
+               }.join('[ ]OR[ ]')  
+    "[\(]#{regParts}[\)]"  
   end  
 end

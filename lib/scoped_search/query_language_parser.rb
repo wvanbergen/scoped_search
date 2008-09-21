@@ -23,22 +23,30 @@ module ScopedSearch
           else
             if /^.+[ ]OR[ ].+$/ =~ item
               conditions_tree << [item, :or]
+            elsif /^#{RegTokens::DateFormatMMDDYYYY}$/ =~ item or
+                  /^#{RegTokens::DateFormatYYYYMMDD}$/ =~ item or
+                  /^#{RegTokens::DatabaseFormat}$/ =~ item
+              conditions_tree << [item, :as_of_date]
             else
               conditions_tree << (negate ? [item, :not] : [item, :like])
               negate = false
             end
         end
       end
+      
       return conditions_tree
     end
     
     def tokenize(query)
-      pattern = [RegTokens::WordOrWord,
+      pattern = [RegTokens::DateFormatMMDDYYYY,
+                 RegTokens::DateFormatYYYYMMDD,
+                 RegTokens::DatabaseFormat,
+                 RegTokens::WordOrWord,
                  RegTokens::WordOrString,
                  RegTokens::StringOrWord,
                  RegTokens::StringOrString,
                  RegTokens::PossiblyNegatedWord,
-                 RegTokens::PossiblyNegatedString]
+                 RegTokens::PossiblyNegatedString]               
       pattern = Regexp.new(pattern.join('|'))
       
       tokens = []

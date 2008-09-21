@@ -108,6 +108,28 @@ class QueryLanguageTest < Test::Unit::TestCase
     assert_equal :or, parsed[0][1]        
   end 
   
+  def test_as_of_date
+    # parsed = parse_query('9/27/1980')
+    # assert_equal 1, parsed.length
+    # assert_equal '9/27/1980', parsed[0][0]
+    # assert_equal :as_of, parsed[0][1]
+   
+    # parsed = parse_query('"Man made" OR Dogs')
+    # assert_equal 1, parsed.length
+    # assert_equal 'Man made OR Dogs', parsed[0][0]
+    # assert_equal :or, parsed[0][1]    
+    # 
+    # parsed = parse_query('Cows OR "Frog Toys"')
+    # assert_equal 1, parsed.length
+    # assert_equal 'Cows OR Frog Toys', parsed[0][0]
+    # assert_equal :or, parsed[0][1]
+    # 
+    # parsed = parse_query('"Happy cow" OR "Sad Frog"')
+    # assert_equal 1, parsed.length
+    # assert_equal 'Happy cow OR Sad Frog', parsed[0][0]
+    # assert_equal :or, parsed[0][1]        
+  end  
+  
   def test_long_string
     str = 'Wes -Hays "Hello World" -"Goodnight Moon" Bob OR Wes "Happy cow" OR "Sad Frog" "Man made" OR Dogs Cows OR "Frog Toys"'
     parsed = parse_query(str)
