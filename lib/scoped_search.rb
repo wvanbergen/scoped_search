@@ -10,6 +10,15 @@ module ScopedSearch
   
     # Creates a named scope in the class it was called upon
     def searchable_on(*fields)
+      if fields.first.class.to_s == 'Hash'
+        if fields.first.has_key?(:only)
+          fields = fields.first[:only]
+        elsif fields.first.has_key?(:except)
+          fields = self.columns_hash.collect { |column| 
+                     fields.first[:except].include?(column[0].to_sym) ? nil : column[0].to_sym }.compact
+        end
+      end
+
       self.cattr_accessor :scoped_search_fields
       self.scoped_search_fields = fields
       self.named_scope :search_for, lambda { |keywords| self.build_scoped_search_conditions(keywords) }
