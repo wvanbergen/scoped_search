@@ -107,7 +107,31 @@ module ScopedSearch
     end    
     
     def as_of_date(keyword_name, value)
-      helper_date_operation('=', keyword_name, value)
+      retVal = []
+      begin
+        dt = Date.parse(value) # This will throw an exception if it is not valid
+        @query_params[keyword_name] = dt.to_s
+        @query_fields.each do |field, field_type|  #|key,value| 
+          if field_type == :date or field_type == :datetime or field_type == :timestamp
+            retVal << "#{field} = :#{keyword_name.to_s}"
+          end
+        end
+      rescue
+        # do not search on any date columns since the date is invalid
+      end
+      
+      # Search the text fields for the date as well as it could be in text.
+      # Also still search on the text columns for an invalid date as it could
+      # have a different meaning.
+      keyword_name_b = "#{keyword_name}b".to_sym
+      @query_params[keyword_name_b] = "%#{value}%"
+      @query_fields.each do |field, field_type|  #|key,value| 
+        if field_type == :string or field_type == :text
+          retVal << "#{field} LIKE :#{keyword_name_b.to_s}"
+        end
+      end
+
+      "(#{retVal.join(' OR ')})"      
     end
     
     def greater_than_date(keyword_name, value)

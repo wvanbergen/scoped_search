@@ -48,13 +48,13 @@ class ScopedSearchTest < Test::Unit::TestCase
   def test_search
     SearchTestModel.searchable_on :string_field, :text_field, :date_field
   
-    assert_equal 16, SearchTestModel.search_for('').count
+    assert_equal 17, SearchTestModel.search_for('').count
     assert_equal 0, SearchTestModel.search_for('456').count   
     assert_equal 2, SearchTestModel.search_for('hays').count 
     assert_equal 1, SearchTestModel.search_for('hay ob').count        
-    assert_equal 14, SearchTestModel.search_for('o').count    
+    assert_equal 15, SearchTestModel.search_for('o').count    
     assert_equal 2, SearchTestModel.search_for('-o').count
-    assert_equal 14, SearchTestModel.search_for('-Jim').count
+    assert_equal 15, SearchTestModel.search_for('-Jim').count
     assert_equal 1, SearchTestModel.search_for('Jim -Bush').count
     assert_equal 1, SearchTestModel.search_for('"Hello World" -"Goodnight Moon"').count    
     assert_equal 2, SearchTestModel.search_for('Wes OR Bob').count
@@ -65,27 +65,31 @@ class ScopedSearchTest < Test::Unit::TestCase
     # ** DATES **   
     #
     # The next two dates are invalid therefore it will be ignored.  
-    # Thus it would be the same as searching for an empty string
-    assert_equal 16, SearchTestModel.search_for('2/30/1980').count 
-    assert_equal 16, SearchTestModel.search_for('99/99/9999').count
+    # Since it is just a date being searched for it will also
+    # be searched for in text fields regardless of whether or 
+    # not it is a valid date.
+    assert_equal 0, SearchTestModel.search_for('2/30/1980').count 
+    assert_equal 0, SearchTestModel.search_for('99/99/9999').count
   
     assert_equal 1, SearchTestModel.search_for('9/27/1980').count
     assert_equal 1, SearchTestModel.search_for('hays 9/27/1980').count
-    assert_equal 2, SearchTestModel.search_for('hays 2/30/1980').count    
-    assert_equal 1, SearchTestModel.search_for('2006/07/15').count
+    assert_equal 0, SearchTestModel.search_for('hays 2/30/1980').count 
   
     assert_equal 1, SearchTestModel.search_for('< 12/01/1980').count    
-    assert_equal 5, SearchTestModel.search_for('> 1/1/2006').count
+    assert_equal 6, SearchTestModel.search_for('> 2006/1/1').count
   
     assert_equal 5, SearchTestModel.search_for('< 12/26/2002').count 
     assert_equal 6, SearchTestModel.search_for('<= 12/26/2002').count   
   
-    assert_equal 5, SearchTestModel.search_for('> 2/5/2005').count 
-    assert_equal 6, SearchTestModel.search_for('>= 2/5/2005').count   
+    assert_equal 6, SearchTestModel.search_for('> 2/5/2005').count 
+    assert_equal 7, SearchTestModel.search_for('>= 2/5/2005').count   
   
     assert_equal 3, SearchTestModel.search_for('1/1/2005 TO 1/1/2007').count 
   
     assert_equal 2, SearchTestModel.search_for('Happy 1/1/2005 TO 1/1/2007').count 
+       
+    # This should return one with a date of 7/15/2006 found in the text.
+    assert_equal 2, SearchTestModel.search_for('7/15/2006').count
   end
 
 end
