@@ -15,6 +15,44 @@ def setup_db
       t.date :date_field
       t.timestamps
     end
+    
+    create_table :users do |t|
+      t.string :first_name, :last_name, :login
+      t.integer :group_id
+      t.integer :address_id
+    end   
+    
+    create_table :clients do |t|
+      t.string :first_name, :last_name
+    end     
+    
+    create_table :offices do |t|
+      t.string :name
+      t.integer :user_id, :client_id
+    end    
+    
+    create_table :groups do |t|
+      t.string :name
+    end    
+    
+    create_table :locations do |t|
+      t.string :name
+    end   
+    
+    create_table :locations_users, :id => false, :force => true do |t|
+      t.integer :user_id
+      t.integer :location_id
+    end 
+    
+    create_table :notes do |t|
+      t.string :title
+      t.text :content
+      t.integer :user_id
+    end      
+    
+    create_table :addresses do |t|
+      t.string :street, :city, :state, :postal_code
+    end  
   end
 end
 
@@ -45,5 +83,124 @@ class SearchTestModel < ActiveRecord::Base
             :text_field => "Sad Toys",       
             :ignored_field => "123456n", 
             :date_field => '2008-09-22')
+  end
+end
+
+class User < ActiveRecord::Base
+  belongs_to :group
+  belongs_to :address
+  has_many :notes
+  has_and_belongs_to_many :locations
+  
+  has_many :offices, :dependent => :destroy
+  has_many :clients, :through => :offices  
+  def self.create_corpus!
+    create!(:first_name => 'Willem',  :last_name => 'Van Bergen', :login => 'wvanbergen', :group_id => 1, :address_id => 1) 
+    create!(:first_name => 'Wes',     :last_name => 'Hays',       :login => 'weshays',    :group_id => 1, :address_id => 2) 
+    create!(:first_name => 'John',    :last_name => 'Dell',       :login => 'jdell',      :group_id => 2, :address_id => 3) 
+    create!(:first_name => 'Ray',     :last_name => 'York',       :login => 'ryork',      :group_id => 3, :address_id => 4) 
+    create!(:first_name => 'Anna',    :last_name => 'Landis',     :login => 'alandis',    :group_id => 4, :address_id => 5) 
+    
+    user = self.find_by_first_name('Willem')
+    user.locations << Location.find_by_name('Office')
+    
+    user = self.find_by_first_name('Wes')
+    user.locations << Location.find_by_name('Store')
+    
+    user = self.find_by_first_name('John')
+    user.locations << Location.find_by_name('Office')
+    
+    user = self.find_by_first_name('Ray')
+    user.locations << Location.find_by_name('Home')
+    
+    user = self.find_by_first_name('Anna')
+    user.locations << Location.find_by_name('Beach')                
+  end
+end
+
+class Client < ActiveRecord::Base
+  has_many :offices, :dependent => :destroy
+  has_many :users, :through => :offices
+  def self.create_corpus!
+    create!(:first_name => 'Bob',    :last_name => 'Smith') 
+    create!(:first_name => 'Sam',    :last_name => 'Lovett')
+    create!(:first_name => 'Sally',  :last_name => 'May')
+    create!(:first_name => 'Mary',   :last_name => 'Smith')
+    create!(:first_name => 'Darren', :last_name => 'Johnson')
+  end
+end
+
+class Office < ActiveRecord::Base
+  belongs_to :client
+  belongs_to :user
+  def self.create_corpus!
+    create!(:name => 'California Office', :user_id => 1, :client_id => 1)
+    create!(:name => 'California Office', :user_id => 2, :client_id => 2)
+    create!(:name => 'California Office', :user_id => 3, :client_id => 3)
+    create!(:name => 'Reno Office',       :user_id => 4, :client_id => 4)
+    create!(:name => 'Reno Office',       :user_id => 5, :client_id => 5)        
+  end
+end
+
+class Group < ActiveRecord::Base
+  has_many :users
+  def self.create_corpus!
+    create!(:name => 'System Administrator') 
+    create!(:name => 'Software Managers')    
+    create!(:name => 'Office Managers')      
+    create!(:name => 'Accounting')           
+  end
+end
+
+class Location < ActiveRecord::Base
+  has_and_belongs_to_many :users
+  def self.create_corpus!
+    create!(:name => 'Home')   
+    create!(:name => 'Office') 
+    create!(:name => 'Store')  
+    create!(:name => 'Beach')  
+  end
+end
+
+class Note < ActiveRecord::Base
+  belongs_to :user
+  def self.create_corpus!
+    wes = User.find_by_first_name('Wes')
+    john = User.find_by_first_name('John')
+    
+    create!(:user_id => wes.id,         
+            :title   => 'Purchases', 
+            :content => "1) Linksys Router. 2) Network Cable")   
+            
+    create!(:user_id => wes.id,         
+            :title  => 'Tasks',
+            :content => 'Clean my car, walk the dog and mow the yard buy milk') 
+            
+    create!(:user_id => wes.id,         
+            :title   => 'Grocery List',
+            :content => 'milk, gum, apples')  
+            
+    create!(:user_id => wes.id,         
+            :title   => 'Stocks to watch',
+            :content => 'MA, AAPL, V and SSO.  Straddle MA at 200 with JAN 09 options')            
+    
+    create!(:user_id => john.id,        
+            :title   => 'Spec Tests',
+            :content => 'Spec Tests... Spec Tests... Spec Tests!!')   
+            
+    create!(:user_id => john.id,        
+            :title   => 'Things To Do',
+            :content => '1) Did I mention Spec Tests!!!, 2) Buy Linksys Router WRT160N')
+  end
+end
+
+class Address < ActiveRecord::Base
+  has_one :user
+  def self.create_corpus!
+    create!(:street => '800 Haskell St',     :city => 'Reno',       :state => 'NV', :postal_code => '89509') 
+    create!(:street => '2499 Dorchester Rd', :city => 'Charleston', :state => 'SC', :postal_code => '29414')
+    create!(:street => '474 Mallard Way',    :city => 'Fernley',    :state => 'NV', :postal_code => '89408')
+    create!(:street => '1600 Montero Ct',    :city => 'Sparks',     :state => 'NV', :postal_code => '89434')
+    create!(:street => '200 4th St',         :city => 'Sparks',     :state => 'NV', :postal_code => '89434')
   end
 end

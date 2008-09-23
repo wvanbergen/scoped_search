@@ -5,6 +5,13 @@ class ScopedSearchTest < Test::Unit::TestCase
   def setup
     setup_db
     SearchTestModel.create_corpus!
+    Group.create_corpus!
+    Location.create_corpus!
+    Address.create_corpus!
+    User.create_corpus!
+    Client.create_corpus!
+    Office.create_corpus!
+    Note.create_corpus!
   end
 
   def teardown
@@ -48,7 +55,7 @@ class ScopedSearchTest < Test::Unit::TestCase
   def test_search
     SearchTestModel.searchable_on :string_field, :text_field, :date_field
   
-    assert_equal 17, SearchTestModel.search_for('').count
+    assert_equal SearchTestModel.count, SearchTestModel.search_for('').count
     assert_equal 0, SearchTestModel.search_for('456').count   
     assert_equal 2, SearchTestModel.search_for('hays').count 
     assert_equal 1, SearchTestModel.search_for('hay ob').count        
@@ -91,6 +98,53 @@ class ScopedSearchTest < Test::Unit::TestCase
     # This should return one with a date of 7/15/2006 found in the text.
     assert_equal 2, SearchTestModel.search_for('7/15/2006').count
   end
+  
+  def test_search_belongs_to_association
+    User.searchable_on :first_name, :last_name, :group_name
+      
+    assert_equal User.count, User.search_for('').count        
+    assert_equal 1, User.search_for('Wes').count     
+    assert_equal 2, User.search_for('System Administrator').count
+    assert_equal 2, User.search_for('Managers').count
+  end
+  
+  def test_search_has_many_association
+    User.searchable_on :first_name, :last_name, :notes_title, :notes_content
+
+    assert_equal User.count, User.search_for('').count        
+    assert_equal 2, User.search_for('Router').count     
+    assert_equal 1, User.search_for('milk').count
+    assert_equal 1, User.search_for('"Spec Tests"').count
+    assert_equal 0, User.search_for('Wes "Spec Tests"').count
+  end  
+  
+  def test_search_has_many_through_association
+    User.searchable_on :first_name, :last_name, :clients_first_name, :clients_last_name
+      
+    assert_equal User.count, User.search_for('').count        
+    assert_equal 2, User.search_for('Smith').count     
+    assert_equal 1, User.search_for('Sam').count
+    assert_equal 1, User.search_for('Johnson').count
+  end  
+  
+  def test_search_has_one_association
+    User.searchable_on :first_name, :last_name, :address_street, :address_city, :address_state, :address_postal_code
+          
+    assert_equal User.count, User.search_for('').count        
+    assert_equal 1, User.search_for('Fernley').count     
+    assert_equal 4, User.search_for('NV').count
+    assert_equal 1, User.search_for('Haskell').count  
+    assert_equal 2, User.search_for('89434').count        
+  end  
+  
+  def test_search_has_and_belongs_to_many_association
+    User.searchable_on :first_name, :last_name, :locations_name
+  
+    assert_equal User.count, User.search_for('').count        
+    assert_equal 2, User.search_for('Office').count     
+    assert_equal 1, User.search_for('Store').count
+    assert_equal 1, User.search_for('John Office').count
+  end  
 
 end
 

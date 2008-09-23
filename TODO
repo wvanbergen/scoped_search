@@ -2,11 +2,6 @@ TODO items for named_scope
 ==========================
 Contact willem AT vanbergen DOT org if you want to help out
 
-
-0.5.0
-- Search fields of associations
-
-
 0.6.0
 - Add test for Postgres
 - Add test for MySQL
