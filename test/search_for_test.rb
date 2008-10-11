@@ -3,7 +3,15 @@ require File.dirname(__FILE__) + '/test_helper'
 class ScopedSearchTest < Test::Unit::TestCase
 
   def setup
-    setup_db
+    case ENV['DATABASE']
+      when 'mysql'
+        create_mysql_connection
+      when 'postgresql' 
+        create_postgresql_connection
+      else 'sqlite3'     
+        create_sqlite3_connection
+    end
+    InitialSchema.up
     SearchTestModel.create_corpus!
     Group.create_corpus!
     Location.create_corpus!
@@ -15,14 +23,14 @@ class ScopedSearchTest < Test::Unit::TestCase
   end
 
   def teardown
-    teardown_db
+    InitialSchema.down
   end
   
   def test_enabling
     assert !SearchTestModel.respond_to?(:search_for)
     SearchTestModel.searchable_on :string_field, :text_field, :date_field
     assert SearchTestModel.respond_to?(:search_for)
-  
+      
     assert_equal ActiveRecord::NamedScope::Scope, SearchTestModel.search_for('test').class
   end  
   
@@ -110,7 +118,7 @@ class ScopedSearchTest < Test::Unit::TestCase
   
   def test_search_has_many_association
     User.searchable_on :first_name, :last_name, :notes_title, :notes_content
-
+  
     assert_equal User.count, User.search_for('').count        
     assert_equal 2, User.search_for('Router').count     
     assert_equal 1, User.search_for('milk').count

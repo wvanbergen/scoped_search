@@ -2,14 +2,6 @@ TODO items for named_scope
 ==========================
 Contact willem AT vanbergen DOT org if you want to help out
 
-0.6.0
-- Add test for Postgres
-- Add test for MySQL
-
-
-0.7.0
-
-
 0.8.0
 
 
@@ -17,7 +9,7 @@ Contact willem AT vanbergen DOT org if you want to help out
 
 
 1.0.0
-
+- Extensive testing
 
 Documentation & testing:
 - Add rdoc en comments to code
