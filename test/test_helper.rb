@@ -88,12 +88,15 @@ def create_postgresql_connection
 end
 
 def create_mysql_connection
+  # '/tmp/mysql.sock' is the default location and file rails looks for.
+  mysql_socket = ENV['MYSQLSOCKET'].nil? ? '/tmp/mysql.sock' : ENV['MYSQLSOCKET']
   ActiveRecord::Base.establish_connection(
     :adapter  => "mysql",
     :host     => "localhost",
     :username => "sstest",
     :password => "sstest",
-    :database => "scoped_search_test"
+    :database => "scoped_search_test",
+    :socket   => mysql_socket
   )    
 end
 
