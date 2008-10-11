@@ -1,6 +1,7 @@
 module ScopedSearch
   
   class QueryConditionsBuilder
+    ## ActiveRecord::Base.connection.adapter_name
 
     # Build the query
     def self.build_query(search_conditions, query_fields)
@@ -10,6 +11,12 @@ module ScopedSearch
     def initialize
       @query_fields = nil 
       @query_params = {}
+      
+      @sql_like = 'LIKE'
+      
+      if ActiveRecord::Base.connected? and ActiveRecord::Base.connection.adapter_name.downcase == 'postgresql'
+        @sql_like = 'ILIKE'
+      end
     end 
 
 
@@ -66,7 +73,7 @@ module ScopedSearch
       retVal = []
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :string or field_type == :text
-          retVal << "#{field} LIKE :#{keyword_name.to_s}"
+          retVal << "#{field} #{@sql_like} :#{keyword_name.to_s}"
         end
       end
       "(#{retVal.join(' OR ')})"
@@ -77,7 +84,7 @@ module ScopedSearch
       retVal = []
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :string or field_type == :text
-          retVal << "(#{field} NOT LIKE :#{keyword_name.to_s} OR #{field} IS NULL)"
+          retVal << "(#{field} NOT #{@sql_like} :#{keyword_name.to_s} OR #{field} IS NULL)"
         end
       end
       "(#{retVal.join(' AND ')})"
@@ -92,7 +99,7 @@ module ScopedSearch
       @query_params[keyword_name_b] = "%#{word2}%"      
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :string or field_type == :text
-          retVal << "(#{field} LIKE :#{keyword_name_a.to_s} OR #{field} LIKE :#{keyword_name_b.to_s})"
+          retVal << "(#{field} #{@sql_like} :#{keyword_name_a.to_s} OR #{field} #{@sql_like} :#{keyword_name_b.to_s})"
         end
       end 
       "(#{retVal.join(' OR ')})"     
@@ -127,7 +134,7 @@ module ScopedSearch
       @query_params[keyword_name_b] = "%#{value}%"
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :string or field_type == :text
-          retVal << "#{field} LIKE :#{keyword_name_b.to_s}"
+          retVal << "#{field} #{@sql_like} :#{keyword_name_b.to_s}"
         end
       end
 

@@ -5,9 +5,9 @@ require 'ruby-debug'
 
 require "#{File.dirname(__FILE__)}/../lib/scoped_search"
 
-def setup_db
-  ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :dbfile => ":memory:")
-  ActiveRecord::Schema.define(:version => 1) do
+class InitialSchema < ActiveRecord::Migration
+
+  def self.up
     create_table :search_test_models do |t|
       t.string :string_field
       t.text :text_field
@@ -52,13 +52,51 @@ def setup_db
     
     create_table :addresses do |t|
       t.string :street, :city, :state, :postal_code
-    end  
+    end    
   end
+
+  def self.down
+    drop_table :search_test_models    
+    drop_table :users     
+    drop_table :clients     
+    drop_table :offices     
+    drop_table :groups     
+    drop_table :locations     
+    drop_table :locations_users    
+    drop_table :notes     
+    drop_table :addresses
+  end
+
 end
 
-def teardown_db
-  ActiveRecord::Base.connection.tables.each { |table| ActiveRecord::Base.connection.drop_table(table) }
+
+def create_sqlite3_connection
+  ActiveRecord::Base.establish_connection(
+    :adapter => "sqlite3", 
+    :dbfile => ":memory:"
+  )
 end
+
+def create_postgresql_connection
+  ActiveRecord::Base.establish_connection(
+    :adapter  => "postgresql",
+    :host     => "localhost",
+    :username => "sstest",
+    :password => "sstest",
+    :database => "scoped_search_test"
+  )    
+end
+
+def create_mysql_connection
+  ActiveRecord::Base.establish_connection(
+    :adapter  => "mysql",
+    :host     => "localhost",
+    :username => "sstest",
+    :password => "sstest",
+    :database => "scoped_search_test"
+  )    
+end
+
 
 class SearchTestModel < ActiveRecord::Base
   def self.create_corpus!
