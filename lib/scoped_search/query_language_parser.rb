@@ -87,10 +87,12 @@ module ScopedSearch
       tokens = []
       matches = query.scan(pattern).flatten.compact
       matches.each { |match|
-        tokens << :not unless match.index('-').nil?
-        # Remove any escaped quotes and any dashes - the dash usually the first character.
+        tokens << :not if match.index('-') == 0
+        # Remove any escaped quotes
+        # Remove any dashes preceded by a space or at the beginning of a token
         # Remove any additional spaces - more that one.
-        tokens << match.gsub(/[-"]/,'').gsub(/[ ]{2,}/, ' ')
+        cleaned_token = match.gsub(/"/,'').gsub(/^-| -/,'').gsub(/[ ]{2,}/, ' ')
+        tokens << cleaned_token if cleaned_token.length > 0
       }
       return tokens
     end

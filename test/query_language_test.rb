@@ -76,7 +76,17 @@ class QueryLanguageTest < Test::Unit::TestCase
     assert_equal 1, parsed.length
     assert_equal 'willem', parsed[0].first
     assert_equal :not,     parsed[0].last
-  
+
+    parsed = parse_query('hallo-world')
+    assert_equal 1, parsed.length
+    assert_equal 'hallo-world', parsed.first.first
+
+    parsed = parse_query('hallo -world')
+    assert_equal 2, parsed.length
+    assert_equal 'hallo', parsed.first.first
+    assert_equal 'world', parsed.last.first
+    assert_equal :not,     parsed.last.last
+
     parsed = parse_query('123 -"456 789"')
     assert_equal 2, parsed.length
     assert_equal '123', parsed[0].first

@@ -1,7 +1,7 @@
 # Regular expression tokens to be used for parsing.
 module RegTokens
    
-  WORD = '[\w]+'
+  WORD = '[\w-]+'
   SPACE = '[ ]'
   STRING = '["][\w ]+["]'
   OR = 'OR'
