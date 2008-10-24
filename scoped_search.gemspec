@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name    = 'scoped_search'
-  s.version = '0.7.1'
-  s.date    = '2008-10-11'
+  s.version = '0.7.2'
+  s.date    = '2008-10-24'
   
   s.summary = "A Rails plugin to search your models using a named_scope"
   s.description = "Scoped search makes it easy to search your ActiveRecord-based models. It will create a named scope according to a provided query string. The named_scope can be used like any other named_scope, so it can be cchained or combined with will_paginate."
