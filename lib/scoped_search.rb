@@ -9,36 +9,39 @@ module ScopedSearch
     end
   
     # Creates a named scope in the class it was called upon
-    def searchable_on(*fields)      
-      if fields.first.class.to_s == 'Hash'
-        if fields.first.has_key?(:only)
-          fields = fields.first[:only]
-        elsif fields.first.has_key?(:except)
-          fields = self.column_names.collect { |column| 
+    def searchable_on(*fields)
+      # Make sure that the table to be searched actually exists
+      if self.table_exists?
+        if fields.first.class.to_s == 'Hash'
+          if fields.first.has_key?(:only)
+            fields = fields.first[:only]
+          elsif fields.first.has_key?(:except)
+            fields = self.column_names.collect { |column| 
                      fields.first[:except].include?(column.to_sym) ? nil : column.to_sym }.compact
-        end
-      end
-
-      assoc_models = self.reflections.collect { |m| m[0] }
-      assoc_fields = fields - self.column_names.collect { |column| column.to_sym }
-      fields -= assoc_fields
-
-      assoc_groupings = {}
-      assoc_models.each do |assoc_model|
-        assoc_groupings[assoc_model] = []
-      	assoc_fields.each do |assoc_field|
-      	  unless assoc_field.to_s.match(/^#{assoc_model.to_s}_/).nil?
-            assoc_groupings[assoc_model] << assoc_field.to_s.sub(/^#{assoc_model.to_s}_/, '').to_sym 
           end
         end
+        
+        assoc_models = self.reflections.collect { |m| m[0] }
+        assoc_fields = fields - self.column_names.collect { |column| column.to_sym }
+        fields -= assoc_fields
+        
+        assoc_groupings = {}
+        assoc_models.each do |assoc_model|
+          assoc_groupings[assoc_model] = []
+        	assoc_fields.each do |assoc_field|
+        	  unless assoc_field.to_s.match(/^#{assoc_model.to_s}_/).nil?
+              assoc_groupings[assoc_model] << assoc_field.to_s.sub(/^#{assoc_model.to_s}_/, '').to_sym 
+            end
+          end
+        end
+        
+        assoc_groupings = assoc_groupings.delete_if {|group, field_group| field_group.empty?}
+        
+        self.cattr_accessor :scoped_search_fields, :scoped_search_assoc_groupings
+        self.scoped_search_fields = fields
+        self.scoped_search_assoc_groupings = assoc_groupings
+        self.named_scope :search_for, lambda { |keywords| self.build_scoped_search_conditions(keywords) }
       end
-      
-      assoc_groupings = assoc_groupings.delete_if {|group, field_group| field_group.empty?}
-
-      self.cattr_accessor :scoped_search_fields, :scoped_search_assoc_groupings
-      self.scoped_search_fields = fields
-      self.scoped_search_assoc_groupings = assoc_groupings
-      self.named_scope :search_for, lambda { |keywords| self.build_scoped_search_conditions(keywords) }
     end
   
     # Build a hash that is used for the named_scope search_for.
