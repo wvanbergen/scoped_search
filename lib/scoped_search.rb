@@ -21,7 +21,7 @@ module ScopedSearch
           end
         end
         
-        assoc_models = self.reflections.collect { |m| m[0] }
+        assoc_models = self.reflections.collect { |key,value| key }
         assoc_fields = fields - self.column_names.collect { |column| column.to_sym }
         fields -= assoc_fields
         
