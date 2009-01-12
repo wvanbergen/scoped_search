@@ -1,3 +1,4 @@
 .svn/
 .DS_Store
 scoped_search-*.gem
+doc/*
