@@ -1,13 +1,13 @@
 module ScopedSearch
   
   class QueryConditionsBuilder
-    ## ActiveRecord::Base.connection.adapter_name
 
-    # Build the query
+    # Builds the query string by calling the build method on a new instances of QueryConditionsBuilder.
     def self.build_query(search_conditions, query_fields)
       self.new.build(search_conditions, query_fields)
     end
 
+    # Initializes the default class variables.
     def initialize
       @query_fields = nil 
       @query_params = {}
@@ -20,16 +20,17 @@ module ScopedSearch
     end 
 
 
-    # Build the query
+    # Build the query based on the search conditions and the fields to query.
     # 
     # Hash query_options : A hash of fields and field types.
     #
-    # Exampe: 
-    # search_conditions = [["Wes", :like], ["Hays", :not], ["Hello World", :like], ["Goodnight Moon", :not], 
-    #                     ["Bob OR Wes", :or], ["Happy cow OR Sad Frog", :or], ["Man made OR Dogs", :or], 
-    #                     ["Cows OR Frog Toys", :or], ['9/28/1980, :datetime]]
-    # query_fields = {:first_name => :string, :created_at => :datetime}
-    # 
+    # Example: 
+    #
+    #   search_conditions = [["Wes", :like], ["Hays", :not], ["Hello World", :like], ["Goodnight Moon", :not], 
+    #                       ["Bob OR Wes", :or], ["Happy cow OR Sad Frog", :or], ["Man made OR Dogs", :or], 
+    #                       ["Cows OR Frog Toys", :or], ['9/28/1980, :datetime]]
+    #   query_fields = {:first_name => :string, :created_at => :datetime}
+    #
     # Exceptons : 
     #   1) If urlParams does not contain a :controller key.      
     def build(search_conditions, query_fields) 
@@ -42,7 +43,7 @@ module ScopedSearch
       search_conditions.each_with_index do |search_condition, index|
         keyword_name = "keyword_#{index}".to_sym
         conditions << case search_condition.last
-                        #when :integer: integer_conditions(keyword_name, search_condition.first)
+                        # when :integer: integer_conditions(keyword_name, search_condition.first)
           
                         when :like: like_condition(keyword_name, search_condition.first)
                         when :not: not_like_condition(keyword_name, search_condition.first)

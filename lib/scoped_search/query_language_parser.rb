@@ -1,17 +1,27 @@
 module ScopedSearch
   
+  # Used to parse and build the conditions tree for the search.
   class QueryLanguageParser
     
+    # Parses the query string by calling the parse_query method on a new instances of QueryLanguageParser.
+    #
+    # query:: The query string to parse.  If nil the all values will be returned (default is nil)
+    def self.parse(query)
+      self.new.parse_query(query)
+    end    
+    
+    # Parse the query string.
+    #
+    # query:: The query string to parse.  If nil the all values will be returned (default is nil)
     def parse_query(query = nil)
       return build_conditions_tree(tokenize(query))
     end
     
-    def self.parse(query)
-      self.new.parse_query(query)
-    end
-    
     protected
   
+    # Build the conditions tree based on the tokens found.
+    #
+    # tokens:: An array of tokens.
     def build_conditions_tree(tokens)
       conditions_tree = []
     
@@ -57,6 +67,7 @@ module ScopedSearch
       return conditions_tree
     end
     
+    # Tokenize the query based on the different RegTokens.
     def tokenize(query)
       pattern = [RegTokens::BetweenDateFormatMMDDYYYY,
                  RegTokens::BetweenDateFormatYYYYMMDD,
