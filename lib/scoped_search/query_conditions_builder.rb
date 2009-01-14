@@ -32,17 +32,19 @@ module ScopedSearch
     #   query_fields = {:first_name => :string, :created_at => :datetime}
     #
     # Exceptons : 
-    #   1) If urlParams does not contain a :controller key.      
+    #   1) If search_conditions is not an array
+    #   2) If query_fields is not a Hash    
     def build(search_conditions, query_fields) 
       raise 'search_conditions must be a hash' unless search_conditions.class.to_s == 'Array'
       raise 'query_fields must be a hash' unless query_fields.class.to_s == 'Hash'
       @query_fields = query_fields
 
       conditions = []
-      
+ 
       search_conditions.each_with_index do |search_condition, index|
         keyword_name = "keyword_#{index}".to_sym
         conditions << case search_condition.last
+                        # Still thinking about this one
                         # when :integer: integer_conditions(keyword_name, search_condition.first)
           
                         when :like: like_condition(keyword_name, search_condition.first)
@@ -67,6 +69,7 @@ module ScopedSearch
     private 
     
     # def integer_condition(keyword_name, value)
+      # Still thinking about this one
     # end    
     
     def like_condition(keyword_name, value)
@@ -126,20 +129,25 @@ module ScopedSearch
         end
       rescue
         # do not search on any date columns since the date is invalid
+        retVal = [] # Reset just in case
       end
       
       # Search the text fields for the date as well as it could be in text.
       # Also still search on the text columns for an invalid date as it could
       # have a different meaning.
-      keyword_name_b = "#{keyword_name}b".to_sym
-      @query_params[keyword_name_b] = "%#{value}%"
+      found_text_fields_to_search = false
+      keyword_name_b = "#{keyword_name}b".to_sym      
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :string or field_type == :text
+          found_text_fields_to_search = true
           retVal << "#{field} #{@sql_like} :#{keyword_name_b.to_s}"
         end
       end
+      if found_text_fields_to_search
+        @query_params[keyword_name_b] = "%#{value}%"
+      end
 
-      "(#{retVal.join(' OR ')})"      
+      retVal.empty? ? '' : "(#{retVal.join(' OR ')})"      
     end
     
     def greater_than_date(keyword_name, value)

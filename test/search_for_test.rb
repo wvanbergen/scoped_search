@@ -153,6 +153,13 @@ class ScopedSearchTest < Test::Unit::TestCase
     assert_equal 1, User.search_for('Store').count
     assert_equal 1, User.search_for('John Office').count
   end  
+  
+  def test_search_with_very_long_query
+    User.searchable_on :first_name, :last_name, :address_street, :address_city, :address_state, :address_postal_code
+    really_long_string = ''
+    10000.times {really_long_string << 'really long string'}
+    assert_equal 0, User.search_for(really_long_string).count
+  end
 
 end
 

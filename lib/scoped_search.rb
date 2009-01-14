@@ -22,9 +22,7 @@ module ScopedSearch
             fields = fields.first[:only]
           elsif fields.first.has_key?(:except)
             # Get all the fields and remove any that are in the -except- list.
-            fields = self.column_names.collect { |column| 
-                       fields.first[:except].include?(column.to_sym) ? nil : column.to_sym 
-                     }.compact
+            fields = self.column_names.collect { |column| fields.first[:except].include?(column.to_sym) ? nil : column.to_sym }.compact
           end
         end
         

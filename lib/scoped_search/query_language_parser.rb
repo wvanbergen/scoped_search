@@ -6,6 +6,8 @@ module ScopedSearch
     # Parses the query string by calling the parse_query method on a new instances of QueryLanguageParser.
     #
     # query:: The query string to parse.  If nil the all values will be returned (default is nil)
+    #         If the query string is longer then 300 characters then it will be truncated to a 
+    #         length of 300.
     def self.parse(query)
       self.new.parse_query(query)
     end    
@@ -13,7 +15,11 @@ module ScopedSearch
     # Parse the query string.
     #
     # query:: The query string to parse.  If nil the all values will be returned (default is nil)
+    #         If the query string is longer then 300 characters then it will be truncated to a 
+    #         length of 300.
     def parse_query(query = nil)
+      # truncate query string at 300 characters
+      query = query[0...300] if query.length > 300
       return build_conditions_tree(tokenize(query))
     end
     

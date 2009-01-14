@@ -7,12 +7,30 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     ScopedSearch::QueryConditionsBuilder.build_query(search_conditions, query_fields)
   end
   
+  # ** Invalid search conditions **
+  def test_search_with_invalid_search_conditions
+    search_conditions = ''
+    query_fields = {'some_table.first_name' => :string}   
+    assert_raise(RuntimeError, 'search_conditions must be a hash') {
+      build_query(search_conditions, query_fields) 
+    }
+  end  
+  
+  def test_search_with_invalid_query_fields
+    search_conditions = [["Wes", :like]]
+    query_fields = ''    
+    assert_raise(RuntimeError, 'query_fields must be a hash') {
+      build_query(search_conditions, query_fields) 
+    }
+  end
+    
+  
   # ** Single query search tests **
   def test_like_search_condition
     search_conditions = [["Wes", :like]]
     query_fields = {'some_table.first_name' => :string}    
     conditions = build_query(search_conditions, query_fields) 
-    
+  
     assert_equal '(some_table.first_name LIKE :keyword_0)', conditions.first
     assert_equal '%Wes%', conditions.last[:keyword_0]
   end
@@ -36,14 +54,273 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     assert_equal '%Hays%', conditions.last[:keyword_0b]
   end
   
-  # def test_date_search_condition
-  #   search_conditions = [["09/27/1980", :as_of_date]]
-  #   query_fields = {'some_table.event_date' => :datetime}    
-  #   conditions = build_query(search_conditions, query_fields) 
-  #   regExs = build_regex_for_date(['event_date'], 'keyword_0')
-  #   assert_match /^#{regExs}$/, conditions.first
-  #   assert_equal '09/27/1980', conditions.last[:keyword_0a]
-  # end  
+  # ** less_than_date **
+  def test_less_than_date_search_condition_with_only_a_date_field_to_search 
+    search_conditions = [['< 09/27/1980', :less_than_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date < :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]
+  end  
+  
+  def test_less_than_date_search_condition_with_invalid_date 
+    search_conditions = [['< 2/30/1980', :less_than_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_less_than_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['< 09/27/1980', :less_than_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date < :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]  
+  end  
+  
+  def test_less_than_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['< 2/30/1980', :less_than_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?   
+  end  
+  
+  
+  # ** less_than_or_equal_to_date **
+  def test_less_than_or_equal_to_date_search_condition_with_only_a_date_field_to_search 
+    search_conditions = [['<= 09/27/1980', :less_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date <= :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_invalid_date 
+    search_conditions = [['<= 2/30/1980', :less_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['<= 09/27/1980', :less_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date <= :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]  
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['<= 2/30/1980', :less_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?   
+  end
+  
+  
+  # ** as_of_date **
+  def test_as_of_date_search_condition_with_only_a_date_field_to_search 
+    search_conditions = [['09/27/1980', :as_of_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+   
+    assert_equal '(some_table.event_date = :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]
+  end  
+  
+  def test_as_of_date_search_condition_with_invalid_date 
+    search_conditions = [['2/30/1980', :as_of_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_as_of_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['09/27/1980', :as_of_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date = :keyword_0 OR some_table.first_name LIKE :keyword_0b)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]
+    assert_equal '%09/27/1980%', conditions.last[:keyword_0b]    
+  end  
+  
+  def test_as_of_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['2/30/1980', :as_of_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.first_name LIKE :keyword_0b)', conditions.first
+    assert_equal '%2/30/1980%', conditions.last[:keyword_0b]    
+  end
+  
+  
+  # ** greater_than_date **
+  def test_less_than_or_equal_to_date_search_condition_with_only_a_date_field_to_search 
+    search_conditions = [['> 09/27/1980', :greater_than_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date > :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_invalid_date 
+    search_conditions = [['> 2/30/1980', :greater_than_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['> 09/27/1980', :greater_than_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date > :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]  
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['> 2/30/1980', :greater_than_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?   
+  end
+  
+  
+  # ** greater_than_or_equal_to_date **
+  def test_less_than_or_equal_to_date_search_condition_with_only_a_date_field_to_search 
+    search_conditions = [['>= 09/27/1980', :greater_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date >= :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_invalid_date 
+    search_conditions = [['>= 2/30/1980', :greater_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['>= 09/27/1980', :greater_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.event_date >= :keyword_0)', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0]  
+  end  
+  
+  def test_less_than_or_equal_to_date_search_condition_with_a_date_field_and_a_text_field
+    search_conditions = [['>= 2/30/1980', :greater_than_or_equal_to_date]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert conditions.first.empty?
+    assert conditions.last.empty?   
+  end    
+  
+  
+  
+  # ** between_dates **
+  def test_between_dates_search_condition_two_valid_dates 
+    search_conditions = [['09/27/1980 TO 10/15/1980', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert_equal '((some_table.event_date BETWEEN :keyword_0a AND :keyword_0b))', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0a]
+    assert_equal '1980-10-15', conditions.last[:keyword_0b]
+  end  
+  
+  def test_between_dates_search_condition_with_a_valid_date_first_and_an_invalid_date_second
+    search_conditions = [['09/27/1980 TO 2/30/1981', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_between_dates_search_condition_with_an_invalid_date_first_and_a_valid_date_second
+    search_conditions = [['02/30/1980 TO 09/27/1980', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_between_dates_search_condition_with_two_invalid_dates
+    search_conditions = [['02/30/1980 TO 02/30/1981', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  
+  def test_between_dates_search_condition_two_valid_dates_and_a_text_field
+    search_conditions = [['09/27/1980 TO 10/15/1980', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert_equal '((some_table.event_date BETWEEN :keyword_0a AND :keyword_0b))', conditions.first
+    assert_equal '1980-09-27', conditions.last[:keyword_0a]
+    assert_equal '1980-10-15', conditions.last[:keyword_0b]
+  end  
+  
+  def test_between_dates_search_condition_with_a_valid_date_first_and_an_invalid_date_second_and_a_text_field
+    search_conditions = [['09/27/1980 TO 2/30/1981', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_between_dates_search_condition_with_an_invalid_date_first_and_a_valid_date_second_and_a_text_field
+    search_conditions = [['02/30/1980 TO 09/27/1980', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
+  
+  def test_between_dates_search_condition_with_two_invalid_dates_and_a_text_field
+    search_conditions = [['02/30/1980 TO 02/30/1981', :between_dates]]
+    query_fields = {'some_table.event_date' => :datetime, 'some_table.first_name' => :string}    
+    conditions = build_query(search_conditions, query_fields) 
+
+    assert conditions.first.empty?
+    assert conditions.last.empty?
+  end  
   
     
   # ** Multi query search tests **
@@ -74,7 +351,6 @@ class QueryConditionsBuilderTest < Test::Unit::TestCase
     assert_equal '%Wes%', conditions.last[:keyword_0]
     assert_equal '%Hays%', conditions.last[:keyword_1]
   end  
-  
   
   
   # ** Helper methods **
