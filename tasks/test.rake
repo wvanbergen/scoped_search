@@ -30,17 +30,3 @@ begin
 rescue LoadError
   nil
 end
-
-
-
-# namespace :test do
-#   desc "Generate code coverage with rcov"
-#   task :coverage do
-#     rm_f "doc/coverage/coverage.data"
-#     rm_f "doc/coverage"
-#     mkdir "doc/coverage"
-#     rcov = %(rcov --rails --aggregate doc/coverage/coverage.data --text-summary -Ilib --html -o doc/coverage test/**/*_test.rb)
-#     system rcov
-#     system "open doc/coverage/index.html" if PLATFORM['darwin']
-#   end
-# end
