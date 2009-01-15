@@ -26,7 +26,7 @@ module Rake
         desc "Updates the file lists for this gem"
         task(:manifest) { manifest_task }
 
-        desc "Releases a new version of #{@name}"
+        desc "Builds a .gem package for #{@name}"
         task(:build) { build_task } 
         
         desc "Releases a new version of #{@name}"
