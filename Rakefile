@@ -4,7 +4,7 @@ require 'rake/rdoctask'
 Dir['tasks/*.rake'].each { |file| load(file) }
  
 desc 'Default: run unit tests.'
-task :default => :test
+task :default => [:test]
 
 ##############################################
 # Build RDocs
@@ -22,3 +22,4 @@ Rake::RDocTask.new do |rdoc|
                           'lib/')
 end
 ##############################################
+

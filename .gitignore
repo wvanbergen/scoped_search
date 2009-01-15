@@ -3,3 +3,4 @@
 scoped_search-*.gem
 doc/*
 coverage/*
+pkg
