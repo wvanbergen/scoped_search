@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'rubyforge'
 require 'rake'
 require 'rake/tasklib'
 require 'date'
@@ -24,22 +25,15 @@ module Rake
       namespace(:gem) do
         desc "Updates the file lists for this gem"
         task(:manifest) { manifest_task }
-        
-        desc "Builds a ruby gem for #{@name}"
-        task(:build => [:manifest]) { build_task }
-        
-        desc "Installs the ruby gem for #{@name} locally"
-        task(:install => [:build]) { install_task }
-        
-        desc "Uninstalls the ruby gem for #{@name} locally"
-        task(:uninstall) { uninstall_task }             
+
+        desc "Releases a new version of #{@name}"
+        task(:build) { build_task } 
         
         desc "Releases a new version of #{@name}"
         task(:release) { release_task } 
-      end
+        
+      end    
     end
-    
-
     
     protected 
 
@@ -135,7 +129,7 @@ module Rake
       spec = File.read(gemspec_file)
       spec.gsub! /^(\s* s.(test_)?files \s* = \s* )( \[ [^\]]* \] | %w\( [^)]* \) )/mx do
         assignment = $1
-        bunch = $2 ? list.grep(/^test.*_test\.rb$/) : list
+        bunch = $2 ? list.grep(/^(test.*_test\.rb|spec.*_spec.rb)$/) : list
         '%s%%w(%s)' % [assignment, bunch.join(' ')]
       end
 
@@ -145,15 +139,17 @@ module Rake
     
     def build_task
       sh "gem build #{gemspec_file}"
+      Dir.mkdir('pkg') unless File.exist?('pkg')
+      sh "mv #{name}-#{specification.version}.gem pkg/#{name}-#{specification.version}.gem" 
     end
     
     def install_task
-      raise "#{name} .gem file not found" unless File.exist?("#{name}-#{specification.version}.gem")
-      sh "gem install #{name}-#{specification.version}.gem"
+      raise "#{name} .gem file not found" unless File.exist?("pkg/#{name}-#{specification.version}.gem")
+      sh "gem install pkg/#{name}-#{specification.version}.gem"
     end
     
     def uninstall_task
-      raise "#{name} .gem file not found" unless File.exist?("#{name}-#{specification.version}.gem")
+      raise "#{name} .gem file not found" unless File.exist?("pkg/#{name}-#{specification.version}.gem")
       sh "gem uninstall #{name}"
     end    
     
