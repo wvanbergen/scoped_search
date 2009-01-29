@@ -1,12 +1,10 @@
-= scoped_search[http://github.com/wvanbergen/scoped_search/tree/master]
+= scoped_search
 
 This simple plugin will make it easy to search your ActiveRecord models. Searching is performed using a query string, which should be passed to the named_scope *search_for* that uses SQL %LIKE% conditions for searching (ILIKE for Postgres). You can specify what fields should be used for searching.
 
-
 == Installing
 
-	gem install wvanbergen-scoped_search
-
+	gem install wvanbergen-scoped_search -s http://gems.github.com
 
 == Usage
 
@@ -53,6 +51,13 @@ projects that are accessible by a given user.
 	# using chained named_scopes and will_paginate
 	Project.accessible_by(current_user).search_for(params[:q]).paginate(:page => params[:page], :include => :tasks)
 
+
+== Additional resources
+
+* Source code: http://github.com/wvanbergen/scoped_search
+* Project wiki: http://wiki.github.com/wvanbergen/scoped_search
+* RDoc documentation: http://wvanbergen.github.com/scoped_search
+* wvanbergen's blog posts: http://techblog.floorplanner.com/tag/scoped_search/
 
 == License
 

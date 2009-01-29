@@ -1,15 +1,6 @@
-TODO items for named_scope
-==========================
-Contact willem AT vanbergen DOT org if you want to help out
+= TODO items for scoped_search
 
-0.8.0
+Contact me at my GitHub account (http://github.com/wvanbergen) if you want to help out.
 
-
-0.9.0
-
-
-1.0.0
-- Extensive testing
-
-Documentation & testing:
-- Add rdoc en comments to code
+== Documentation & testing
+- Add rdoc and comments to code

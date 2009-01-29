@@ -1,12 +1,13 @@
-scoped_search 0.3.0
-===================
+= Changelog for scoped_search
+
+The following changes were incorporated in each scoped_search release.
+
+== scoped_search 0.3.0
 - Detection of column types so they can be handled properly
 - Date based queries supported on date and time fields
 
-scoped_search 0.2.0
-===================
+== scoped_search 0.2.0
 - OR keyword supported in query language
 
-scoped_search 0.1.0
-===================
+== scoped_search 0.1.0
 - Initial version
