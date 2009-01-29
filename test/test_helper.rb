@@ -5,9 +5,11 @@ require 'ruby-debug'
 
 require "#{File.dirname(__FILE__)}/../lib/scoped_search"
 
+ActiveRecord::Migration.verbose = false
 class InitialSchema < ActiveRecord::Migration
 
   def self.up
+    
     create_table :search_test_models do |t|
       t.string :string_field
       t.text :text_field
