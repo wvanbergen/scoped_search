@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/test_helper'
+require File.dirname(__FILE__) + '/../test_helper'
 
-class QueryLanguageTest < Test::Unit::TestCase
+class ScopedSearch::Test::QueryLanguage < Test::Unit::TestCase
 
   # change this function if you switch to another query language parser
   def parse_query(query)

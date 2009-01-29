@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/test_helper'
+require File.dirname(__FILE__) + '/../test_helper'
 
-class QueryConditionsBuilderTest < Test::Unit::TestCase
+class ScopedSearch::Test::QueryConditionsBuilder < Test::Unit::TestCase
 
   # change this function if you switch to another query language parser
   def build_query(search_conditions, query_fields)    
