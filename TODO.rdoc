@@ -1,6 +1,0 @@
-= TODO items for scoped_search
-
-Contact me at my GitHub account (http://github.com/wvanbergen) if you want to help out.
-
-== Documentation & testing
-- Add rdoc and comments to code
