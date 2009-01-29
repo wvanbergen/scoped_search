@@ -8,7 +8,11 @@ Gem::Specification.new do |s|
   
   s.authors  = ['Willem van Bergen', 'Wes Hays']
   s.email    = ['willem@vanbergen.org', 'weshays@gbdev.com']
-  s.homepage = 'http://github.com/wvanbergen/scoped_search/wikis'
+  s.homepage = 'http://wiki.github.com/wvanbergen/scoped_search'
+  
+  s.has_rdoc = true
+  s.rdoc_options << '--title' << s.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
+  s.extra_rdoc_files = ['README.rdoc', 'CHANGELOG.rdoc', 'TODO.rdoc']
   
   s.files = %w(CHANGELOG LICENSE README README.textile Rakefile TODO coverage init.rb lib lib/scoped_search lib/scoped_search.rb lib/scoped_search/query_conditions_builder.rb lib/scoped_search/query_language_parser.rb lib/scoped_search/reg_tokens.rb tasks tasks/github-gem.rake tasks/test.rake test test/query_conditions_builder_test.rb test/query_language_test.rb test/search_for_test.rb test/test_helper.rb)
   s.test_files = %w(test/query_conditions_builder_test.rb test/query_language_test.rb test/search_for_test.rb)
