@@ -4,9 +4,9 @@ namespace :test do
   
   databases = YAML.load(File.read(File.dirname(__FILE__) + '/../test/database.yml'))  
   
-  desc "Run tests for all configured databases in test/database.yml"
+  desc "Run testsuite on all configured databases in test/database.yml"
   task(:all => databases.keys.map { |db| db.to_sym }) do
-    puts "\nFinished testing for all configured databases!"
+    puts "\nFinished testing on all configured databases!"
     puts "(Configure databases by adjusting test/database.yml)"
   end
   
