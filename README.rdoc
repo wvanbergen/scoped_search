@@ -1,10 +1,25 @@
 = scoped_search
 
-This simple plugin will make it easy to search your ActiveRecord models. Searching is performed using a query string, which should be passed to the named_scope *search_for* that uses SQL %LIKE% conditions for searching (ILIKE for Postgres). You can specify what fields should be used for searching.
+The <b>scoped_search</b> Rails plugin makes it easy to search your ActiveRecord models. Searching is 
+performed using a query string, which should be passed to the named_scope *search_for* that uses SQL 
+<tt>LIKE %keyword%</tt> conditions for searching (ILIKE for Postgres). You can specify what fields 
+should be used for searching.
 
 == Installing
 
-	gem install wvanbergen-scoped_search -s http://gems.github.com
+The recommended method to enable scoped_search in your project is adding the scoped_search gem to your environment. Add the following code to your Rails configuration in <tt>config/environment.rb</tt>:
+
+  Rails::Initializer.run do |config|
+    ...
+    config.gem 'wvanbergen-scoped_search', :lib => 'scoped_search', 
+                   source => 'http://gems.github.com/'
+  end
+
+Run <tt>sudo rake gems:install</tt> to install the gem.
+
+Another alternative is to install scoped_search as a Rails plugin:
+
+  script/plugin install git://github.com/wvanbergen/scoped_search.git
 
 == Usage
 
@@ -29,16 +44,15 @@ You can also search on associate models.  This works with <b>belongs_to</b>, <b>
     searchable_on :first_name, :last_name, :notes_title, :notes_content
   end
 
-
 The search query language is simple. It supports these constructs:
-* <b>words:</b> some search keywords
-* <b>phrases:</b> "a single search phrase"
-* <b>negation:</b> "look for this" -"but do not look for this phrase and this" -word
-* <b>OR words/phrases:</b> word/phrase OR word/phrase.  Example: "Hello World" OR "Hello Moon"
+* <b>words:</b> <tt>some search keywords</tt>
+* <b>phrases:</b> <tt>"a single search phrase"</tt>
+* <b>negation:</b> <tt>"look for this" -"but do not look for this phrase and this" -word</tt>
+* <b>OR words/phrases:</b> word/phrase OR word/phrase.  Example: <tt>"Hello World" OR "Hello Moon"</tt>
 * <b>dates:</b> mm/dd/yyyy, dd/mm/yyyy, yyyy/mm/dd, yyyy-mm-dd
-* <b>date ranges:</b> > date, >= date, < date, <= date, date TO date.  Examples: > mm/dd/yyyy, < yyyy-mm-dd
+* <b>date ranges:</b> > date, >= date, < date, <= date, date TO date.  Examples: <tt>> 30/05/1983</tt>, <tt>< 2009-01-30</tt>
 
-This functionality is build on named_scope. The searchable_on statement creates 
+This functionality is build on <tt>named_scope</tt>. The searchable_on statement creates 
 a named_scope *search_for*. Because of this, you can actually chain the call with
 other scopes. For example, this can be very useful if you only want to search in 
 projects that are accessible by a given user.
