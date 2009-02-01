@@ -3,9 +3,8 @@ module ScopedSearch
   module ClassMethods
     
     def self.extended(base) # :nodoc:
-      require 'scoped_search/reg_tokens'
-      require 'scoped_search/query_language_parser'
-      require 'scoped_search/query_conditions_builder'
+      require 'scoped_search/query_language'
+      require 'scoped_search/query_builder'
     end
   
     # Creates a named scope in the class it was called upon.
@@ -93,8 +92,8 @@ module ScopedSearch
           end
         end
         
-        search_conditions = QueryLanguageParser.parse(search_string) 
-        conditions = QueryConditionsBuilder.build_query(search_conditions, query_fields) 
+        ast = ScopedSearch::QueryLanguage::Compiler.parse(search_string) 
+        conditions = ScopedSearch::QueryBuilder.new(ast, query_fields).build_query
  
         retVal = {:conditions => conditions}
         retVal[:include] = assoc_models_to_include unless assoc_models_to_include.empty?

@@ -32,18 +32,26 @@ module ScopedSearch::QueryLanguage::Parser
     expressions = []
     expressions << parse_expression until peek_token.nil? || peek_token == :rparen
     next_token if peek_token == :rparen # skip :rparen
-    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions)
+    return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions)
   end
 
   def parse_infix_operator
     first_operand = @previous_expression
     operator = next_token
     second_operand = parse_expression(LOGICAL_INFIX_OPERATORS.include?(operator))
-    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(operator, [first_operand, second_operand])
+    if LOGICAL_INFIX_OPERATORS.include?(operator)
+      return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(operator, [first_operand, second_operand])
+    else
+      return ScopedSearch::QueryLanguage::AST::OperatorNode.new(operator, [first_operand, second_operand])
+    end
   end
 
   def parse_prefix_operator
-    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(current_token, [parse_expression])
+    if LOGICAL_INFIX_OPERATORS.include?(current_token)
+      return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(current_token, [parse_expression])
+    else
+      return ScopedSearch::QueryLanguage::AST::OperatorNode.new(current_token, [parse_expression])
+    end
   end
 
   def parse_expression(expand_rhs = true)
