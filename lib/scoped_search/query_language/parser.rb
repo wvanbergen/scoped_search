@@ -27,12 +27,6 @@ module ScopedSearch::QueryLanguage::Parser
     @current_token = @tokens[@current_token_pos]
   end
 
-  def parse_infix_operator
-    first_operand = @previous_expression
-    operator = next_token
-    second_operand = parse_expression
-    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(operator, [first_operand, second_operand])
-  end
 
   def parse_expression_sequence
     expressions = []
@@ -41,11 +35,18 @@ module ScopedSearch::QueryLanguage::Parser
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions)
   end
 
+  def parse_infix_operator
+    first_operand = @previous_expression
+    operator = next_token
+    second_operand = parse_expression(LOGICAL_INFIX_OPERATORS.include?(operator))
+    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(operator, [first_operand, second_operand])
+  end
+
   def parse_prefix_operator
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(current_token, [parse_expression])
   end
 
-  def parse_expression
+  def parse_expression(expand_rhs = true)
   
     @previous_expression = case next_token
       when nil;       nil
@@ -60,11 +61,11 @@ module ScopedSearch::QueryLanguage::Parser
     end
     
     if peek_token == :comma
-      next_token # skip comma
+      next_token # skip comma      
     elsif ScopedSearch::QueryLanguage::AST::LeafNode === @previous_expression
-      @previous_expression = parse_infix_operator if ALL_INFIX_OPERATORS.include?(peek_token)
+      @previous_expression = parse_infix_operator if expand_rhs && ALL_INFIX_OPERATORS.include?(peek_token)
     else
-      @previous_expression = parse_infix_operator if LOGICAL_INFIX_OPERATORS.include?(peek_token)
+      @previous_expression = parse_infix_operator if expand_rhs && LOGICAL_INFIX_OPERATORS.include?(peek_token)
     end
     
     return @previous_expression

@@ -75,4 +75,14 @@ class ScopedSearch::Test::Parser < Test::Unit::TestCase
     ast = ScopedSearch::QueryLanguage::Compiler.parse('(a = b) >c')
     assert_equal [:and, [:eq, 'a', 'b'], [:gt, 'c']], ast.to_a    
   end  
+  
+  def test_infix_and_prefix_operator_with_comma
+    ast = ScopedSearch::QueryLanguage::Compiler.parse('a = b, > c')
+    assert_equal [:and, [:eq, 'a', 'b'], [:gt, 'c']], ast.to_a    
+  end 
+
+  def test_infix_and_prefix_operator_without_comma
+    ast = ScopedSearch::QueryLanguage::Compiler.parse('a = b > c')
+    assert_equal [:and, [:eq, 'a', 'b'], [:gt, 'c']], ast.to_a    
+  end
 end
