@@ -9,6 +9,7 @@ class ScopedSearch::Test::DatabaseSchema < ActiveRecord::Migration
       t.text :text_field
       t.string :ignored_field
       t.date :date_field
+      t.integer :int_field
       t.timestamps
     end
     

@@ -34,6 +34,16 @@ class ScopedSearch::Test::SearchFor < Test::Unit::TestCase
     assert_equal 2, Foo.search_for('Cows OR "Frog Toys"').count   
   end
   
+  def test_search_particular_field
+    Foo.searchable_on :string_field # whatever
+    
+    assert_equal 1, Foo.search_for('string_field = Bob').count 
+    assert_equal 1, Foo.search_for('string_field = bob').count
+    assert_equal 1, Foo.search_for('NOT string_field != bob').count
+    assert_equal 9, Foo.search_for('int_field < 10').count    
+    assert_equal 5, Foo.search_for('int_field >= 1, int_field <= 5').count    
+  end  
+  
   def test_date_search
     Foo.searchable_on :string_field, :text_field, :date_field
     
@@ -113,7 +123,6 @@ class ScopedSearch::Test::SearchFor < Test::Unit::TestCase
     assert_equal 1, User.search_for('Store').count
     assert_equal 1, User.search_for('John Office').count
   end  
-
 
   # def test_search_with_very_long_query
   #   User.searchable_on :first_name, :last_name, :address_street, :address_city, :address_state, :address_postal_code

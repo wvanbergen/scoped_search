@@ -14,6 +14,5 @@ class ScopedSearch::Test::QueryBuilder < Test::Unit::TestCase
      ast = ScopedSearch::QueryLanguage::Compiler.parse('(some simple) OR keywords')
      p sql = ScopedSearch::QueryBuilder.new(ast, [:name, :description]).build_query
   end
-
   
 end
