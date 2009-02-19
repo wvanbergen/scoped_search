@@ -35,10 +35,11 @@ class ScopedSearch::Test::API < Test::Unit::TestCase
   def test_search_except_fields
     Foo.searchable_on :except => [:id, :ignored_field, :created_at, :updated_at]
     assert Foo.respond_to?(:search_for)
-    assert_equal Foo.scoped_search_fields.size, 3
+    assert_equal Foo.scoped_search_fields.size, 4
     assert Foo.scoped_search_fields.include?(:string_field)
     assert Foo.scoped_search_fields.include?(:text_field)
     assert Foo.scoped_search_fields.include?(:date_field)
+    assert Foo.scoped_search_fields.include?(:int_field)    
   end  
   
   def test_search_with_only_and_except
