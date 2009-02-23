@@ -44,9 +44,7 @@ module ScopedSearch
       search_conditions.each_with_index do |search_condition, index|
         keyword_name = "keyword_#{index}".to_sym
         conditions << case search_condition.last
-                        # Still thinking about this one
-                        # when :integer: integer_conditions(keyword_name, search_condition.first)
-          
+                        # :like also handles integers
                         when :like: like_condition(keyword_name, search_condition.first)
                         when :not: not_like_condition(keyword_name, search_condition.first)
             
@@ -68,16 +66,17 @@ module ScopedSearch
     
     private 
     
-    # def integer_condition(keyword_name, value)
-      # Still thinking about this one
-    # end    
-    
-    def like_condition(keyword_name, value)
-      @query_params[keyword_name] = "%#{value}%"
+    def like_condition(keyword_name, value)      
       retVal = []
       @query_fields.each do |field, field_type|  #|key,value| 
         if field_type == :string or field_type == :text
+          @query_params[keyword_name] = "%#{value}%"
           retVal << "#{field} #{@sql_like} :#{keyword_name.to_s}"
+        end
+        if value.strip =~ /^[0-9]+$/ and (field_type == :int or field_type == :integer)
+          qkey = "#{keyword_name}_#{value.strip}"
+          @query_params[qkey.to_sym] = value.strip.to_i
+          retVal << "#{field} = :#{qkey}"
         end
       end
       "(#{retVal.join(' OR ')})"
@@ -101,10 +100,22 @@ module ScopedSearch
       keyword_name_b = "#{keyword_name.to_s}b".to_sym
       @query_params[keyword_name_a] = "%#{word1}%"
       @query_params[keyword_name_b] = "%#{word2}%"      
-      @query_fields.each do |field, field_type|  #|key,value| 
+      @query_fields.each do |field, field_type|  #|key,value|       
         if field_type == :string or field_type == :text
           retVal << "(#{field} #{@sql_like} :#{keyword_name_a.to_s} OR #{field} #{@sql_like} :#{keyword_name_b.to_s})"
         end
+        if (word1.strip =~ /^[0-9]+$/ and word2.strip =~ /^[0-9]+$/) and (field_type == :int or field_type == :integer)
+          qkeya = "#{keyword_name}_a_#{word1.strip}"
+          qkeyb = "#{keyword_name}_b_#{word2.strip}"
+          @query_params[qkeya] = word1.strip.to_i
+          @query_params[qkeyb] = word2.strip.to_i
+          retVal << "(#{field} = :#{qkeya} OR #{field} = :#{qkeyb})"   
+        elsif (word1.strip =~ /^[0-9]+$/ or word2.strip =~ /^[0-9]+$/) and (field_type == :int or field_type == :integer)
+          num_word = word1.strip =~ /^[0-9]+$/ ? word1.strip.to_i : word2.strip.to_i
+          qkey = "#{keyword_name}_#{num_word}"
+          @query_params[qkey.to_sym] = num_word
+          retVal << "(#{field} = :#{qkey})"
+        end             
       end 
       "(#{retVal.join(' OR ')})"     
     end

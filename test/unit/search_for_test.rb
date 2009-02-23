@@ -17,7 +17,7 @@ class ScopedSearch::Test::SearchFor < Test::Unit::TestCase
   end
   
   def test_search
-    Foo.searchable_on :string_field, :text_field, :date_field
+    Foo.searchable_on :string_field, :text_field, :date_field, :some_int_field
   
     assert_equal Foo.count, Foo.search_for('').count
     assert_equal 0, Foo.search_for('456').count   
@@ -32,6 +32,7 @@ class ScopedSearch::Test::SearchFor < Test::Unit::TestCase
     assert_equal 3, Foo.search_for('"Happy cow" OR "Sad Frog"').count
     assert_equal 3, Foo.search_for('"Man made" OR Dogs').count
     assert_equal 2, Foo.search_for('Cows OR "Frog Toys"').count   
+    assert_equal 1, Foo.search_for('700').count
   
     # ** DATES **   
     #
@@ -83,12 +84,13 @@ class ScopedSearch::Test::SearchFor < Test::Unit::TestCase
   end  
   
   def test_search_has_many_through_association
-    User.searchable_on :first_name, :last_name, :clients_first_name, :clients_last_name
+    User.searchable_on :first_name, :last_name, :age, :clients_first_name, :clients_last_name
       
     assert_equal User.count, User.search_for('').count        
     assert_equal 2, User.search_for('Smith').count     
     assert_equal 1, User.search_for('Sam').count
     assert_equal 1, User.search_for('Johnson').count
+    assert_equal 1, User.search_for('28').count
   end  
   
   def test_search_has_one_association

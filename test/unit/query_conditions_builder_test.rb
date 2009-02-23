@@ -35,6 +35,15 @@ class ScopedSearch::Test::QueryConditionsBuilder < Test::Unit::TestCase
     assert_equal '%Wes%', conditions.last[:keyword_0]
   end
   
+  def test_like_search_condition_with_integer
+    search_conditions = [["26", :like]]
+    query_fields = {'some_table.age' => :integer}    
+    conditions = build_query(search_conditions, query_fields) 
+  
+    assert_equal '(some_table.age = :keyword_0_26)', conditions.first
+    assert_equal 26, conditions.last[:keyword_0_26]
+  end  
+  
   def test_not_like_search_condition
     search_conditions = [["Wes", :not]]
     query_fields = {'some_table.first_name' => :string}    
@@ -53,6 +62,16 @@ class ScopedSearch::Test::QueryConditionsBuilder < Test::Unit::TestCase
     assert_equal '%Wes%', conditions.last[:keyword_0a]
     assert_equal '%Hays%', conditions.last[:keyword_0b]
   end
+  
+  def test_or_search_condition_with_integer
+    search_conditions = [["Wes OR 26", :or]]
+    query_fields = {'some_table.first_name' => :string, 'some_table.age' => :integer}    
+    conditions = build_query(search_conditions, query_fields) 
+    regExs = build_regex_for_or(['first_name', 'age'], 'keyword_0')
+    assert_match /^#{regExs}$/, conditions.first
+    assert_equal '%Wes%', conditions.last[:keyword_0a]
+    assert_equal 26, conditions.last[:keyword_0_26]       
+  end  
   
   # ** less_than_date **
   def test_less_than_date_search_condition_with_only_a_date_field_to_search 
@@ -374,11 +393,12 @@ class ScopedSearch::Test::QueryConditionsBuilder < Test::Unit::TestCase
   def build_regex_for_or(fields,keyword)
     orFields = fields.join('|')
     regParts = fields.collect { |field| 
-                 "[\(]some_table.(#{orFields}) LIKE :#{keyword}a OR some_table.(#{orFields}) LIKE :#{keyword}b[\)]" 
+                 "([(](some_table.(first_name|age) (LIKE|=) :keyword_0[a-zA-Z0-9_]+ OR )?some_table.(first_name|age) (LIKE|=) :keyword_0[a-zA-Z0-9_]+)[)]" 
                }.join('[ ]OR[ ]')
     
     "[\(]#{regParts}[\)]"
   end  
+  
   
   def build_regex_for_date(fields,keyword)
     orFields = fields.join('|')

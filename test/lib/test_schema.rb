@@ -8,12 +8,14 @@ class ScopedSearch::Test::DatabaseSchema < ActiveRecord::Migration
       t.string :string_field
       t.text :text_field
       t.string :ignored_field
+      t.integer :some_int_field
       t.date :date_field
       t.timestamps
     end
     
     create_table :users do |t|
       t.string :first_name, :last_name, :login
+      t.integer :age
       t.integer :group_id
       t.integer :address_id
     end   

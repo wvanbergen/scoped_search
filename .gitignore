@@ -1,5 +1,5 @@
 .DS_Store
-scoped_search-*.gem
+*scoped_search-*.gem
 /tmp
 /doc
 /pkg

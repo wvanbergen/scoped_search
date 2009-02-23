@@ -30,12 +30,13 @@ class ScopedSearch::Test::QueryLanguage < Test::Unit::TestCase
     assert_equal 2, parsed.length
     assert_equal 'willem', parsed.last.first
     
-    parsed = parse_query("  hallo  willem   van\tbergen ")
-    assert_equal 4, parsed.length    
+    parsed = parse_query("  hallo  willem   van\tbergen 25")
+    assert_equal 5, parsed.length    
     assert_equal 'hallo',  parsed[0].first
     assert_equal 'willem', parsed[1].first
     assert_equal 'van',    parsed[2].first
     assert_equal 'bergen', parsed[3].first      
+    assert_equal '25',     parsed[4].first
   end
   
   def test_quoted_keywords
@@ -56,6 +57,10 @@ class ScopedSearch::Test::QueryLanguage < Test::Unit::TestCase
     assert_equal 2, parsed.length
     assert_equal 'hallo wi', parsed[0].first
     assert_equal 'llem',       parsed[1].first
+    
+    parsed = parse_query('"hays 25"')
+    assert_equal 1, parsed.length
+    assert_equal 'hays 25', parsed[0].first  
   end
   
   def test_quote_escaping

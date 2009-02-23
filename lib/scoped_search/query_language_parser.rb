@@ -69,7 +69,7 @@ module ScopedSearch
             end
         end
       end
-      
+
       return conditions_tree
     end
     
