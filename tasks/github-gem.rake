@@ -232,10 +232,10 @@ module Rake
     
     def create_version_tag!
       # commit the gemspec file
-      git_commit_file(gemspec_file, "Updated #{gemspec_file} for release of version #{@specification.version}") if git_modified?(gemspec_file)
+      git_commit_file(gemspec_file, "Released #{@name} version #{@specification.version}") if git_modified?(gemspec_file)
 
       # create tag and push changes
-      git_create_tag("#{@name}-#{@specification.version}", "Tagged version #{@specification.version}")
+      git_create_tag("#{@name}-#{@specification.version}", "Tagged #{@name} version #{@specification.version}")
       git_push('origin', 'master', [:tags])     
     end
     
