@@ -45,18 +45,18 @@ module ScopedSearch
         keyword_name = "keyword_#{index}".to_sym
         conditions << case search_condition.last
                         # :like also handles integers
-                        when :like: like_condition(keyword_name, search_condition.first)
-                        when :not: not_like_condition(keyword_name, search_condition.first)
+                        when :like then like_condition(keyword_name, search_condition.first)
+                        when :not then not_like_condition(keyword_name, search_condition.first)
             
-                        when :or: or_condition(keyword_name, search_condition.first)
+                        when :or then or_condition(keyword_name, search_condition.first)
       
-                        when :less_than_date: less_than_date(keyword_name, search_condition.first)      
-                        when :less_than_or_equal_to_date: less_than_or_equal_to_date(keyword_name, search_condition.first)   
-                        when :as_of_date: as_of_date(keyword_name, search_condition.first)      
-                        when :greater_than_date: greater_than_date(keyword_name, search_condition.first) 
-                        when :greater_than_or_equal_to_date: greater_than_or_equal_to_date(keyword_name, search_condition.first)   
+                        when :less_than_date then less_than_date(keyword_name, search_condition.first)      
+                        when :less_than_or_equal_to_date then less_than_or_equal_to_date(keyword_name, search_condition.first)   
+                        when :as_of_date then as_of_date(keyword_name, search_condition.first)      
+                        when :greater_than_date then greater_than_date(keyword_name, search_condition.first) 
+                        when :greater_than_or_equal_to_date then greater_than_or_equal_to_date(keyword_name, search_condition.first)   
                         
-                        when :between_dates: between_dates(keyword_name, search_condition.first)                                                        
+                        when :between_dates then between_dates(keyword_name, search_condition.first)                                                        
                       end          
       end
 
