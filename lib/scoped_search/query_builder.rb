@@ -56,8 +56,8 @@ module ScopedSearch
             sql_operator = to_sql_operator(klass.columns_hash[field.to_s])
             field_name = klass.connection.quote_table_name(klass.table_name) + "." + klass.connection.quote_column_name(field)
 
-            puts "(#{field_name} #{sql_operator} ?)"
-            puts children.last.value
+            # puts "(#{field_name} #{sql_operator} ?)"
+            # puts children.last.value
             
             yield(children.last.value)
             "(#{field_name} #{sql_operator} ?)"
