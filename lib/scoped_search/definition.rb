@@ -4,7 +4,7 @@ module ScopedSearch
     
     class Field
       
-      attr_reader :definition, :field, :only_explicit, :relation
+      attr_reader :definition, :field, :only_explicit #, :relation
       
       def column
         definition.klass.columns_hash[field.to_s]
@@ -15,7 +15,11 @@ module ScopedSearch
       end
       
       def numerical?
-        
+        [:integer, :double, :float, :decimal].include? column.type
+      end
+      
+      def textual?
+        [:string, :text].include? column.type
       end
       
       def default_operator
@@ -34,8 +38,8 @@ module ScopedSearch
         @field      = field.to_sym
 
         # Parse options hash
-        @only_explicit       = !!options[:only_explicit]
-        # TODO: options[:default_operator]
+        @only_explicit    = !!options[:only_explicit]
+        @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         
         # Store this field is the field array
         definition.fields[@field] = self
