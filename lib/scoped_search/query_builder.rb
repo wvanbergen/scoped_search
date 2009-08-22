@@ -2,28 +2,28 @@ module ScopedSearch
 
   class QueryBuilder
     
-    attr_reader :ast, :klass
+    attr_reader :ast, :definition
     
     # Creates a find parameter hash given a class, and query string.
-    def self.build_query(klass, query) 
+    def self.build_query(definition, query) 
       # Return all record when an empty search string is given
       if !query.kind_of?(String) || query.strip.blank?
         return { :conditions => nil }
       else
-        builder = self.new(klass, ScopedSearch::QueryLanguage::Compiler.parse(query))
+        builder = self.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query))
         return builder.build_find_params
       end
     end
 
-    # Initializes the klass by setting the relevant parameters
-    def initialize(klass, ast)
-      @klass, @ast = klass, ast
+    # Initializes the instance by setting the relevant parameters
+    def initialize(definition, ast)
+      @definition, @ast = definition, ast
     end
     
     # Actually builds the find parameters
     def build_find_params
       parameters = []
-      sql = @ast.to_sql(klass) { |parameter| parameters << parameter }
+      sql = @ast.to_sql(definition) { |parameter| parameters << parameter }
       return { :conditions => [sql] + parameters }
     end
     
@@ -55,9 +55,9 @@ module ScopedSearch
       
       # Defines the to_sql method for AST LeadNodes
       module LeafNode
-        def to_sql(klass, &block)
+        def to_sql(definition, &block)
           # Search keywords found without context, just search on all the default fields
-          fragments = klass.scoped_search.default_fields_for(value).map do |field|
+          fragments = definition.default_fields_for(value).map do |field|
             ScopedSearch::QueryBuilder.sql_test(field, field.default_operator, value, &block)
           end
           "(#{fragments.join(' OR ')})"
@@ -71,38 +71,38 @@ module ScopedSearch
           ScopedSearch::QueryBuilder.sql_operator(operator)
         end
         
-        def to_not_sql(klass, &block)
+        def to_not_sql(definition, &block)
           child = children.first
-          "(NOT(#{child.to_sql(klass, &block)}) OR #{child.to_sql(klass, &block)} IS NULL)"
+          "(NOT(#{child.to_sql(definition, &block)}) OR #{child.to_sql(definition, &block)} IS NULL)"
         end
         
-        def to_default_fields_sql(klass, &block)
+        def to_default_fields_sql(definition, &block)
           raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
           
           # Search keywords found without context, just search on all the default fields
-          fragments = klass.scoped_search.default_fields_for(children.last.value, operator).map do |field|
+          fragments = definition.default_fields_for(children.last.value, operator).map do |field|
             ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
           end
           "(#{fragments.join(' OR ')})"
         end
         
-        def to_single_field_sql(klass, &block)
+        def to_single_field_sql(definition, &block)
           raise "Field name not a leaf node" unless children.first.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
           raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
           
           # Search only on the given field.
-          field = klass.scoped_search.fields[children.first.value.to_sym]
+          field = definition.fields[children.first.value.to_sym]
           raise "Field not recognized for searching!" unless field
           ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
         end
         
-        def to_sql(klass, &block)
+        def to_sql(definition, &block)
           if operator == :not && children.length == 1
-            to_not_sql(klass, &block)
+            to_not_sql(definition, &block)
           elsif children.length == 1
-            to_default_fields_sql(klass, &block)            
+            to_default_fields_sql(definition, &block)            
           elsif children.length == 2
-            to_single_field_sql(klass, &block)
+            to_single_field_sql(definition, &block)
           else
             raise "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
           end
@@ -111,8 +111,8 @@ module ScopedSearch
       
       # Defines the to_sql method for AST AND/OR operators
       module LogicalOperatorNode
-        def to_sql(klass, &block)
-          fragments = children.map { |c| c.to_sql(klass, &block) }
+        def to_sql(definition, &block)
+          fragments = children.map { |c| c.to_sql(definition, &block) }
           "(#{fragments.join(" #{operator.to_s.upcase} ")})"
         end 
       end      

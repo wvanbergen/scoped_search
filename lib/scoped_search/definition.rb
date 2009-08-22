@@ -63,7 +63,7 @@ module ScopedSearch
       @fields        = {}
       @unique_fields = []
       
-      register_named_scope!
+      register_named_scope! unless klass.respond_to?(:search_for)
     end
     
     NUMBER_REGXP    = /^\-?\d+(\.\d+)?$/
@@ -92,7 +92,7 @@ module ScopedSearch
     
     # Registers the search_for named scope within the class
     def register_named_scope! # :nodoc
-      @klass.named_scope(:search_for, lambda { |query| ScopedSearch::QueryBuilder.build_query(@klass, query) })
+      @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
     end    
     
   end
