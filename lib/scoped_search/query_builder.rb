@@ -43,6 +43,8 @@ module ScopedSearch
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield("%#{value}%")
+      elsif field.temporal? && value =~ ScopedSearch::Definition::DATELIKE_REGEXP
+        yield(DateTime.parse(value))
       else
         yield(value)
       end
@@ -55,7 +57,7 @@ module ScopedSearch
       module LeafNode
         def to_sql(klass, &block)
           # Search keywords found without context, just search on all the default fields
-          fragments = klass.scoped_search.default_fields.map do |field|
+          fragments = klass.scoped_search.default_fields_for(value).map do |field|
             ScopedSearch::QueryBuilder.sql_test(field, field.default_operator, value, &block)
           end
           "(#{fragments.join(' OR ')})"
@@ -78,7 +80,7 @@ module ScopedSearch
           raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
           
           # Search keywords found without context, just search on all the default fields
-          fragments = klass.scoped_search.default_fields.map do |field|
+          fragments = klass.scoped_search.default_fields_for(children.last.value, operator).map do |field|
             ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
           end
           "(#{fragments.join(' OR ')})"
@@ -110,8 +112,8 @@ module ScopedSearch
       # Defines the to_sql method for AST AND/OR operators
       module LogicalOperatorNode
         def to_sql(klass, &block)
-          sql_fragments = children.map { |c| c.to_sql(klass, &block) }
-          "(#{sql_fragments.join(" #{operator.to_s.upcase} ")})"
+          fragments = children.map { |c| c.to_sql(klass, &block) }
+          "(#{fragments.join(" #{operator.to_s.upcase} ")})"
         end 
       end      
     end
