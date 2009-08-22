@@ -23,8 +23,12 @@ describe ScopedSearch, "API - " do
   
   context 'An unprepared ActiveRecord model' do
     
-    it "should respond to :searchable_on to setup scoped_search for the model" do
+    it "should respond to :searchable_on for backwards compatibility" do
       Class.new(ActiveRecord::Base).should respond_to(:searchable_on)
+    end
+    
+    it "should respond to :scoped_search to setup scoped_search for the model" do
+      Class.new(ActiveRecord::Base).should respond_to(:scoped_search)
     end
   end
   
