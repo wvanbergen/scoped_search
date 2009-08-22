@@ -4,7 +4,7 @@ module ScopedSearch::QueryLanguage::Parser
   
   LOGICAL_INFIX_OPERATORS  = [:and, :or]
   LOGICAL_PREFIX_OPERATORS = [:not]
-  COMPARISON_OPERATORS = [:eq, :ne, :gt, :gte, :lt, :lte]
+  COMPARISON_OPERATORS = [:eq, :ne, :gt, :gte, :lt, :lte, :like, :unlike]
   ALL_INFIX_OPERATORS = LOGICAL_INFIX_OPERATORS + COMPARISON_OPERATORS
   ALL_PREFIX_OPERATORS = LOGICAL_PREFIX_OPERATORS + COMPARISON_OPERATORS
   

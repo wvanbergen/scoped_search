@@ -26,6 +26,28 @@ module ScopedSearch
       sql = @ast.to_sql(klass) { |parameter| parameters << parameter }
       return { :conditions => [sql] + parameters }
     end
+    
+    def self.sql_operator(operator)
+      case operator
+      when :eq;     '='  
+      when :like;   'LIKE'              
+      when :unlike; 'NOT LIKE'              
+      when :ne;     '<>'  
+      when :gt;     '>'
+      when :lt;     '<'
+      when :lte;    '<='
+      when :gte;    '>='
+      end  
+    end
+    
+    def self.sql_test(field, operator, value, &block)
+      if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
+        yield("%#{value}%")
+      else
+        yield(value)
+      end
+      "#{field.to_sql} #{self.sql_operator(operator)} ?"
+    end
    
     module AST
       
@@ -33,10 +55,8 @@ module ScopedSearch
       module LeafNode
         def to_sql(klass, &block)
           # Search keywords found without context, just search on all the default fields
-          fragments = klass.scoped_search.default_fields.map do |(field, options)|
-            field_name = klass.connection.quote_table_name(klass.table_name) + "." + klass.connection.quote_column_name(field)
-            yield("%#{value}%")
-            "#{field_name} LIKE ?"
+          fragments = klass.scoped_search.default_fields.map do |field|
+            ScopedSearch::QueryBuilder.sql_test(field, field.default_operator, value, &block)
           end
           "(#{fragments.join(' OR ')})"
         end
@@ -46,16 +66,7 @@ module ScopedSearch
       module OperatorNode
         
         def sql_operator
-          case operator
-          when :eq;        '='  
-          when :like;      'LIKE'              
-          when :not_like;  'NOT LIKE'              
-          when :ne;        '<>'  
-          when :gt;        '>'
-          when :lt;        '<'
-          when :lte;       '<='
-          when :gte;       '>='
-          end
+          ScopedSearch::QueryBuilder.sql_operator(operator)
         end
         
         def to_not_sql(klass, &block)
@@ -64,28 +75,23 @@ module ScopedSearch
         end
         
         def to_default_fields_sql(klass, &block)
+          raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
+          
           # Search keywords found without context, just search on all the default fields
-          fragments = klass.scoped_search.default_fields.map do |(field, options)|
-            
-            field_name = klass.connection.quote_table_name(klass.table_name) + "." + klass.connection.quote_column_name(field)
-            value = children.last.value
-                      
-            yield("#{value}")
-            "#{field_name} #{sql_operator} ?"
+          fragments = klass.scoped_search.default_fields.map do |field|
+            ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
           end
           "(#{fragments.join(' OR ')})"
         end
         
         def to_single_field_sql(klass, &block)
-          raise "Not a leaf node" unless children.first.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
-          raise "Not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+          raise "Field name not a leaf node" unless children.first.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+          raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
           
+          # Search only on the given field.
           field = klass.scoped_search.fields[children.first.value.to_sym]
-          raise "Field not supported in search!" unless field
-          field_name = klass.connection.quote_table_name(klass.table_name) + "." + klass.connection.quote_column_name(field[:field])
-          
-          yield(children.last.value)
-          "(#{field_name} #{sql_operator} ?)"
+          raise "Field not recognized for searching!" unless field
+          ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
         end
         
         def to_sql(klass, &block)

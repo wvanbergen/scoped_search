@@ -1,7 +1,7 @@
 module ScopedSearch::QueryLanguage::Tokenizer
 
   KEYWORDS = { 'and' => :and, 'or' => :or, 'not' => :not }
-  OPERATORS = { '&' => :and, '|' => :or, '&&' => :and, '||' => :or, '-'=> :not, '!' => :not,
+  OPERATORS = { '&' => :and, '|' => :or, '&&' => :and, '||' => :or, '-'=> :not, '!' => :not, '~' => :like, '!~' => :unlike,
       '=' => :eq, '==' => :eq, '!=' => :ne, '<>' => :ne, '>' => :gt, '<' => :lt, '>=' => :gte, '<=' => :lte }
 
   
@@ -30,9 +30,9 @@ module ScopedSearch::QueryLanguage::Tokenizer
       when '(';  yield(:lparen)
       when ')';  yield(:rparen)
       when ',';  yield(:comma)
-      when /\&|\||=|<|>|!|-/;  tokenize_operator(&block)
-      when '"';                tokenize_quoted_keyword(&block)
-      else;                    tokenize_keyword(&block)
+      when /\&|\||=|<|>|!|~|-/;  tokenize_operator(&block)
+      when '"';                  tokenize_quoted_keyword(&block)
+      else;                      tokenize_keyword(&block)
       end
     end
   end  

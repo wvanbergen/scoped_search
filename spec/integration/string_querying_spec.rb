@@ -46,6 +46,14 @@ describe ScopedSearch, :search_for do
       @class.search_for('= fo').should have(0).items
     end
 
+    it "should find the record with an explicit LIKE operator and a partial match" do
+      @class.search_for('~ fo').should have(1).items
+    end
+    
+    it "should find the all other record with an explicit NOT LIKE operator and a partial match" do
+      @class.search_for('string !~ fo').should have(@class.count - 1).items
+    end  
+
     it "should not find a record with a non-match" do
       @class.search_for('nonsense').should have(0).items
     end        
