@@ -11,7 +11,7 @@ module ScopedSearch::Spec::Database
   end
 
   def self.establish_named_connection(name)
-    @database_connections ||= YAML.load(File.read("#{File.dirname(__FILE__)}/database.yml"))
+    @database_connections ||= YAML.load(File.read("#{File.dirname(__FILE__)}/../database.yml"))
     raise "#{name} database not configured" if @database_connections[name.to_s].nil?
     ActiveRecord::Base.establish_connection(@database_connections[name.to_s])
   end
