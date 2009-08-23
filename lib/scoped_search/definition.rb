@@ -69,15 +69,13 @@ module ScopedSearch
     end
     
     NUMBER_REGXP    = /^\-?\d+(\.\d+)?$/
-    YYYYMMDD_REGEXP = /^\d{4}[\/\-]?\d{2}[\/\-]?\d{2}$/
-    DATELIKE_REGEXP = YYYYMMDD_REGEXP
     
     def default_fields_for(value, operator = nil)
       # Use the value to detect
       column_types  = []
       column_types += [:string, :text]                      if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:integer, :double, :float, :decimal] if value =~ NUMBER_REGXP
-      column_types += [:datetime, :date, :timestamp]        if value =~ DATELIKE_REGEXP
+      column_types += [:datetime, :date, :timestamp]        if ScopedSearch::QueryBuilder.parse_temporal(value)
 
       default_fields.select { |field| column_types.include?(field.type) }
     end

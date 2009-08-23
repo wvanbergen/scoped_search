@@ -43,14 +43,20 @@ module ScopedSearch
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield("%#{value}%")
-      elsif field.temporal? && value =~ ScopedSearch::Definition::DATELIKE_REGEXP
-        yield(DateTime.parse(value))
+      elsif field.temporal?
+        timestamp = parse_temporal(value)
+        return if timestamp.nil?
+        yield(timestamp) 
       else
         yield(value)
       end
       "#{field.to_sql} #{self.sql_operator(operator)} ?"
     end
-   
+    
+    def self.parse_temporal(value)
+      Time.parse(value) rescue nil
+    end
+
     module AST
       
       # Defines the to_sql method for AST LeadNodes
