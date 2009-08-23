@@ -87,11 +87,13 @@ module ScopedSearch::QueryLanguage::AST
     # Return the left-hand side (LHS) operand for this operator.
     def lhs
       raise "Operator does not have a LHS" if prefix?
+      raise "Operators with more than 2 children do not have LHS/RHS" if children.length > 2
       children[0]
     end       
     
     # Return the right-hand side (RHS) operand for this operator.    
     def rhs
+      raise "Operators with more than 2 children do not have LHS/RHS" if children.length > 2      
       children.length == 1 ? children[0] : children[1]
     end
     

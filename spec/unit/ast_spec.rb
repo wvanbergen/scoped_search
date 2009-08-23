@@ -129,3 +129,69 @@ describe ScopedSearch::QueryLanguage::AST do
     end
   end
 end
+
+describe ScopedSearch::QueryLanguage::AST::OperatorNode do
+
+  context 'with 1 child' do
+    before(:each) do
+      @node = tree([:not, '1']) 
+    end
+
+    it 'should be a prefix operator' do
+      @node.should be_prefix
+    end
+
+    it "should not be an infix operator" do
+      @node.should_not be_infix
+    end
+
+    it 'should return the first child as RHS' do
+      @node.rhs.should eql(@node[0])
+    end
+
+    it "should raise an error of the LHS is requested" do
+      lambda { @node.lhs }.should raise_error
+    end
+  end
+
+  context 'with 2 children' do
+    before(:each) do
+      @node = tree([:eq, '1', '2']) 
+    end
+
+    it "should be an infix operator" do
+      @node.should be_infix
+    end
+
+    it "should not be a prefix operator" do
+      @node.should_not be_prefix      
+    end
+
+    it "should return the first child as LHS" do
+      @node.lhs.should eql(@node[0])
+    end
+
+    it "should return the second child as RHS" do
+      @node.rhs.should eql(@node[1])
+    end
+
+  end
+
+  context 'many children' do
+    before(:each) do
+      @node = tree([:and, '1', '2', '3', '4']) 
+    end
+
+    it "should be an infix operator" do
+      @node.should be_infix
+    end
+
+    it "should raise an error of the LHS is requested" do
+      lambda { @node.lhs }.should raise_error
+    end
+
+    it "should raise an error of the RHS is requested" do
+      lambda { @node.rhs }.should raise_error
+    end
+  end
+end
