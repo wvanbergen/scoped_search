@@ -49,6 +49,10 @@ module ScopedSearch::QueryLanguage::AST
     def to_a
       value
     end
+    
+    def eql?(node) # :nodoc
+      node.kind_of?(LeafNode) && node.value == value
+    end
   end
 
   # AST class for representing operators in the query. An operator node has an operator 
@@ -68,12 +72,16 @@ module ScopedSearch::QueryLanguage::AST
     # Tree simplicication: returns itself after simpifying its children 
     def simplify
       @children = children.map { |c| c.simplify }
-      return self 
+      return self
     end
     
     # Return an array representation for the node 
     def to_a
       [@operator] + @children.map { |c| c.to_a }
+    end
+    
+    def eql?(node) # :nodoc
+      node.kind_of?(OperatorNode) && node.operator == operator && node.children.eql?(children)
     end
     
     # Return the left-hand side (LHS) operand for this operator.
@@ -127,5 +135,5 @@ module ScopedSearch::QueryLanguage::AST
         return self  
       end
     end
-  end  
+  end
 end

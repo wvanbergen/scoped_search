@@ -39,28 +39,6 @@ module ScopedSearch::Spec::Matchers
   end
 end
 
-class ParseTo
-  
-  def initialize(tree)
-    @expected_tree = tree
-  end
-  
-  def matches?(model)
-    @model = model
-    @parsed_tree = ScopedSearch::QueryLanguage::Compiler.parse(@model).to_a 
-    return @parsed_tree == @expected_tree
-  end
-  
-  def description
-    "be parsed to #{@parsed_tree.inspect}"
-  end
-  
-  def failure_message
-    "#{@expected_tree.inspect}, but found #{@parsed_tree.inspect}"
-  end
-  
-  def negative_failure_message
-    " expected not to be parsed to #{@expected_tree.inspect}"
-  end  
-  
+def tree(array)
+  ScopedSearch::QueryLanguage::AST.from_array(array)
 end
