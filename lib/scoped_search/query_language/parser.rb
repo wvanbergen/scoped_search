@@ -9,11 +9,13 @@ module ScopedSearch::QueryLanguage::Parser
   ALL_INFIX_OPERATORS = LOGICAL_INFIX_OPERATORS + COMPARISON_OPERATORS
   ALL_PREFIX_OPERATORS = LOGICAL_PREFIX_OPERATORS + COMPARISON_OPERATORS + NULL_PREFIX_OPERATORS
   
+  # Start the parsing process by parsing an expression sequence
   def parse
     @tokens = tokenize   
     parse_expression_sequence(true).simplify
   end
 
+  # Parses a sequence of expressions
   def parse_expression_sequence(initial = false)
     expressions = []
     next_token if !initial && peek_token == :lparen # skip staring :lparen    
@@ -22,6 +24,8 @@ module ScopedSearch::QueryLanguage::Parser
     return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions)
   end
   
+
+  # Parses a logical expression.
   def parse_logical_expression
     lhs = case peek_token
       when nil;             nil
@@ -40,6 +44,7 @@ module ScopedSearch::QueryLanguage::Parser
     end
   end  
   
+  # Parses a NOT expression
   def parse_logical_not_expression
     next_token # = skip NOT operator
     negated_expression = case peek_token
@@ -50,19 +55,23 @@ module ScopedSearch::QueryLanguage::Parser
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(:not, [negated_expression])
   end
   
+  # Parses a set? or null? expression
   def parse_null_expression
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(next_token, [parse_value])
   end
   
+  # Parses a comparison
   def parse_comparison
     next_token if peek_token == :comma # skip comma      
     return (String === peek_token) ? parse_infix_comparison : parse_prefix_comparison
   end
   
+  # Parses a prefix comparison, i.e. without an explicit field: <operator> <value>
   def parse_prefix_comparison
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(next_token, [parse_value])
   end  
 
+  # Parses an infix expression, i.e. <field> <operator> <value>
   def parse_infix_comparison
     lhs = parse_value
     return case peek_token
@@ -82,6 +91,8 @@ module ScopedSearch::QueryLanguage::Parser
     end
   end  
   
+  # Parses a single value.
+  # This can either be a constant value or a field name.
   def parse_value
     raise ScopedSearch::Exception, "Value expected but found #{peek_token.inspect}" unless String === peek_token
     ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
