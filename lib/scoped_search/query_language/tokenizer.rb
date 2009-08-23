@@ -1,6 +1,6 @@
 module ScopedSearch::QueryLanguage::Tokenizer
 
-  KEYWORDS = { 'and' => :and, 'or' => :or, 'not' => :not }
+  KEYWORDS = { 'and' => :and, 'or' => :or, 'not' => :not, 'set?' => :notnull, 'null?' => :null }
   OPERATORS = { '&' => :and, '|' => :or, '&&' => :and, '||' => :or, '-'=> :not, '!' => :not, '~' => :like, '!~' => :unlike,
       '=' => :eq, '==' => :eq, '!=' => :ne, '<>' => :ne, '>' => :gt, '<' => :lt, '>=' => :gte, '<=' => :lte }
 

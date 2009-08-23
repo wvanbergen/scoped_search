@@ -80,6 +80,17 @@ module ScopedSearch
           "(NOT(#{rhs.to_sql(definition, &block)}) OR #{rhs.to_sql(definition, &block)} IS NULL)"
         end
         
+        # Returns a IS (NOT) NULL SQL fragment
+        def to_null_sql(definition, &block)
+          field = definition.fields[rhs.value.to_sym]  
+          raise ScopedSearch::Exception, "Field '#{rhs.value}' not recognized for searching!" unless field
+          
+          case operator
+            when :null    then "#{field.to_sql} IS NULL"
+            when :notnull then "#{field.to_sql} IS NOT NULL"
+          end
+        end
+        
         # No explicit field name given, run the operator on all default fields
         def to_default_fields_sql(definition, &block)
           raise ScopedSearch::Exception, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
@@ -106,6 +117,8 @@ module ScopedSearch
         def to_sql(definition, &block)
           if operator == :not && children.length == 1
             to_not_sql(definition, &block)
+          elsif [:null, :notnull].include?(operator)
+            to_null_sql(definition, &block)
           elsif children.length == 1
             to_default_fields_sql(definition, &block)            
           elsif children.length == 2

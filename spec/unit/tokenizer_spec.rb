@@ -49,6 +49,10 @@ describe ScopedSearch::QueryLanguage::Tokenizer do
   it "should parse keyword characters" do
     'a | -("b""c") & d'.should tokenize_to('a', :or, :not, :lparen, 'b', 'c', :rparen, :and, 'd')
   end
+  
+  it "should tokenize null operators" do
+    'set? a null? b'.should tokenize_to(:notnull, 'a', :null, 'b')
+  end  
 
   it "should parse double keyword characters" do
     'a || b'.should tokenize_to('a', :or, 'b')

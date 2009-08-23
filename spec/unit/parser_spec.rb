@@ -98,4 +98,8 @@ describe ScopedSearch::QueryLanguage::Parser do
   it "should create a infix and prefix comparison in an AND block because of first come first serve" do
     'a = b > c'.should parse_to([:and, [:eq, 'a', 'b'], [:gt, 'c']])
   end
+  
+  it "should parse a null? keyword" do
+    'set? a b null? c'.should parse_to([:and, [:notnull, 'a'], 'b', [:null, 'c']])
+  end
 end

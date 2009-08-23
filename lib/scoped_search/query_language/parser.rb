@@ -4,9 +4,10 @@ module ScopedSearch::QueryLanguage::Parser
   
   LOGICAL_INFIX_OPERATORS  = [:and, :or]
   LOGICAL_PREFIX_OPERATORS = [:not]
+  NULL_PREFIX_OPERATORS    = [:null, :notnull]
   COMPARISON_OPERATORS = [:eq, :ne, :gt, :gte, :lt, :lte, :like, :unlike]
   ALL_INFIX_OPERATORS = LOGICAL_INFIX_OPERATORS + COMPARISON_OPERATORS
-  ALL_PREFIX_OPERATORS = LOGICAL_PREFIX_OPERATORS + COMPARISON_OPERATORS
+  ALL_PREFIX_OPERATORS = LOGICAL_PREFIX_OPERATORS + COMPARISON_OPERATORS + NULL_PREFIX_OPERATORS
   
   def parse
     @tokens = tokenize   
@@ -23,10 +24,11 @@ module ScopedSearch::QueryLanguage::Parser
   
   def parse_logical_expression
     lhs = case peek_token
-      when nil;     nil
-      when :lparen; parse_expression_sequence
-      when :not;    parse_logical_not_expression
-      else;         parse_comparison
+      when nil;             nil
+      when :lparen;         parse_expression_sequence
+      when :not;            parse_logical_not_expression
+      when :null, :notnull; parse_null_expression
+      else;                 parse_comparison
     end
 
     if LOGICAL_INFIX_OPERATORS.include?(peek_token)
@@ -46,6 +48,10 @@ module ScopedSearch::QueryLanguage::Parser
       else          parse_comparison
     end
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(:not, [negated_expression])
+  end
+  
+  def parse_null_expression
+    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(next_token, [parse_value])
   end
   
   def parse_comparison

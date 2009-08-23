@@ -12,7 +12,7 @@ describe ScopedSearch, :search_for do
     
     @class.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz')
     @class.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz')      
-    @class.create!(:string => 'baz', :another => 'temp 3', :explicit => 'baz')      
+    @class.create!(:string => 'baz', :another => 'temp 3', :explicit => nil)
   end
     
   after(:all) do
@@ -24,6 +24,10 @@ describe ScopedSearch, :search_for do
     it "should find the record with an exact string match" do
       @class.search_for('foo').should have(1).item
     end
+    
+    it "should find the opther two records using NOT with an exact string match" do
+      @class.search_for('-foo').should have(2).item
+    end    
 
     it "should find the record with an exact string match and an explicit field operator" do
       @class.search_for('string = foo').should have(1).item
@@ -36,6 +40,10 @@ describe ScopedSearch, :search_for do
     it "should find the record with an partial string match" do
       @class.search_for('fo').should have(1).item
     end
+    
+    it "should find the other two records using NOT with an partial string match" do
+      @class.search_for('-fo').should have(2).item
+    end    
 
     it "should not find the record with an explicit equals operator and a partial match" do
       @class.search_for('= fo').should have(0).items
@@ -78,7 +86,11 @@ describe ScopedSearch, :search_for do
     it "should find an exact match" do
       @class.search_for('"temp 1"').should have(1).item
     end
-
+    
+    it "should find the orther records using NOT and an exact match" do
+      @class.search_for('-"temp 1"').should have(2).item
+    end
+    
     it "should find an explicit match" do
       @class.search_for('another = "temp 1"').should have(1).item
     end
@@ -86,6 +98,10 @@ describe ScopedSearch, :search_for do
     it "should not find a partial match" do
       @class.search_for('temp').should have(0).item
     end    
+    
+    it "should find all records using a NOT with a partial match on all records" do
+      @class.search_for('-temp"').should have(3).item
+    end     
 
     it "should find a partial match when the like operator is given" do
       @class.search_for('~ temp').should have(3).item
@@ -109,7 +125,7 @@ describe ScopedSearch, :search_for do
     end
 
     it "should find all records when searching on the explicit field" do
-      @class.search_for('explicit = baz').should have(3).item
+      @class.search_for('explicit = baz').should have(2).items
     end
 
     it "should find no records if the value in the explicit field is not an exact match" do
@@ -117,13 +133,31 @@ describe ScopedSearch, :search_for do
     end
 
     it "should find all records when searching on the explicit field" do
-      @class.search_for('explicit ~ ba').should have(3).item
+      @class.search_for('explicit ~ ba').should have(2).items
     end
     
     it "should only find the record with string = foo and explicit = baz" do
       @class.search_for('foo, explicit = baz').should have(1).item
     end
+  end
+  
+  context 'using null? and set? queries' do
     
+    it "should return all records if the string field is being check with set?" do
+      @class.search_for('set? string').should have(3).items
+    end
 
+    it "should return all records if the string field is being check with set?" do
+      @class.search_for('null? string').should have(0).items
+    end
+
+    it "should return all records if the string field is being check with set?" do
+      @class.search_for('set? explicit').should have(2).items
+    end
+
+    it "should return all records if the string field is being check with set?" do
+      @class.search_for('null? explicit').should have(1).items
+    end
+    
   end
 end
