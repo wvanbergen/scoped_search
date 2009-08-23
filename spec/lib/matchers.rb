@@ -38,7 +38,3 @@ module ScopedSearch::Spec::Matchers
     end    
   end
 end
-
-def tree(array)
-  ScopedSearch::QueryLanguage::AST.from_array(array)
-end

@@ -6,33 +6,35 @@ module ScopedSearch
       
       attr_reader :definition, :field, :only_explicit #, :relation
       
+      # Find the relevant column definition in the AR class
       def column
         definition.klass.columns_hash[field.to_s]
       end
       
+      def type
+        column.type
+      end
+      
       def temporal?
-        [:datetime, :time, :timestamp].include? column.type
+        [:datetime, :time, :timestamp].include?(type)
       end
       
       def numerical?
-        [:integer, :double, :float, :decimal].include? column.type
+        [:integer, :double, :float, :decimal].include?(type)
       end
       
       def textual?
-        [:string, :text].include? column.type
+        [:string, :text].include?(type)
       end
       
+      # Returns the default search operator for this field.
       def default_operator
-        @default_operator ||= begin
-          case column.type
-          when :string, :text
-            :like
-          else 
-            :eq
-          end
+        @default_operator ||= case type
+          when :string, :text then :like
+          else :eq
         end
       end
-      
+
       def initialize(definition, field, options = {})
         @definition = definition
         @field      = field.to_sym
@@ -77,7 +79,7 @@ module ScopedSearch
       column_types += [:integer, :double, :float, :decimal] if value =~ NUMBER_REGXP
       column_types += [:datetime, :date, :timestamp]        if value =~ DATELIKE_REGEXP
 
-      default_fields.select { |field| column_types.include?(field.column.type) }
+      default_fields.select { |field| column_types.include?(field.type) }
     end
     
     def default_fields

@@ -1,0 +1,28 @@
+require "#{File.dirname(__FILE__)}/../spec_helper"
+
+describe ScopedSearch::Definition do
+
+  before(:each) do
+    @klass      = mock_activerecord_class
+    @definition = ScopedSearch::Definition.new(@klass)
+  end
+
+  describe '#initialize' do
+    
+    it "should create the named scope when" do
+      @klass.should_receive(:named_scope).with(:search_for, instance_of(Proc))
+      ScopedSearch::Definition.new(@klass)
+    end
+
+    it "should not create the named scope if it already exists" do
+      @klass.stub!(:search_for)
+      @klass.should_not_receive(:named_scope)
+      ScopedSearch::Definition.new(@klass)
+    end
+  end
+
+  describe '#fields' do
+    
+  end
+
+end
