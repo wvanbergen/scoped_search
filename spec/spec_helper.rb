@@ -8,8 +8,11 @@ require 'active_record'
 require 'scoped_search'
 require 'scoped_search/query_language'
 
-module ScopedSearch::Spec
-end
+module ScopedSearch::Spec; end
 
 require "#{File.dirname(__FILE__)}/lib/matchers"
 require "#{File.dirname(__FILE__)}/lib/database"
+
+Spec::Runner.configure do |config|
+  config.include ScopedSearch::Spec::Matchers
+end

@@ -1,66 +1,131 @@
 module ScopedSearch::QueryLanguage::AST
   
+  # Constructs an AST from an array notation.
+  def self.from_array(arg) 
+    if arg.kind_of?(Array)
+      operator = arg.shift
+      case operator
+      when :and, :or
+        LogicalOperatorNode.new(operator, arg.map { |c| from_array(c) })
+      when Symbol
+        OperatorNode.new(operator, arg.map { |c| from_array(c) })
+      else
+        raise "Not a valid array representation of an AST!"
+      end
+    else
+      return LeafNode.new(arg)
+    end
+  end
+  
+  # Base AST node class. Instances of this class are used to represent an abstract syntax tree.
+  # This syntax tree is created by the ScopedSearch::QueryLanguage parser and visited by the
+  # ScopedSearch::QueryBuilder to create SQL query conditions.
   class Node
-    def inspect
+    
+    def inspect # :nodoc
       "<AST::#{self.class.to_s.split('::').last} #{self.to_a.inspect}>"
     end
     
-    def simplify
+    # Tree simplification. By default, do nothing and return the node as is.
+    def simplify 
       return self
     end
+    
+    def compatible_with(node) # :nodoc
+      false  
+    end 
   end
-   
+  
+  # AST lead node. This node represents leafs in the AST and can represent
+  # either a search phrase or a search field name. 
   class LeafNode < Node
     attr_reader :value
    
-    def initialize(value)
+    def initialize(value) # :nodoc
       @value = value
     end
      
+    # Return an array representation for the node     
     def to_a
       value
     end
   end
 
- 
+  # AST class for representing operators in the query. An operator node has an operator 
+  # and operands that are represented as AST child nodes. Usually, operator nodes have
+  # one or two children.
+  # For logical operators, a distinct subclass exists to implement some tree
+  # simplification rules.
   class OperatorNode < Node
     attr_reader :operator
     attr_reader :children
      
-    def initialize(operator, children)
+    def initialize(operator, children) # :nodoc
       @operator = operator
       @children = children
     end
-     
+    
+    # Tree simplicication: returns itself after simpifying its children 
     def simplify
       @children = children.map { |c| c.simplify }
       return self 
     end
-     
+    
+    # Return an array representation for the node 
     def to_a
       [@operator] + @children.map { |c| c.to_a }
     end
+    
+    # Return the left-hand side (LHS) operand for this operator.
+    def lhs
+      raise "Operator does not have a LHS" if prefix?
+      children[0]
+    end       
+    
+    # Return the right-hand side (RHS) operand for this operator.    
+    def rhs
+      children.length == 1 ? children[0] : children[1]
+    end
+    
+    # Returns true if this is an infix operator
+    def infix?
+      children.length > 1
+    end
+    
+    # Returns true if this is a prefix operator
+    def prefix?
+      children.length == 1
+    end
+    
+    # Returns a child node by index, starting with 0.
+    def [](child_nr)
+      children[child_nr]
+    end
+    
   end
   
-
- class LogicalOperatorNode < OperatorNode
+  # AST class for representing AND or OR constructs.
+  # Logical constructs can be simplified resulting in a less complex AST.
+  class LogicalOperatorNode < OperatorNode
    
-   def simplify
-     if children.length == 1
-       return children.first.simplify
-     else
-       @children = children.clone
-       simplified_children = []
-       while child = children.shift
-         if child.kind_of?(LogicalOperatorNode) && child.operator == self.operator
-           simplified_children += child.children.map { |c| c.simplify }
-         else
-           simplified_children << child.simplify
-         end
-       end
-       @children = simplified_children
-       return self  
-     end
-   end
- end  
+    # Checks whether another node is comparable so that it can be used for tree simplification.
+    # A node can only be simplified if the logical operator is equal.
+    def compatible_with(node)
+      node.kind_of?(LogicalOperatorNode) && node.operator == self.operator
+    end
+   
+    # Simplifies nested AND and OR constructs to single constructs with multiple arguments:
+    # e.g. (a AND (b AND c)) -> (a AND b AND c)
+    def simplify
+      if children.length == 1
+        # AND or OR constructs do nothing if they only have one operand
+        # So remove the logal operator from the AST by simply using the opeand
+        return children.first.simplify
+      else
+        # nested AND or OR constructs can be combined into one construct
+        @children = children.map { |c| c.simplify }.map { |c| self.compatible_with(c) ? c.children : c }.flatten
+        return self  
+      end
+    end
+  end  
 end

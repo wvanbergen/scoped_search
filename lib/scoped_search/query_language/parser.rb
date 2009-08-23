@@ -13,27 +13,11 @@ module ScopedSearch::QueryLanguage::Parser
     parse_expression_sequence(true).simplify
   end
 
-  def current_token
-    @current_token
-  end
-  
-  def peek_token(amount = 1)
-    @tokens[amount - 1]
-  end
-
-  def next_token
-    @current_token = @tokens.shift
-  end
-  
-  def debug_tokens
-    @tokens.inspect
-  end
-
   def parse_expression_sequence(initial = false)
     expressions = []
-    next_token if !initial && peek_token == :lparen # skip :lparen    
+    next_token if !initial && peek_token == :lparen # skip staring :lparen    
     expressions << parse_logical_expression until peek_token.nil? || peek_token == :rparen
-    next_token if peek_token == :rparen # skip :rparen
+    next_token if !initial && peek_token == :rparen # skip final :rparen
     return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions)
   end
   
@@ -93,8 +77,22 @@ module ScopedSearch::QueryLanguage::Parser
   end  
   
   def parse_value
-    raise "Value expected at #{debug_tokens}" unless String === peek_token
+    raise "Value expected but found #{peek_token.inspect}" unless String === peek_token
     ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
   end
+
+  protected 
+  
+  def current_token
+    @current_token
+  end
+  
+  def peek_token(amount = 1)
+    @tokens[amount - 1]
+  end
+
+  def next_token
+    @current_token = @tokens.shift
+  end  
 
 end

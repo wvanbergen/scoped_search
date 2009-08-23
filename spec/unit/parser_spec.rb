@@ -10,10 +10,14 @@ describe ScopedSearch::QueryLanguage::Parser do
     'double_1 double_2'.should parse_to([:and, 'double_1', 'double_2'])    
   end
   
-  
   it "should create a three-item AND construct for three keywords" do
     'triplet_1 triplet_2 triplet_3'.should parse_to([:and, 'triplet_1', 'triplet_2', 'triplet_3'])
   end
+  
+  it "should create a four-item AND construct by simplifying AND constructs" do
+    '1 (2 (3 4))'.should parse_to([:and, '1', '2', '3', '4'])
+  end
+  
   
   it "should create an OR construct" do
     'some OR simple OR keywords'.should parse_to([:or, 'some', 'simple', 'keywords'])
