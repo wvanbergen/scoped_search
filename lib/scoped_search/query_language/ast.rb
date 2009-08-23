@@ -10,7 +10,7 @@ module ScopedSearch::QueryLanguage::AST
       when Symbol
         OperatorNode.new(operator, arg.map { |c| from_array(c) })
       else
-        raise "Not a valid array representation of an AST!"
+        raise ScopedSearch::Exception, "Not a valid array representation of an AST!"
       end
     else
       return LeafNode.new(arg)

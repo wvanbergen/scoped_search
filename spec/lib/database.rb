@@ -34,11 +34,7 @@ module ScopedSearch::Spec::Database
     
     klass = Class.new(ActiveRecord::Base)
     klass.set_table_name(table_name)
-
-    fields.reject { |n, t| /^unindexed_/ =~ t.to_s}.keys.each do |field|
-      klass.scoped_search.on(field)
-    end
-    
+    yield(klass) if block_given?
     return klass
   end
   

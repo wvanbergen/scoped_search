@@ -27,6 +27,7 @@ module ScopedSearch
       return { :conditions => [sql] + parameters }
     end
     
+    # Return the SQL operator to use
     def self.sql_operator(operator)
       case operator
       when :eq;     '='  
@@ -40,6 +41,7 @@ module ScopedSearch
       end  
     end
     
+    # Generates a simple SQL test expression, for a field and value using an operator.
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield("%#{value}%")
@@ -72,36 +74,35 @@ module ScopedSearch
       
       # Defines the to_sql method for AST operator nodes
       module OperatorNode
-        
-        def sql_operator
-          ScopedSearch::QueryBuilder.sql_operator(operator)
-        end
-        
+            
+        # Returns a NOT(...)  SQL fragment that negates the current AST node's children  
         def to_not_sql(definition, &block)
-          child = children.first
-          "(NOT(#{child.to_sql(definition, &block)}) OR #{child.to_sql(definition, &block)} IS NULL)"
+          "(NOT(#{rhs.to_sql(definition, &block)}) OR #{rhs.to_sql(definition, &block)} IS NULL)"
         end
         
+        # No explicit field name given, run the operator on all default fields
         def to_default_fields_sql(definition, &block)
-          raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
+          raise ScopedSearch::Exception, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
           
           # Search keywords found without context, just search on all the default fields
-          fragments = definition.default_fields_for(children.last.value, operator).map do |field|
-            ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
+          fragments = definition.default_fields_for(rhs.value, operator).map do |field|
+            ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block)
           end
           "(#{fragments.join(' OR ')})"
         end
         
+        # Explicit field name given, run the operator on the specified field only
         def to_single_field_sql(definition, &block)
-          raise "Field name not a leaf node" unless children.first.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
-          raise "Value not a leaf node" unless children.last.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+          raise ScopedSearch::Exception, "Field name not a leaf node" unless lhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+          raise ScopedSearch::Exception, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
           
           # Search only on the given field.
-          field = definition.fields[children.first.value.to_sym]
-          raise "Field not recognized for searching!" unless field
-          ScopedSearch::QueryBuilder.sql_test(field, operator, children.last.value, &block)
+          field = definition.fields[lhs.value.to_sym]
+          raise ScopedSearch::Exception, "Field '#{lhs.value}' not recognized for searching!" unless field
+          ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block)
         end
         
+        # Convert this AST node to an SQL fragment.
         def to_sql(definition, &block)
           if operator == :not && children.length == 1
             to_not_sql(definition, &block)
@@ -110,7 +111,7 @@ module ScopedSearch
           elsif children.length == 2
             to_single_field_sql(definition, &block)
           else
-            raise "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
+            raise ScopedSearch::Exception, "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
           end
         end 
       end

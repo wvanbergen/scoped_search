@@ -77,7 +77,7 @@ module ScopedSearch::QueryLanguage::Parser
   end  
   
   def parse_value
-    raise "Value expected but found #{peek_token.inspect}" unless String === peek_token
+    raise ScopedSearch::Exception, "Value expected but found #{peek_token.inspect}" unless String === peek_token
     ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
   end
 

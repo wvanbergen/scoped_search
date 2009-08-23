@@ -35,7 +35,9 @@ describe ScopedSearch, "API - " do
   context 'A prepared ActiveRecord model' do
     
     before(:all) do
-      @class = ScopedSearch::Spec::Database.create_model(:field => :string)    
+      @class = ScopedSearch::Spec::Database.create_model(:field => :string) do |klass|
+        klass.scoped_search.on :field
+      end
     end
     
     after(:all) do

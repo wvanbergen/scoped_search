@@ -13,8 +13,12 @@ describe ScopedSearch, :search_for do
   context 'ordinal' do
 
     before(:all) do
-      @class = ScopedSearch::Spec::Database.create_model(:int => :integer, 
-        :timestamp => :datetime, :unindexed => :unindexed_integer)
+      @class = ScopedSearch::Spec::Database.create_model(:int => :integer, :timestamp => :datetime, :unindexed => :integer) do |klass|
+        klass.scoped_search do |search|
+          search.on :int
+          search.on :timestamp
+        end
+      end
     end
 
     after(:all) do
@@ -75,7 +79,7 @@ describe ScopedSearch, :search_for do
       end
 
       it "searching in the non-index column should raise an error" do
-        lambda { @class.search_for('unindexed = 10') }.should raise_error
+        lambda { @class.search_for('unindexed = 10') }.should raise_error(ScopedSearch::Exception)
       end
 
       it "searching for the value of the unindexed field should return nothing" do

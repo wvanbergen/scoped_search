@@ -17,6 +17,9 @@ module ScopedSearch
       fields.each { |field| scoped_search.on(field) }
     end
   end
+  
+  class Exception < StandardError
+  end
 end
 
 # Load all lib files
