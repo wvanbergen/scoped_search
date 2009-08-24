@@ -13,10 +13,11 @@ describe ScopedSearch, :search_for do
   context 'ordinal' do
 
     before(:all) do
-      @class = ScopedSearch::Spec::Database.create_model(:int => :integer, :timestamp => :datetime, :unindexed => :integer) do |klass|
+      @class = ScopedSearch::Spec::Database.create_model(:int => :integer, :timestamp => :datetime, :date => :date, :unindexed => :integer) do |klass|
         klass.scoped_search do |search|
           search.on :int
           search.on :timestamp
+          search.on :date, :only_explicit => true
         end
       end
     end
@@ -28,7 +29,7 @@ describe ScopedSearch, :search_for do
     context 'integer field' do
 
       before(:all) do
-        @record = @class.create!(:int =>  9, :timestamp => Time.now, :unindexed => 10)
+        @record = @class.create!(:int =>  9, :unindexed => 10)
       end
 
       after(:all) do
@@ -71,7 +72,7 @@ describe ScopedSearch, :search_for do
     context 'unindexed field' do
 
       before(:all) do
-        @record = @class.create!(:int =>  9, :timestamp => Time.now, :unindexed => 10)     
+        @record = @class.create!(:int =>  9, :unindexed => 10)
       end
 
       after(:all) do
@@ -87,37 +88,61 @@ describe ScopedSearch, :search_for do
       end
     end
 
-    context 'datetime field' do
+    context 'date and time fields' do
 
       before(:all) do
-        @record = @class.create!(:int =>  9, :timestamp => Time.now, :unindexed => 10)
-        @record = @class.create!(:int =>  9, :timestamp => nil,      :unindexed => 10)
+        @record = @class.create!(:timestamp => Time.parse('2009-01-02 14:51:44'), :date => Date.parse('2009-01-02'))
+        @nil_record = @class.create!(:timestamp => nil, :date => nil)
       end
 
       after(:all) do
         @record.destroy
+        @nil_record.destroy
       end
 
-      it "should find the records with a timestamp set today" do
-        @class.search_for('>= %s' % Date.today.strftime('%Y-%m-%d')).should have(1).item
+      it "should accept YYYY-MM-DD as date format" do
+        @class.search_for('date = 2009-01-02').should have(1).item
+      end
+      
+      it "should accept YYYY/MM/DD as date format" do
+        @class.search_for('date = 2009/01/02').should have(1).item
+      end
+      
+      it "should accept MM/DD/YYYY as date format" do
+        @class.search_for('date = 01/02/2009').should have(1).item
+      end      
+      
+      it "should ignore an invalid date and thus return all records" do
+        @class.search_for('>= 2009-14-57').should have(2).items
+      end      
+      
+      it "should find the records with a timestamp set some point on the provided date" do
+        @class.search_for('>= 2009-01-02').should have(1).item
       end
 
       it "should find no record with a timestamp in the past" do
-        @class.search_for('< %s' % Date.today.strftime('%Y-%m-%d')).should have(0).item
+        @class.search_for('< 2009-01-02').should have(0).item
+      end
+
+      it "should find all timestamps on a date if no time is given using the = operator" do
+        @class.search_for('= 2009-01-02').should have(1).item
+      end
+      
+      it "should find all timestamps not on a date if no time is given using the != operator" do
+        @class.search_for('!= 2009-01-02').should have(0).item
+      end      
+
+      it "should find the records when the date part of a timestamp matches a date" do
+        @class.search_for('>= 2009-01-02').should have(1).item
       end
 
       it "should find the record with the timestamp today or in the past" do
-        pending do
-          @class.search_for('<= %s' % Date.today.strftime('%Y-%m-%d')).should have(1).item
-        end
+        @class.search_for('<= 2009-01-02').should have(1).item
       end
 
       it "should find no record with a timestamp later than today" do
-        pending do
-          @class.search_for('> %s' % Date.today.strftime('%Y-%m-%d')).should have(0).item
-        end
+        @class.search_for('> 2009-01-02').should have(0).item
       end
-
     end
   end
 end

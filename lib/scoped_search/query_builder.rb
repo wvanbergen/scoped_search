@@ -24,7 +24,7 @@ module ScopedSearch
     def build_find_params
       parameters = []
       sql = @ast.to_sql(definition) { |parameter| parameters << parameter }
-      return { :conditions => [sql] + parameters }
+      return (sql.nil?) ? { :conditions => nil } : { :conditions => [sql] + parameters }
     end
     
     # Return the SQL operator to use
@@ -40,23 +40,49 @@ module ScopedSearch
       when :gte;    '>='
       end  
     end
+     
+    def self.datetime_test(field, operator, value, &block)
+      
+      # Parse the value as a date/time and ignore invalid timestamps
+      timestamp = parse_temporal(value)
+      timestamp = Date.parse(timestamp.strftime('%Y-%m-%d')) if field.date?
+      return nil unless timestamp 
+      
+      # Check for the case that a date is given as search but the record is a datetime
+      if timestamp.day_fraction == 0 && field.datetime?
+        if [:eq, :ne].include?(operator)
+          yield(timestamp)
+          yield(timestamp + 1)
+          negate = (operator == :ne) ? 'NOT' : ''
+          return "#{negate}(#{field.to_sql} >= ? AND #{field.to_sql} < ?)"
+        elsif operator == :gt
+          timestamp += 1
+        elsif operator == :lte
+          timestamp += 1
+          operator = :lt
+        end
+      end
+    
+      # Yield the timestamp and return the SQL test
+      yield(timestamp)
+      "#{field.to_sql} #{self.sql_operator(operator)} ?"      
+    end
     
     # Generates a simple SQL test expression, for a field and value using an operator.
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield("%#{value}%")
+        return "#{field.to_sql} #{self.sql_operator(operator)} ?"
       elsif field.temporal?
-        timestamp = parse_temporal(value)
-        return if timestamp.nil?
-        yield(timestamp) 
+        return datetime_test(field, operator, value, &block)
       else
         yield(value)
+        return "#{field.to_sql} #{self.sql_operator(operator)} ?"
       end
-      "#{field.to_sql} #{self.sql_operator(operator)} ?"
     end
     
     def self.parse_temporal(value)
-      Time.parse(value) rescue nil
+      DateTime.parse(value) rescue nil
     end
 
     module AST
@@ -96,10 +122,9 @@ module ScopedSearch
           raise ScopedSearch::Exception, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
           
           # Search keywords found without context, just search on all the default fields
-          fragments = definition.default_fields_for(rhs.value, operator).map do |field|
-            ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block)
-          end
-          "(#{fragments.join(' OR ')})"
+          fragments = definition.default_fields_for(rhs.value, operator).map { |field|
+            ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block) }.compact
+          fragments.empty? ? nil : "(#{fragments.join(' OR ')})"
         end
         
         # Explicit field name given, run the operator on the specified field only
@@ -132,8 +157,8 @@ module ScopedSearch
       # Defines the to_sql method for AST AND/OR operators
       module LogicalOperatorNode
         def to_sql(definition, &block)
-          fragments = children.map { |c| c.to_sql(definition, &block) }
-          "(#{fragments.join(" #{operator.to_s.upcase} ")})"
+          fragments = children.map { |c| c.to_sql(definition, &block) }.compact
+          fragments.empty? ? nil : "(#{fragments.join(" #{operator.to_s.upcase} ")})"
         end 
       end      
     end

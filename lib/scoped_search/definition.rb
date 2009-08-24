@@ -15,8 +15,16 @@ module ScopedSearch
         column.type
       end
       
-      def temporal?
+      def datetime?
         [:datetime, :time, :timestamp].include?(type)
+      end
+      
+      def date?
+        type == :date
+      end
+      
+      def temporal?
+        datetime? || date?
       end
       
       def numerical?
