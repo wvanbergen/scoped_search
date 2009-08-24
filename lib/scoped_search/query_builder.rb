@@ -82,7 +82,7 @@ module ScopedSearch
     end
     
     def self.parse_temporal(value)
-      DateTime.parse(value) rescue nil
+      DateTime.parse(value, true) rescue nil
     end
 
     module AST
