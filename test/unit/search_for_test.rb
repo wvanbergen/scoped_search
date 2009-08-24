@@ -16,67 +16,6 @@ class ScopedSearch::Test::SearchFor < Test::Unit::TestCase
     ScopedSearch::Test::DatabaseSchema.down    
   end
   
-  def test_simple_like_search
-    Foo.searchable_on :string_field, :text_field
-
-    assert_equal Foo.count, Foo.search_for('').count
-    assert_equal 0, Foo.search_for('456').count   
-    assert_equal 2, Foo.search_for('hays').count 
-    assert_equal 1, Foo.search_for('hay ob').count        
-    assert_equal 15, Foo.search_for('o').count    
-    assert_equal 2, Foo.search_for('-o').count
-    assert_equal 15, Foo.search_for('-Jim').count
-    assert_equal 1, Foo.search_for('Jim -Bush').count
-    assert_equal 1, Foo.search_for('"Hello World" -"Goodnight Moon"').count    
-    assert_equal 2, Foo.search_for('Wes OR Bob').count
-    assert_equal 3, Foo.search_for('"Happy cow" OR "Sad Frog"').count
-    assert_equal 3, Foo.search_for('"Man made" OR Dogs').count
-    assert_equal 2, Foo.search_for('Cows OR "Frog Toys"').count   
-  end
-  
-  def test_search_particular_field
-    Foo.searchable_on :string_field # whatever
-    
-    assert_equal 1, Foo.search_for('string_field = Bob').count 
-    assert_equal 1, Foo.search_for('string_field = bob').count
-    assert_equal 1, Foo.search_for('NOT string_field != bob').count
-    assert_equal 9, Foo.search_for('int_field < 10').count    
-    assert_equal 5, Foo.search_for('int_field >= 1, int_field <= 5').count    
-  end  
-  
-  def test_date_search
-    Foo.searchable_on :string_field, :text_field, :date_field
-    
-    #   # ** DATES **   
-    #   #
-    #   # The next two dates are invalid therefore it will be ignored.  
-    #   # Since it is just a date being searched for it will also
-    #   # be searched for in text fields regardless of whether or 
-    #   # not it is a valid date.
-    #   assert_equal 0, Foo.search_for('2/30/1980').count 
-    #   assert_equal 0, Foo.search_for('99/99/9999').count
-    # 
-    #   assert_equal 1, Foo.search_for('9/27/1980').count
-    #   assert_equal 1, Foo.search_for('hays 9/27/1980').count
-    #   assert_equal 0, Foo.search_for('hays 2/30/1980').count 
-    # 
-    #   assert_equal 1, Foo.search_for('< 12/01/1980').count    
-    #   assert_equal 6, Foo.search_for('> 2006/1/1').count
-    # 
-    #   assert_equal 5, Foo.search_for('< 12/26/2002').count 
-    #   assert_equal 6, Foo.search_for('<= 12/26/2002').count   
-    # 
-    #   assert_equal 6, Foo.search_for('> 2/5/2005').count 
-    #   assert_equal 7, Foo.search_for('>= 2/5/2005').count   
-    # 
-    #   assert_equal 3, Foo.search_for('1/1/2005 TO 1/1/2007').count 
-    # 
-    #   assert_equal 2, Foo.search_for('Happy 1/1/2005 TO 1/1/2007').count 
-    #      
-    #   # This should return one with a date of 7/15/2006 found in the text.
-    #   assert_equal 2, Foo.search_for('7/15/2006').count    
-  end
-
   def test_search_belongs_to_association
     User.searchable_on :first_name, :last_name, :group_name
       
