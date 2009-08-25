@@ -61,12 +61,12 @@ module ScopedSearch
         @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         
         # Store this field is the field array
-        definition.fields[@field] = self
-        definition.unique_fields << self
+        definition.fields[@field] ||= self
+        definition.unique_fields   << self
         
         # Store definition for alias / aliases as well
-        definition.fields[options[:alias]] = self                    if options[:alias]
-        options[:aliases].each { |al| definition.fields[al] = self } if options[:aliases]        
+        definition.fields[options[:alias]] ||= self                    if options[:alias]
+        options[:aliases].each { |al| definition.fields[al] ||= self } if options[:aliases]        
       end
     end
     
