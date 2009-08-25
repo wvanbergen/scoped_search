@@ -23,8 +23,27 @@ module ScopedSearch
     # Actually builds the find parameters
     def build_find_params
       parameters = []
-      sql = @ast.to_sql(definition) { |parameter| parameters << parameter }
-      return (sql.nil?) ? { :conditions => nil } : { :conditions => [sql] + parameters }
+      includes   = [] 
+      
+      # Build SQL where clause
+      sql = @ast.to_sql(definition) do |notification, value| 
+        
+        # Handle the notifications encountered during the SQL generation:
+        # Store the parameters, includes, etc so that they can be added to
+        # the find-hash later on.
+        case notification
+        when :parameter then parameters << value
+        when :include   then includes   << value
+        else
+          raise ScopedSearch::Exception, "Cannot handle #{notification.inspect}: #{value.inspect}"
+        end
+      end
+      
+      # Build hash for ActiveRecord::Base#find for the named scope
+      find_attributes = {}
+      find_attributes[:conditions] = [sql] + parameters if sql
+      find_attributes[:includes]   = includes unless includes.empty?
+      return find_attributes
     end
     
     # Return the SQL operator to use
@@ -40,47 +59,63 @@ module ScopedSearch
       when :gte;    '>='
       end  
     end
-     
+
+    # Perform a comparison between a field and a Date(Time) value.
+    # Makes sure the date is valid and adjust the comparison in
+    # some cases to return more logical results
     def self.datetime_test(field, operator, value, &block)
       
       # Parse the value as a date/time and ignore invalid timestamps
       timestamp = parse_temporal(value)
-      timestamp = Date.parse(timestamp.strftime('%Y-%m-%d')) if field.date?
       return nil unless timestamp 
+      timestamp = Date.parse(timestamp.strftime('%Y-%m-%d')) if field.date?      
       
-      # Check for the case that a date is given as search but the record is a datetime
+      # Check for the case that a date-only value is given as search keyword,
+      # but the field is of datetime type. Change the comparison to return
+      # more logical results.
       if timestamp.day_fraction == 0 && field.datetime?
+        
         if [:eq, :ne].include?(operator)
-          yield(timestamp)
-          yield(timestamp + 1)
+          # Instead of looking for an exact (non-)match, look for dates that
+          # fall inside/outside the range of timestamps of that day.
+          yield(:parameter, timestamp)
+          yield(:parameter, timestamp + 1)
           negate = (operator == :ne) ? 'NOT' : ''
           return "#{negate}(#{field.to_sql} >= ? AND #{field.to_sql} < ?)"
+          
         elsif operator == :gt
+          # Make sure timestamps on the given date are not included in the results
+          # by moving the date to the next day.
           timestamp += 1
+          operator = :gte
+          
         elsif operator == :lte
+          # Make sure the timestamps of the given date are included by moving the 
+          # date to the next date.
           timestamp += 1
           operator = :lt
         end
       end
     
       # Yield the timestamp and return the SQL test
-      yield(timestamp)
+      yield(:parameter, timestamp)
       "#{field.to_sql} #{self.sql_operator(operator)} ?"      
     end
     
     # Generates a simple SQL test expression, for a field and value using an operator.
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
-        yield("%#{value}%")
+        yield(:parameter, "%#{value}%")
         return "#{field.to_sql} #{self.sql_operator(operator)} ?"
       elsif field.temporal?
         return datetime_test(field, operator, value, &block)
       else
-        yield(value)
+        yield(:parameter, value)
         return "#{field.to_sql} #{self.sql_operator(operator)} ?"
       end
     end
     
+    # Try to parse a string as a datetime.
     def self.parse_temporal(value)
       DateTime.parse(value, true) rescue nil
     end
