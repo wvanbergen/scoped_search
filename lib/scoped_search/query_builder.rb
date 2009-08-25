@@ -43,11 +43,12 @@ module ScopedSearch
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
+      # p find_attributes # Uncomment for debugging
       return find_attributes
     end
     
     # Return the SQL operator to use
-    def self.sql_operator(operator)
+    def self.sql_operator(operator, field)
       case operator
       when :eq;     '='  
       when :like;   'LIKE'              
@@ -81,7 +82,7 @@ module ScopedSearch
           yield(:parameter, timestamp)
           yield(:parameter, timestamp + 1)
           negate    = (operator == :ne) ? 'NOT' : ''
-          field_sql = field.to_sql(&block)
+          field_sql = field.to_sql(operator, &block)
           return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
           
         elsif operator == :gt
@@ -100,19 +101,19 @@ module ScopedSearch
     
       # Yield the timestamp and return the SQL test
       yield(:parameter, timestamp)
-      "#{field.to_sql(&block)} #{self.sql_operator(operator)} ?"      
+      "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
     end
     
     # Generates a simple SQL test expression, for a field and value using an operator.
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield(:parameter, "%#{value}%")
-        return "#{field.to_sql(&block)} #{self.sql_operator(operator)} ?"
+        return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       elsif field.temporal?
         return datetime_test(field, operator, value, &block)
       else
         yield(:parameter, value)
-        return "#{field.to_sql(&block)} #{self.sql_operator(operator)} ?"
+        return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end
     end
     
@@ -124,7 +125,7 @@ module ScopedSearch
     module Field
       
       # Return an SQL representation for this field
-      def to_sql(&block)
+      def to_sql(operator = nil, &block)
         yield(:include, relation) if relation
         definition.klass.connection.quote_table_name(klass.table_name) + "." + 
             definition.klass.connection.quote_column_name(field)

@@ -77,6 +77,7 @@ module ScopedSearch
       @fields        = {}
       @unique_fields = []
       
+      setup_adapter!        unless klass.connection.nil?
       register_named_scope! unless klass.respond_to?(:search_for)
     end
     
@@ -111,7 +112,11 @@ module ScopedSearch
     # Registers the search_for named scope within the class
     def register_named_scope! # :nodoc
       @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
-    end    
+    end
+    
+    def setup_adapter!
+      ScopedSearch::Adapter.setup(@klass.connection)
+    end
     
   end
   

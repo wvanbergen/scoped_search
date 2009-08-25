@@ -5,6 +5,7 @@ describe ScopedSearch::Definition do
   before(:each) do
     @klass      = mock_activerecord_class
     @definition = ScopedSearch::Definition.new(@klass)
+    @definition.stub!(:setup_adapter)
   end
 
   describe '#initialize' do
@@ -20,9 +21,4 @@ describe ScopedSearch::Definition do
       ScopedSearch::Definition.new(@klass)
     end
   end
-
-  describe '#fields' do
-    
-  end
-
 end

@@ -27,7 +27,8 @@ module ScopedSearch
 end
 
 # Load all lib files
-require 'scoped_search/definition'      
+require 'scoped_search/definition'
+require 'scoped_search/adapters'
 require 'scoped_search/query_language'
 require 'scoped_search/query_builder'
 
