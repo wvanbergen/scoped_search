@@ -32,7 +32,8 @@ module ScopedSearch
     end
     
     module PostgreSQLAdapter
-      def setup(connection)
+      
+      def self.setup(connection)
         ScopedSearch::QueryBuilder.send :extend, QueryBuilderClassMethods
       end
       
