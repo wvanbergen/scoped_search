@@ -24,10 +24,10 @@ module ScopedSearch
     # Actually builds the find parameters
     def build_find_params
       parameters = []
-      includes   = [] 
+      includes   = []
       
-      # Build SQL where clause
-      sql = @ast.to_sql(definition) do |notification, value| 
+      # Build SQL WHERE clause using the AST
+      sql = @ast.to_sql(definition) do |notification, value|
         
         # Handle the notifications encountered during the SQL generation:
         # Store the parameters, includes, etc so that they can be added to
@@ -35,15 +35,14 @@ module ScopedSearch
         case notification
         when :parameter then parameters << value
         when :include   then includes   << value
-        else
-          raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
+        else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
       
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
-      find_attributes[:conditions] = [sql] + parameters if sql
-      find_attributes[:includes]   = includes unless includes.empty?
+      find_attributes[:conditions] = [sql] + parameters unless sql.nil?
+      find_attributes[:include]    = includes.uniq      unless includes.empty?
       return find_attributes
     end
     
@@ -81,8 +80,9 @@ module ScopedSearch
           # fall inside/outside the range of timestamps of that day.
           yield(:parameter, timestamp)
           yield(:parameter, timestamp + 1)
-          negate = (operator == :ne) ? 'NOT' : ''
-          return "#{negate}(#{field.to_sql} >= ? AND #{field.to_sql} < ?)"
+          negate    = (operator == :ne) ? 'NOT' : ''
+          field_sql = field.to_sql(&block)
+          return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
           
         elsif operator == :gt
           # Make sure timestamps on the given date are not included in the results
@@ -100,25 +100,35 @@ module ScopedSearch
     
       # Yield the timestamp and return the SQL test
       yield(:parameter, timestamp)
-      "#{field.to_sql} #{self.sql_operator(operator)} ?"      
+      "#{field.to_sql(&block)} #{self.sql_operator(operator)} ?"      
     end
     
     # Generates a simple SQL test expression, for a field and value using an operator.
     def self.sql_test(field, operator, value, &block)
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield(:parameter, "%#{value}%")
-        return "#{field.to_sql} #{self.sql_operator(operator)} ?"
+        return "#{field.to_sql(&block)} #{self.sql_operator(operator)} ?"
       elsif field.temporal?
         return datetime_test(field, operator, value, &block)
       else
         yield(:parameter, value)
-        return "#{field.to_sql} #{self.sql_operator(operator)} ?"
+        return "#{field.to_sql(&block)} #{self.sql_operator(operator)} ?"
       end
     end
     
     # Try to parse a string as a datetime.
     def self.parse_temporal(value)
       DateTime.parse(value, true) rescue nil
+    end
+
+    module Field
+      
+      # Return an SQL representation for this field
+      def to_sql(&block)
+        yield(:include, relation) if relation
+        definition.klass.connection.quote_table_name(klass.table_name) + "." + 
+            definition.klass.connection.quote_column_name(field)
+      end
     end
 
     module AST
@@ -148,8 +158,8 @@ module ScopedSearch
           raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
           
           case operator
-            when :null    then "#{field.to_sql} IS NULL"
-            when :notnull then "#{field.to_sql} IS NOT NULL"
+            when :null    then "#{field.to_sql(&block)} IS NULL"
+            when :notnull then "#{field.to_sql(&block)} IS NOT NULL"
           end
         end
         
@@ -200,6 +210,7 @@ module ScopedSearch
     end
   end
 
+  Definition::Field.send(:include, QueryBuilder::Field)
   QueryLanguage::AST::LeafNode.send(:include, QueryBuilder::AST::LeafNode)
   QueryLanguage::AST::OperatorNode.send(:include, QueryBuilder::AST::OperatorNode)
   QueryLanguage::AST::LogicalOperatorNode.send(:include, QueryBuilder::AST::LogicalOperatorNode)  

@@ -4,11 +4,19 @@ module ScopedSearch
     
     class Field
       
-      attr_reader :definition, :field, :only_explicit #, :relation
+      attr_reader :definition, :field, :only_explicit, :relation
+      
+      def klass
+        if relation
+          definition.klass.reflections[relation].klass
+        else
+          definition.klass
+        end
+      end
       
       # Find the relevant column definition in the AR class
       def column
-        definition.klass.columns_hash[field.to_s]
+        klass.columns_hash[field.to_s]
       end
       
       def type
@@ -47,7 +55,8 @@ module ScopedSearch
         @definition = definition
         @field      = field.to_sym
 
-        # Parse options hash
+        # Set attributes from options hash
+        @relation         = options[:relation]
         @only_explicit    = !!options[:only_explicit]
         @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         
@@ -58,11 +67,6 @@ module ScopedSearch
         # Store definition for alias / aliases as well
         definition.fields[options[:alias]] = self                    if options[:alias]
         options[:aliases].each { |al| definition.fields[al] = self } if options[:aliases]        
-      end
-
-      def to_sql
-        definition.klass.connection.quote_table_name(definition.klass.table_name) + "." + 
-              definition.klass.connection.quote_column_name(field)
       end
     end
     
