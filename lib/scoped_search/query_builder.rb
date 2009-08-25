@@ -9,9 +9,10 @@ module ScopedSearch
       # Return all record when an empty search string is given
       if !query.kind_of?(String) || query.strip.blank?
         return { :conditions => nil }
+      elsif query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
+        return self.new(definition, query).build_find_params
       else
-        builder = self.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query))
-        return builder.build_find_params
+        return self.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query)).build_find_params
       end
     end
 
