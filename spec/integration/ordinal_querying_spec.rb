@@ -6,11 +6,8 @@ describe ScopedSearch do
     ScopedSearch::Spec::Database.establish_connection
 
     @class = ScopedSearch::Spec::Database.create_model(:int => :integer, :timestamp => :datetime, :date => :date, :unindexed => :integer) do |klass|
-      klass.scoped_search do |search|
-        search.on :int
-        search.on :timestamp
-        search.on :date, :only_explicit => true
-      end
+      klass.scoped_search :on => [:int, :timestamp]
+      klass.scoped_search :on => :date, :only_explicit => true
     end
   end
 

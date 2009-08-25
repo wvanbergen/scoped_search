@@ -5,9 +5,15 @@ module ScopedSearch
     # Export the scoped_search method fo defining the search options.
     # This method will create a definition instance for the class if it does not yet exist,
     # and use the object as block argument and retun value.
-    def scoped_search
+    def scoped_search(*definitions)
       @scoped_search ||= ScopedSearch::Definition.new(self)
-      yield(@scoped_search) if block_given?
+      definitions.each do |definition|
+        if definition[:on].kind_of?(Array)
+          definition[:on].each { |field| @scoped_search.define(definition.merge(:on => field)) }
+        else
+          @scoped_search.define(definition)
+        end
+      end
       return @scoped_search
     end
 
@@ -18,9 +24,9 @@ module ScopedSearch
     def searchable_on(*fields)
       fields.each do |field| 
         if relation = self.reflections.keys.detect { |relation| field.to_s =~ Regexp.new("^#{relation}_(\\w+)$") }
-          scoped_search.in(relation, :on => $1.to_sym) 
+          scoped_search(:in => relation, :on => $1.to_sym) 
         else
-          scoped_search.on(field) 
+          scoped_search(:on => field)
         end
       end
     end    

@@ -21,7 +21,7 @@ describe ScopedSearch do
       # The class on which to call search_for
       Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
         klass.belongs_to :bar
-        klass.scoped_search.in(:bar, :on => :related)
+        klass.scoped_search :in => :bar, :on => :related
       end
       
       @bar_record = Bar.create!(:related => 'bar')
@@ -67,7 +67,7 @@ describe ScopedSearch do
       # The class on which to call search_for
       Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
         klass.has_many :bars
-        klass.scoped_search.in(:bars, :on => :related)
+        klass.scoped_search :in => :bars, :on => :related
       end
 
       @foo_1 = Foo.create!(:foo => 'foo')
@@ -115,7 +115,7 @@ describe ScopedSearch do
       # The class on which to call search_for
       Foo = ScopedSearch::Spec::Database.create_model(:foo => :string) do |klass|
         klass.has_one :bar
-        klass.scoped_search.in(:bar, :on => :related)
+        klass.scoped_search :in => :bar, :on => :related
       end
 
       @foo_1 = Foo.create!(:foo => 'foo')
@@ -165,7 +165,7 @@ describe ScopedSearch do
       # The class on which to call search_for
       class Foo < ActiveRecord::Base
         has_and_belongs_to_many :bars
-        scoped_search.in(:bars, :on => :related)
+        scoped_search :in => :bars, :on => :related
       end
 
       @foo_1 = Foo.create!(:foo => 'foo')
@@ -223,7 +223,7 @@ describe ScopedSearch do
         has_many :bars
         has_many :bazs, :through => :bars
         
-        scoped_search.in(:bazs, :on => :related)
+        scoped_search :in => :bazs, :on => :related
       end
 
       @foo_1 = Foo.create!(:foo => 'foo')

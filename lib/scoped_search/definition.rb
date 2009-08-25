@@ -51,14 +51,19 @@ module ScopedSearch
         end
       end
 
-      def initialize(definition, field, options = {})
+      def initialize(definition, options = {})
         @definition = definition
-        @field      = field.to_sym
+        case options
+        when Symbol, String
+          @field = field.to_sym
+        when Hash
+          @field = options.delete(:on)
 
-        # Set attributes from options hash
-        @relation         = options[:relation]
-        @only_explicit    = !!options[:only_explicit]
-        @default_operator = options[:default_operator] if options.has_key?(:default_operator)
+          # Set attributes from options hash
+          @relation         = options[:in]
+          @only_explicit    = !!options[:only_explicit]
+          @default_operator = options[:default_operator] if options.has_key?(:default_operator)
+        end
         
         # Store this field is the field array
         definition.fields[@field] ||= self
@@ -97,16 +102,10 @@ module ScopedSearch
       unique_fields.reject { |field| field.only_explicit }
     end
     
-    def on(field, options = {})
-      Field.new(self, field, options)
+    def define(options)
+      Field.new(self, options)
     end
-    
-    def in(relation, options)
-      field = options.delete(:on)
-      options[:relation] = relation
-      Field.new(self, field, options)
-    end
-    
+        
     protected
     
     # Registers the search_for named scope within the class

@@ -5,9 +5,9 @@ describe ScopedSearch, :search_for do
   before(:all) do
     ScopedSearch::Spec::Database.establish_connection
     @class = ScopedSearch::Spec::Database.create_model(:string => :string, :another => :string, :explicit => :string) do |klass|
-      klass.scoped_search.on :string
-      klass.scoped_search.on :another,  :default_operator => :eq, :alias => :alias      
-      klass.scoped_search.on :explicit, :only_explicit => true
+      klass.scoped_search :on => :string
+      klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias      
+      klass.scoped_search :on => :explicit, :only_explicit => true
     end
     
     @class.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz')

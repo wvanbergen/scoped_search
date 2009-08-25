@@ -32,7 +32,7 @@ describe ScopedSearch, "API" do
     
     before(:all) do
       @class = ScopedSearch::Spec::Database.create_model(:field => :string) do |klass|
-        klass.scoped_search.on :field
+        klass.scoped_search :on => :field
       end
     end
     
@@ -72,7 +72,7 @@ describe ScopedSearch, "API" do
 
     it "should create a Field with a valid relation when using the underscore notation" do
       ScopedSearch::Definition::Field.should_receive(:new).with(
-          instance_of(ScopedSearch::Definition), :related_field, hash_including(:relation => :bar))
+          instance_of(ScopedSearch::Definition), hash_including(:in => :bar, :on => :related_field))
           
       Foo.searchable_on(:bar_related_field)
     end
