@@ -94,7 +94,7 @@ module ScopedSearch::QueryLanguage::Parser
   # Parses a single value.
   # This can either be a constant value or a field name.
   def parse_value
-    raise ScopedSearch::Exception, "Value expected but found #{peek_token.inspect}" unless String === peek_token
+    raise ScopedSearch::QueryNotSupported, "Value expected but found #{peek_token.inspect}" unless String === peek_token
     ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
   end
 
