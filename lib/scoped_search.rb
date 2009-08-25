@@ -22,6 +22,10 @@ module ScopedSearch
   module BackwardsCompatibility
     # Defines fields to search on using a syntax compatible with scoped_search 1.2
     def searchable_on(*fields)
+      
+      options = fields.last.kind_of?(Hash) ? fields.pop : {}
+      # TODO: handle options?
+      
       fields.each do |field| 
         if relation = self.reflections.keys.detect { |relation| field.to_s =~ Regexp.new("^#{relation}_(\\w+)$") }
           scoped_search(:in => relation, :on => $1.to_sym) 
