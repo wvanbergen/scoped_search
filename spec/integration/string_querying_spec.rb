@@ -63,7 +63,31 @@ describe ScopedSearch, :search_for do
 
     it "should find two records if it partially matches them" do
       @class.search_for('ba').should have(2).item
+    end
+
+    it "should find no records starting with an a" do
+      @class.search_for('a%').should have(0).item
     end  
+
+    it "should find one records ending with an oo" do
+      @class.search_for('%oo').should have(1).item
+    end  
+
+    it "should find records without case sensitivity when using the LIKE operator" do
+      @class.search_for('string ~ FOO').should have(1).item
+    end
+
+    it "should not find records without case sensitivity when using the = operator" do
+      @class.search_for('string = FOO').should have(0).items
+    end
+
+    it "should find records without case sensitivity when using the != operator" do
+      @class.search_for('string != FOO').should have(3).items
+    end
+
+    it "should find records without case sensitivity when using the NOT LIKE operator" do
+      @class.search_for('string !~ FOO').should have(2).items
+    end
     
     it "should find the record if one of the query words match using OR" do
       @class.search_for('foo OR nonsense').should have(1).item
@@ -143,19 +167,19 @@ describe ScopedSearch, :search_for do
   
   context 'using null? and set? queries' do
     
-    it "should return all records if the string field is being check with set?" do
+    it "should return all records if the string field is being checked with set?" do
       @class.search_for('set? string').should have(3).items
     end
 
-    it "should return all records if the string field is being check with set?" do
+    it "should return no records if the string field is being checked with null?" do
       @class.search_for('null? string').should have(0).items
     end
 
-    it "should return all records if the string field is being check with set?" do
+    it "should return all records with a value if the string field is being checked with set?" do
       @class.search_for('set? explicit').should have(2).items
     end
 
-    it "should return all records if the string field is being check with set?" do
+    it "should return all records without a value if the string field is being checked with null?" do
       @class.search_for('null? explicit').should have(1).items
     end
     
