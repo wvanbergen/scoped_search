@@ -11,14 +11,25 @@ module ScopedSearch
       return @scoped_search
     end
 
+  end
+  
+  module BackwardsCompatibility
     # Defines fields to search on using a syntax compatible with scoped_search 1.2
-    # TODO: improve backwards compatibility?
     def searchable_on(*fields)
-      fields.each { |field| scoped_search.on(field) }
-    end
+      fields.each do |field| 
+        if relation = self.reflections.keys.detect { |relation| field.to_s =~ Regexp.new("^#{relation}_(\\w+)$") }
+          scoped_search.in(relation, :on => $1.to_sym) 
+        else
+          scoped_search.on(field) 
+        end
+      end
+    end    
   end
   
   class Exception < StandardError
+  end
+
+  class DefinitionError < ScopedSearch::Exception
   end
   
   class QueryNotSupported < ScopedSearch::Exception
@@ -34,3 +45,4 @@ require 'scoped_search/query_builder'
 
 # Import the search_on method in the ActiveReocrd::Base class
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
+ActiveRecord::Base.send(:extend, ScopedSearch::BackwardsCompatibility)
