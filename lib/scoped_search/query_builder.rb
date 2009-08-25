@@ -35,7 +35,7 @@ module ScopedSearch
         when :parameter then parameters << value
         when :include   then includes   << value
         else
-          raise ScopedSearch::Exception, "Cannot handle #{notification.inspect}: #{value.inspect}"
+          raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
       
@@ -144,7 +144,7 @@ module ScopedSearch
         # Returns a IS (NOT) NULL SQL fragment
         def to_null_sql(definition, &block)
           field = definition.fields[rhs.value.to_sym]  
-          raise ScopedSearch::Exception, "Field '#{rhs.value}' not recognized for searching!" unless field
+          raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
           
           case operator
             when :null    then "#{field.to_sql} IS NULL"
@@ -154,7 +154,7 @@ module ScopedSearch
         
         # No explicit field name given, run the operator on all default fields
         def to_default_fields_sql(definition, &block)
-          raise ScopedSearch::Exception, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
+          raise ScopedSearch::QueryNotSupported, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
           
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(rhs.value, operator).map { |field|
@@ -164,12 +164,12 @@ module ScopedSearch
         
         # Explicit field name given, run the operator on the specified field only
         def to_single_field_sql(definition, &block)
-          raise ScopedSearch::Exception, "Field name not a leaf node" unless lhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
-          raise ScopedSearch::Exception, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+          raise ScopedSearch::QueryNotSupported, "Field name not a leaf node" unless lhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+          raise ScopedSearch::QueryNotSupported, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
           
           # Search only on the given field.
           field = definition.fields[lhs.value.to_sym]
-          raise ScopedSearch::Exception, "Field '#{lhs.value}' not recognized for searching!" unless field
+          raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
           ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block)
         end
         
@@ -184,7 +184,7 @@ module ScopedSearch
           elsif children.length == 2
             to_single_field_sql(definition, &block)
           else
-            raise ScopedSearch::Exception, "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
+            raise ScopedSearch::QueryNotSupported, "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
           end
         end 
       end

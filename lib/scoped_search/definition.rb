@@ -92,7 +92,13 @@ module ScopedSearch
       unique_fields.reject { |field| field.only_explicit }
     end
     
-    def on(field, options ={})
+    def on(field, options = {})
+      Field.new(self, field, options)
+    end
+    
+    def in(relation, options)
+      field = options.delete(:on)
+      options[:relation] = relation
       Field.new(self, field, options)
     end
     

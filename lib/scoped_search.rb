@@ -20,6 +20,10 @@ module ScopedSearch
   
   class Exception < StandardError
   end
+  
+  class QueryNotSupported < ScopedSearch::Exception
+  end
+  
 end
 
 # Load all lib files
