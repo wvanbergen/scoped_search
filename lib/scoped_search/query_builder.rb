@@ -43,7 +43,7 @@ module ScopedSearch
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
-       p find_attributes # Uncomment for debugging
+      # p find_attributes # Uncomment for debugging
       return find_attributes
     end
     
