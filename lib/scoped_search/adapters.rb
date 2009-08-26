@@ -31,25 +31,10 @@ module ScopedSearch
       
     end
     
-    module PostgreSQLAdapter
-      
+    module PostgreSQLAdapter      
       def self.setup(connection)
-        ScopedSearch::QueryBuilder.send :extend, QueryBuilderClassMethods
-      end
-      
-      module QueryBuilderClassMethods
-        def sql_operator(sql_operator, field)
-          case operator
-          when :eq;     '='  
-          when :like;   'ILIKE'              
-          when :unlike; 'NOT ILIKE'              
-          when :ne;     '<>'  
-          when :gt;     '>'
-          when :lt;     '<'
-          when :lte;    '<='
-          when :gte;    '>='
-          end
-        end
+        ScopedSearch::QueryBuilder::SQL_OPERATORS[:like] = 'ILIKE'
+        ScopedSearch::QueryBuilder::SQL_OPERATORS[:unlike] = 'NOT ILIKE'
       end
     end
   end

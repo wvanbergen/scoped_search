@@ -43,22 +43,17 @@ module ScopedSearch
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
-      # p find_attributes # Uncomment for debugging
+       p find_attributes # Uncomment for debugging
       return find_attributes
     end
     
+    SQL_OPERATORS = { :eq =>'=', :ne => '<>',
+      :like => 'LIKE', :unlike => 'NOT LIKE',
+      :gt => '>', :lt =>'<', :lte => '<=', :gte => '>=' }
+    
     # Return the SQL operator to use
     def self.sql_operator(operator, field)
-      case operator
-      when :eq;     '='  
-      when :like;   'LIKE'              
-      when :unlike; 'NOT LIKE'              
-      when :ne;     '<>'  
-      when :gt;     '>'
-      when :lt;     '<'
-      when :lte;    '<='
-      when :gte;    '>='
-      end  
+      SQL_OPERATORS[operator]
     end
 
     # Perform a comparison between a field and a Date(Time) value.
