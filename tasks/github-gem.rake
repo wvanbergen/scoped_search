@@ -97,7 +97,7 @@ module Rake
     protected 
 
     def has_rdoc?
-      @specification.has_rdoc
+      branch_exist?('gh-pages')
     end
 
     def has_specs?
@@ -168,6 +168,11 @@ module Rake
       run_command('git branch').detect { |line| /^\* (.+)/ =~ line }
       raise "You are currently not working in the master branch!" unless branch == $1
     end
+
+    def branch_exist?(branch)
+      run_command('git branch').any? { |line| line.split(' ').last == branch }
+    end
+
     
     def verify_clean_status(on_branch = nil)
       sh "git fetch"
