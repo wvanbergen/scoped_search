@@ -4,3 +4,5 @@ scoped_search-*.gem
 /doc
 /pkg
 /coverage
+/classes
+/files
