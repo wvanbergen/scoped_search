@@ -53,7 +53,7 @@ More information about usage can be found in the project wiki: http://wiki.githu
 
 The search query language is simple, but supports several constructs to support more complex queries:
 
-words::         require very word to be present, e.g.: <tt>some search keywords</tt>
+words::         require every word to be present, e.g.: <tt>some search keywords</tt>
 
 phrases::       use quotes for multi-word phrases, e.g. <tt>"police car"</tt>
 
