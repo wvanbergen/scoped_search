@@ -10,7 +10,9 @@ Gem::Specification.new do |s|
   s.email    = ['willem@vanbergen.org', 'weshays@gbdev.com']
   s.homepage = 'http://wiki.github.com/wvanbergen/scoped_search'
   
-  s.has_rdoc = true
+  s.add_runtime_dependency('activerecord', '>= 2.1.0')
+  s.add_development_dependency('rspec', '>= 1.1.4')
+  
   s.rdoc_options << '--title' << s.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
   s.extra_rdoc_files = ['README.rdoc']
   
