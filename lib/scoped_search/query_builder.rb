@@ -7,12 +7,14 @@ module ScopedSearch
     # Creates a find parameter hash given a class, and query string.
     def self.build_query(definition, query) 
       # Return all record when an empty search string is given
-      if !query.kind_of?(String) || query.strip.blank?
-        return { :conditions => nil }
-      elsif query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
+      if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
         return self.new(definition, query).build_find_params
-      else
+      elsif query.kind_of?(String)
         return self.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query)).build_find_params
+      elsif query.nil?
+        return { }
+      else
+        raise "Unsupported query object: #{query.inspect}!"
       end
     end
 
@@ -119,7 +121,9 @@ module ScopedSearch
 
     module Field
       
-      # Return an SQL representation for this field
+      # Return an SQL representation for this field. Also make sure that
+      # the relation which includes the search field is included in the
+      # SQL query.
       def to_sql(operator = nil, &block)
         yield(:include, relation) if relation
         definition.klass.connection.quote_table_name(klass.table_name) + "." + 

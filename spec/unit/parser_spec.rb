@@ -18,7 +18,6 @@ describe ScopedSearch::QueryLanguage::Parser do
     '1 (2 (3 4))'.should parse_to([:and, '1', '2', '3', '4'])
   end
   
-  
   it "should create an OR construct" do
     'some OR simple OR keywords'.should parse_to([:or, 'some', 'simple', 'keywords'])
   end
