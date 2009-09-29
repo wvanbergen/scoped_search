@@ -13,19 +13,19 @@ describe ScopedSearch do
   context 'querying a :belongs_to relation' do
 
     before(:all) do
-      
+
       # The related class
       ActiveRecord::Migration.create_table(:bars) { |t| t.string :related }
       class Bar < ActiveRecord::Base; has_many :foos; end
-      
+
       # The class on which to call search_for
       Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
         klass.belongs_to :bar
         klass.scoped_search :in => :bar, :on => :related
       end
-      
+
       @bar_record = Bar.create!(:related => 'bar')
-      
+
       Foo.create!(:foo => 'foo',       :bar => @bar_record)
       Foo.create!(:foo => 'foo too',   :bar => @bar_record)
       Foo.create!(:foo => 'foo three', :bar => Bar.create!(:related => 'another bar'))
@@ -85,11 +85,11 @@ describe ScopedSearch do
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
     end
-    
+
     it "should find all records with at least one bar record containing 'bar'" do
       Foo.search_for('bar').should have(2).items
     end
-    
+
     it "should find the only record with at least one bar record having the exact value 'bar'" do
       Foo.search_for('= bar').should have(1).item
     end
@@ -97,13 +97,13 @@ describe ScopedSearch do
     it "should find all records for which at least one related bar record exists" do
       Foo.search_for('set? related').should have(2).items
     end
-    
+
     it "should find all records for which none related bar records exist" do
       Foo.search_for('null? related').should have(1).items
     end
-    
+
   end
-  
+
   context 'querying a :has_one relation' do
 
     before(:all) do
@@ -132,11 +132,11 @@ describe ScopedSearch do
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
     end
-    
+
     it "should find all records with a bar record containing 'bar" do
       Foo.search_for('bar').should have(2).items
     end
-    
+
     it "should find the only record with the bar record has the exact value 'bar" do
       Foo.search_for('= bar').should have(1).item
     end
@@ -144,7 +144,7 @@ describe ScopedSearch do
     it "should find all records for which the related bar record exists" do
       Foo.search_for('set? related').should have(2).items
     end
-    
+
     it "should find all records for which the related bar record does not exist" do
       Foo.search_for('null? related').should have(1).items
     end
@@ -158,7 +158,7 @@ describe ScopedSearch do
       ActiveRecord::Migration.create_table(:bars) { |t| t.string :related }
       ActiveRecord::Migration.create_table(:bars_foos, :id => false) { |t| t.integer :foo_id; t.integer :bar_id }
       ActiveRecord::Migration.create_table(:foos) { |t| t.string :foo }
-      
+
       # The related class
       class Bar < ActiveRecord::Base; end
 
@@ -175,7 +175,7 @@ describe ScopedSearch do
       @bar_1 = Bar.create!(:related => 'bar')
       @bar_2 = Bar.create!(:related => 'other bar')
       @bar_3 = Bar.create!(:related => 'last bar')
-      
+
       @foo_1.bars << @bar_1 << @bar_2
       @foo_2.bars << @bar_2 << @bar_3
     end
@@ -183,15 +183,15 @@ describe ScopedSearch do
     after(:all) do
       ActiveRecord::Migration.drop_table(:bars_foos)
       ActiveRecord::Migration.drop_table(:bars)
-      ActiveRecord::Migration.drop_table(:foos)      
+      ActiveRecord::Migration.drop_table(:foos)
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
     end
-    
+
     it "should find all records with at least one associated bar record containing 'bar'" do
       Foo.search_for('bar').should have(2).items
     end
-    
+
     it "should find record which is related to @bar_1" do
       Foo.search_for('= bar').should have(1).items
     end
@@ -206,14 +206,14 @@ describe ScopedSearch do
   end
 
   context 'querying a :has_many => :through relation' do
-    
+
     before(:all) do
 
       # Create some tables
       ActiveRecord::Migration.create_table(:bars) { |t| t.integer :foo_id; t.integer :baz_id }
       ActiveRecord::Migration.create_table(:bazs) { |t| t.string :related }
       ActiveRecord::Migration.create_table(:foos) { |t| t.string :foo }
-      
+
       # The related classes
       class Bar < ActiveRecord::Base; belongs_to :baz; belongs_to :foo; end
       class Baz < ActiveRecord::Base; has_many :bars; end
@@ -222,7 +222,7 @@ describe ScopedSearch do
       class Foo < ActiveRecord::Base
         has_many :bars
         has_many :bazs, :through => :bars
-        
+
         scoped_search :in => :bazs, :on => :related
       end
 
@@ -248,8 +248,8 @@ describe ScopedSearch do
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
       Object.send :remove_const, :Baz
-    end   
-    
+    end
+
     it "should find the two records that are related to a baz record" do
       Foo.search_for('baz').should have(2).items
     end

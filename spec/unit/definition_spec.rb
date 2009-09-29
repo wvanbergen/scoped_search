@@ -9,7 +9,7 @@ describe ScopedSearch::Definition do
   end
 
   describe '#initialize' do
-    
+
     it "should create the named scope when" do
       @klass.should_receive(:named_scope).with(:search_for, instance_of(Proc))
       ScopedSearch::Definition.new(@klass)

@@ -1,12 +1,20 @@
 module ScopedSearch
 
+  # The QueryBuilder class builds an SQL query based on aquery string that is
+  # provided to the search_for named scope. It uses a SearchDefinition instance
+  # to shape the query.
   class QueryBuilder
-    
+
     attr_reader :ast, :definition
-    
-    # Creates a find parameter hash given a class, and query string.
-    def self.build_query(definition, query) 
-      # Return all record when an empty search string is given
+
+    # Creates a find parameter hash that can be passed to ActiveRecord::Base#find,
+    # given a search definition and query string. This method is called from the
+    # search_for named scope.
+    #
+    # This method will parse the query string and build an SQL query using the search
+    # query. It will return an ampty hash if the search query is empty, in which case
+    # the scope call will simply return all records.
+    def self.build_query(definition, query)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
         return self.new(definition, query).build_find_params
       elsif query.kind_of?(String)
@@ -22,15 +30,16 @@ module ScopedSearch
     def initialize(definition, ast)
       @definition, @ast = definition, ast
     end
-    
-    # Actually builds the find parameters
+
+    # Actually builds the find parameters hash that should be used in the search_for
+    # named scope.
     def build_find_params
       parameters = []
       includes   = []
-      
+
       # Build SQL WHERE clause using the AST
       sql = @ast.to_sql(definition) do |notification, value|
-        
+
         # Handle the notifications encountered during the SQL generation:
         # Store the parameters, includes, etc so that they can be added to
         # the find-hash later on.
@@ -40,7 +49,7 @@ module ScopedSearch
         else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
-      
+
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
@@ -48,31 +57,42 @@ module ScopedSearch
       # p find_attributes # Uncomment for debugging
       return find_attributes
     end
-    
-    SQL_OPERATORS = { :eq =>'=', :ne => '<>',
-      :like => 'LIKE', :unlike => 'NOT LIKE',
-      :gt => '>', :lt =>'<', :lte => '<=', :gte => '>=' }
-    
-    # Return the SQL operator to use
+
+    # A hash that maps the operators of the query language with the corresponding SQL operator.
+    SQL_OPERATORS = { :eq =>'=',  :ne => '<>', :like => 'LIKE', :unlike => 'NOT LIKE',
+                      :gt => '>', :lt =>'<',   :lte => '<=',    :gte => '>=' }
+
+    # Return the SQL operator to use given an operator symbol and field definition.
+    #
+    # By default, it will simply look up the correct SQL operator in the SQL_OPERATORS
+    # hash, but this can be overrided by a database adapter.
     def self.sql_operator(operator, field)
       SQL_OPERATORS[operator]
     end
 
     # Perform a comparison between a field and a Date(Time) value.
-    # Makes sure the date is valid and adjust the comparison in
-    # some cases to return more logical results
-    def self.datetime_test(field, operator, value, &block)
-      
+    #
+    # This function makes sure the date is valid and adjust the comparison in
+    # some cases to return more logical results.
+    #
+    # This function needs a block that can be used to pass other information about the query
+    # (parameters that should be escaped, includes) to the query builder.
+    #
+    # <tt>field</tt>:: The field to test.
+    # <tt>operator</tt>:: The operator used for comparison.
+    # <tt>value</tt>:: The value to compare the field with.
+    def self.datetime_test(field, operator, value, &block) # :yields: finder_option_type, value
+
       # Parse the value as a date/time and ignore invalid timestamps
       timestamp = parse_temporal(value)
-      return nil unless timestamp 
-      timestamp = Date.parse(timestamp.strftime('%Y-%m-%d')) if field.date?      
-      
+      return nil unless timestamp
+      timestamp = Date.parse(timestamp.strftime('%Y-%m-%d')) if field.date?
+
       # Check for the case that a date-only value is given as search keyword,
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
       if timestamp.day_fraction == 0 && field.datetime?
-        
+
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
@@ -81,28 +101,35 @@ module ScopedSearch
           negate    = (operator == :ne) ? 'NOT' : ''
           field_sql = field.to_sql(operator, &block)
           return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
-          
+
         elsif operator == :gt
           # Make sure timestamps on the given date are not included in the results
           # by moving the date to the next day.
           timestamp += 1
           operator = :gte
-          
+
         elsif operator == :lte
-          # Make sure the timestamps of the given date are included by moving the 
+          # Make sure the timestamps of the given date are included by moving the
           # date to the next date.
           timestamp += 1
           operator = :lt
         end
       end
-    
+
       # Yield the timestamp and return the SQL test
       yield(:parameter, timestamp)
       "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
     end
-    
+
     # Generates a simple SQL test expression, for a field and value using an operator.
-    def self.sql_test(field, operator, value, &block)
+    #
+    # This function needs a block that can be used to pass other information about the query
+    # (parameters that should be escaped, includes) to the query builder.
+    #
+    # <tt>field</tt>:: The field to test.
+    # <tt>operator</tt>:: The operator used for comparison.
+    # <tt>value</tt>:: The value to compare the field with.
+    def self.sql_test(field, operator, value, &block) # :yields: finder_option_type, value
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield(:parameter, "%#{value}%")
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
@@ -113,26 +140,32 @@ module ScopedSearch
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end
     end
-    
+
     # Try to parse a string as a datetime.
     def self.parse_temporal(value)
       DateTime.parse(value, true) rescue nil
     end
 
+    # This module gets included into the Field class to add SQL generation.
     module Field
-      
+
       # Return an SQL representation for this field. Also make sure that
       # the relation which includes the search field is included in the
       # SQL query.
-      def to_sql(operator = nil, &block)
+      #
+      # This function may yield an :include that should be used in the
+      # ActiveRecord::Base#find call, to make sure that the field is avalable
+      # for the SQL query.
+      def to_sql(operator = nil, &block) # :yields: finder_option_type, value
         yield(:include, relation) if relation
-        definition.klass.connection.quote_table_name(klass.table_name) + "." + 
+        definition.klass.connection.quote_table_name(klass.table_name) + "." +
             definition.klass.connection.quote_column_name(field)
       end
     end
 
+    # This module contains modules for every AST::Node class to add SQL generation.
     module AST
-      
+
       # Defines the to_sql method for AST LeadNodes
       module LeafNode
         def to_sql(definition, &block)
@@ -143,47 +176,47 @@ module ScopedSearch
           "(#{fragments.join(' OR ')})"
         end
       end
-      
+
       # Defines the to_sql method for AST operator nodes
       module OperatorNode
-            
-        # Returns a NOT(...)  SQL fragment that negates the current AST node's children  
+
+        # Returns a NOT(...)  SQL fragment that negates the current AST node's children
         def to_not_sql(definition, &block)
           "(NOT(#{rhs.to_sql(definition, &block)}) OR #{rhs.to_sql(definition, &block)} IS NULL)"
         end
-        
-        # Returns a IS (NOT) NULL SQL fragment
+
+        # Returns an IS (NOT) NULL SQL fragment
         def to_null_sql(definition, &block)
-          field = definition.fields[rhs.value.to_sym]  
+          field = definition.fields[rhs.value.to_sym]
           raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
-          
+
           case operator
             when :null    then "#{field.to_sql(&block)} IS NULL"
             when :notnull then "#{field.to_sql(&block)} IS NOT NULL"
           end
         end
-        
+
         # No explicit field name given, run the operator on all default fields
         def to_default_fields_sql(definition, &block)
-          raise ScopedSearch::QueryNotSupported, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)          
-          
+          raise ScopedSearch::QueryNotSupported, "Value not a leaf node" unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
+
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(rhs.value, operator).map { |field|
             ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block) }.compact
           fragments.empty? ? nil : "(#{fragments.join(' OR ')})"
         end
-        
+
         # Explicit field name given, run the operator on the specified field only
         def to_single_field_sql(definition, &block)
           raise ScopedSearch::QueryNotSupported, "Field name not a leaf node" unless lhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
           raise ScopedSearch::QueryNotSupported, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
-          
+
           # Search only on the given field.
           field = definition.fields[lhs.value.to_sym]
           raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
           ScopedSearch::QueryBuilder.sql_test(field, operator, rhs.value, &block)
         end
-        
+
         # Convert this AST node to an SQL fragment.
         def to_sql(definition, &block)
           if operator == :not && children.length == 1
@@ -191,27 +224,30 @@ module ScopedSearch
           elsif [:null, :notnull].include?(operator)
             to_null_sql(definition, &block)
           elsif children.length == 1
-            to_default_fields_sql(definition, &block)            
+            to_default_fields_sql(definition, &block)
           elsif children.length == 2
             to_single_field_sql(definition, &block)
           else
             raise ScopedSearch::QueryNotSupported, "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
           end
-        end 
+        end
       end
-      
+
       # Defines the to_sql method for AST AND/OR operators
       module LogicalOperatorNode
         def to_sql(definition, &block)
           fragments = children.map { |c| c.to_sql(definition, &block) }.compact
           fragments.empty? ? nil : "(#{fragments.join(" #{operator.to_s.upcase} ")})"
-        end 
-      end      
+        end
+      end
     end
   end
+
+  # Include the modu;es into the corresponding classes
+  # to add SQL generation capabilities to them.
 
   Definition::Field.send(:include, QueryBuilder::Field)
   QueryLanguage::AST::LeafNode.send(:include, QueryBuilder::AST::LeafNode)
   QueryLanguage::AST::OperatorNode.send(:include, QueryBuilder::AST::OperatorNode)
-  QueryLanguage::AST::LogicalOperatorNode.send(:include, QueryBuilder::AST::LogicalOperatorNode)  
+  QueryLanguage::AST::LogicalOperatorNode.send(:include, QueryBuilder::AST::LogicalOperatorNode)
 end

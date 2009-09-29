@@ -65,7 +65,7 @@ describe ScopedSearch::QueryLanguage::AST do
 
       it "should create a child node for every subsequent array item" do
         @ast.should have(2).children
-      end    
+      end
 
       it "should create a nested OR structure for a nested array" do
         @ast.lhs.should be_leaf_node('a')
@@ -134,7 +134,7 @@ describe ScopedSearch::QueryLanguage::AST::OperatorNode do
 
   context 'with 1 child' do
     before(:each) do
-      @node = tree([:not, '1']) 
+      @node = tree([:not, '1'])
     end
 
     it 'should be a prefix operator' do
@@ -156,7 +156,7 @@ describe ScopedSearch::QueryLanguage::AST::OperatorNode do
 
   context 'with 2 children' do
     before(:each) do
-      @node = tree([:eq, '1', '2']) 
+      @node = tree([:eq, '1', '2'])
     end
 
     it "should be an infix operator" do
@@ -164,7 +164,7 @@ describe ScopedSearch::QueryLanguage::AST::OperatorNode do
     end
 
     it "should not be a prefix operator" do
-      @node.should_not be_prefix      
+      @node.should_not be_prefix
     end
 
     it "should return the first child as LHS" do
@@ -179,7 +179,7 @@ describe ScopedSearch::QueryLanguage::AST::OperatorNode do
 
   context 'many children' do
     before(:each) do
-      @node = tree([:and, '1', '2', '3', '4']) 
+      @node = tree([:and, '1', '2', '3', '4'])
     end
 
     it "should be an infix operator" do

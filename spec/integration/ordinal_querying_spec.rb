@@ -97,31 +97,31 @@ describe ScopedSearch do
     it "should accept YY-MM-DD as date format" do
       @class.search_for('date = 09-01-02').should have(1).item
     end
-    
+
     it "should accept MM/DD/YY as date format" do
       @class.search_for('date = 01/02/09').should have(1).item
-    end    
-    
+    end
+
     it "should accept YYYY/MM/DD as date format" do
       @class.search_for('date = 2009/01/02').should have(1).item
     end
-    
+
     it "should accept MM/DD/YYYY as date format" do
       @class.search_for('date = 01/02/2009').should have(1).item
-    end      
-    
+    end
+
     it "should ignore an invalid date and thus return all records" do
       @class.search_for('>= 2009-14-57').should have(2).items
-    end      
-    
+    end
+
     it "should find the records with a timestamp set some point on the provided date" do
       @class.search_for('>= 2009-01-02').should have(1).item
     end
-    
+
     it "should support full timestamps" do
       @class.search_for('> "2009-01-02 02:02:02"').should have(1).item
     end
-    
+
     it "should find no record with a timestamp in the past" do
       @class.search_for('< 2009-01-02').should have(0).item
     end
@@ -129,14 +129,14 @@ describe ScopedSearch do
     it "should find all timestamps on a date if no time is given using the = operator" do
       @class.search_for('= 2009-01-02').should have(1).item
     end
-    
+
     it "should find all timestamps on a date if no time is when no operator is given" do
       @class.search_for('2009-01-02').should have(1).item
-    end    
-    
+    end
+
     it "should find all timestamps not on a date if no time is given using the != operator" do
       @class.search_for('!= 2009-01-02').should have(0).item
-    end      
+    end
 
     it "should find the records when the date part of a timestamp matches a date" do
       @class.search_for('>= 2009-01-02').should have(1).item

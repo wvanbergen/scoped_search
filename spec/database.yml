@@ -1,17 +1,17 @@
 sqlite3:
   adapter: "sqlite3"
   database: ":memory:"
-  
+
 mysql:
   adapter: "mysql"
   host: "localhost"
   user: "root"
   password:
   database: "scoped_search_test"
-  
+
 postgresql:
   adapter: "postgresql"
   host: "localhost"
   username: "sstest"
   password: "sstest"
-  database: "scoped_search_test"  
+  database: "scoped_search_test"

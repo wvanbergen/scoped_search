@@ -1,6 +1,6 @@
 = Scoped search
 
-The <b>scoped_search</b> Rails plugin makes it easy to search your ActiveRecord models. Searching is 
+The <b>scoped_search</b> Rails plugin makes it easy to search your ActiveRecord models. Searching is
 performed using a query string, which should be passed to the named_scope <tt>search_for</tt>. Based on
 a definition in what fields to look, it will build query conditions and return those as a named scope.
 
@@ -10,7 +10,7 @@ The recommended method to enable scoped_search in your project is adding the sco
 
   Rails::Initializer.run do |config|
     ...
-    config.gem 'wvanbergen-scoped_search', :lib => 'scoped_search', 
+    config.gem 'wvanbergen-scoped_search', :lib => 'scoped_search',
                    :source => 'http://gems.github.com/'
   end
 
@@ -31,7 +31,7 @@ Scoped search requires you to define the fields you want to search in:
 For more information about options and using fields from relations, see the project
 wiki on search definitions: http://wiki.github.com/wvanbergen/scoped_search/search-definition
 
-Now, the <b>search_for</b> scope is available for queries. You should pass a query string to the scope. 
+Now, the <b>search_for</b> scope is available for queries. You should pass a query string to the scope.
 This can be empty or nil, in which case all no search conditions are set (and all records will be returned).
 
   User.search_for('my search string').each { |user| ... }
@@ -57,7 +57,7 @@ words::         require every word to be present, e.g.: <tt>some search keywords
 
 phrases::       use quotes for multi-word phrases, e.g. <tt>"police car"</tt>
 
-negation::      look for "everything but", e.g. <tt>police -uniform</tt>, <tt>-"police car"</tt>, 
+negation::      look for "everything but", e.g. <tt>police -uniform</tt>, <tt>-"police car"</tt>,
                 <tt>police NOT car</tt>
 
 logical keywords:: make logical constructs using AND, OR, &&, ||, &, | operators, e.g.
@@ -90,5 +90,5 @@ For more info, see the the project wiki: http://wiki.github.com/wvanbergen/scope
 
 == License
 
-This plugin is released under the MIT license. Please contact weshays (http://github.com/weshays) 
+This plugin is released under the MIT license. Please contact weshays (http://github.com/weshays)
 or wvanbergen (http://github.com/wvanbergen) for any questions.

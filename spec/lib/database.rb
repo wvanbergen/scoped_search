@@ -7,7 +7,7 @@ module ScopedSearch::Spec::Database
       self.establish_named_connection(ENV['DATABASE'])
     else
       self.establish_default_connection
-    end  
+    end
   end
 
   def self.establish_named_connection(name)
@@ -23,21 +23,21 @@ module ScopedSearch::Spec::Database
   def self.close_connection
     ActiveRecord::Base.remove_connection
   end
-  
+
   def self.create_model(fields)
     table_name = "model_#{rand}".gsub(/\./, '')
-    ActiveRecord::Migration.create_table(table_name) do |t| 
-      fields.each do |name, field_type| 
+    ActiveRecord::Migration.create_table(table_name) do |t|
+      fields.each do |name, field_type|
         t.send(field_type.to_s.gsub(/^unindexed_/, '').to_sym, name)
       end
     end
-    
+
     klass = Class.new(ActiveRecord::Base)
     klass.set_table_name(table_name)
     yield(klass) if block_given?
     return klass
   end
-  
+
   def self.drop_model(klass)
     ActiveRecord::Migration.drop_table(klass.table_name)
   end

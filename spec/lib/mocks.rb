@@ -10,7 +10,7 @@ module ScopedSearch::Spec::Mocks
     ar_mock.stub!(:connection).and_return(mock_database_connection)
     return ar_mock
   end
-  
+
   def mock_database_connection
     c_mock = mock('ActiveRecord::Base.connection')
     return c_mock
