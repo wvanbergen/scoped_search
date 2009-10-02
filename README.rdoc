@@ -1,8 +1,15 @@
 = Scoped search
 
-The <b>scoped_search</b> Rails plugin makes it easy to search your ActiveRecord models. Searching is
-performed using a query string, which should be passed to the named_scope <tt>search_for</tt>. Based on
-a definition in what fields to look, it will build query conditions and return those as a named scope.
+The <b>scoped_search</b> Rails plugin makes it easy to search your ActiveRecord
+models. Searching is performed using a query string, which should be passed to
+the named_scope <tt>search_for</tt>. Based on a definition in what fields to
+look, it will build query conditions and return those as a named scope.
+
+Scoped search is great if you want to offer a simple search box to your users
+and build a query based on the search string they enter. If you want to build a
+more complex search form with multiple fields, searchlogic (see
+http://github.com/binarylogic/searchlogic) may be a good choice for you.
+
 
 == Installing
 
@@ -28,16 +35,18 @@ Scoped search requires you to define the fields you want to search in:
     scoped_search :on => [:first_name, :last_name]
   end
 
-For more information about options and using fields from relations, see the project
-wiki on search definitions: http://wiki.github.com/wvanbergen/scoped_search/search-definition
+For more information about options and using fields from relations, see the
+project wiki on search definitions:
+http://wiki.github.com/wvanbergen/scoped_search/search-definition
 
-Now, the <b>search_for</b> scope is available for queries. You should pass a query string to the scope.
-This can be empty or nil, in which case all no search conditions are set (and all records will be returned).
+Now, the <b>search_for</b> scope is available for queries. You should pass a
+query string to the scope. This can be empty or nil, in which case all no search
+conditions are set (and all records will be returned).
 
   User.search_for('my search string').each { |user| ... }
 
-The result is returned as <tt>named_scope</tt>. Because of this, you can actually chain the call with
-other scopes, or with will_paginate. An example:
+The result is returned as <tt>named_scope</tt>. Because of this, you can
+actually chain the call with other scopes, or with will_paginate. An example:
 
   class Project < ActiveRecord::Base
     searchable_on :name, :description
@@ -47,11 +56,13 @@ other scopes, or with will_paginate. An example:
   # using chained named_scopes and will_paginate in your controller
   Project.public.search_for(params[:q]).paginate(:page => params[:page], :include => :tasks)
 
-More information about usage can be found in the project wiki: http://wiki.github.com/wvanbergen/scoped_search/usage
+More information about usage can be found in the project wiki:
+http://wiki.github.com/wvanbergen/scoped_search/usage
 
 == Query language
 
-The search query language is simple, but supports several constructs to support more complex queries:
+The search query language is simple, but supports several constructs to support
+more complex queries:
 
 words::         require every word to be present, e.g.: <tt>some search keywords</tt>
 
@@ -74,8 +85,9 @@ explicit fields::  search only in the given field. e.g. <tt>username = root</tt>
 NULL checks::   using the <tt>set?</tt> and <tt>null?</tt> operator with a field name, e.g.
                 <tt>null? graduated_at</tt>, <tt>set? parent_id</tt>
 
-A complex query example to look for Ruby on Rails programmers without cobol experience, over 18 years old,
-with a recently updated record and a non-lame nickname:
+A complex query example to look for Ruby on Rails programmers without cobol
+experience, over 18 years old, with a recently updated record and a non-lame
+nickname:
 
   ("Ruby" OR "Rails") -cobol, age >= 18, updated_at > 2009-01-01 && nickname !~ l33t
 
@@ -90,5 +102,6 @@ For more info, see the the project wiki: http://wiki.github.com/wvanbergen/scope
 
 == License
 
-This plugin is released under the MIT license. Please contact weshays (http://github.com/weshays)
-or wvanbergen (http://github.com/wvanbergen) for any questions.
+This plugin is released under the MIT license. Please contact weshays
+(http://github.com/weshays) or wvanbergen (http://github.com/wvanbergen) for any
+questions.
