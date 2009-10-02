@@ -4,6 +4,7 @@ describe ScopedSearch::QueryBuilder do
 
   before(:each) do
     @definition = mock('ScopedSearch::Definition')
+    @definition.stub!(:klass).and_return(Class.new(ActiveRecord::Base))
   end
 
   it "should return empty conditions if the search query is nil" do
@@ -15,7 +16,7 @@ describe ScopedSearch::QueryBuilder do
   end
 
   it "should return empty conditions if the query is whitespace only" do
-    ScopedSearch::QueryBuilder.build_query(@definition, "\t ").should == { }
+    ScopedSearch::QueryBuilder.build_query(@definition, "\t ").should == {  }
   end
 
 end

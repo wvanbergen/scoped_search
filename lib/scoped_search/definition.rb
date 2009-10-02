@@ -106,7 +106,6 @@ module ScopedSearch
       @fields        = {}
       @unique_fields = []
 
-      setup_adapter!        unless klass.connection.nil?
       register_named_scope! unless klass.respond_to?(:search_for)
     end
 
@@ -118,7 +117,7 @@ module ScopedSearch
       column_types  = []
       column_types += [:string, :text]                      if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:integer, :double, :float, :decimal] if value =~ NUMERICAL_REGXP
-      column_types += [:datetime, :date, :timestamp]        if ScopedSearch::QueryBuilder.parse_temporal(value)
+      column_types += [:datetime, :date, :timestamp]        if (DateTime.parse(value) rescue nil)
 
       default_fields.select { |field| column_types.include?(field.type) }
     end
@@ -141,11 +140,6 @@ module ScopedSearch
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
       @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
-    end
-
-    # Installs the database adapter based on the current database connection.
-    def setup_adapter!
-      ScopedSearch::Adapter.setup(@klass.connection)
     end
   end
 end
