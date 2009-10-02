@@ -3,8 +3,8 @@ Gem::Specification.new do |s|
   
   # Do not change the version and date fields by hand. This will be done
   # automatically by the gem release script.
-  s.version = "2.0.0"
-  s.date    = "2009-08-26"
+  s.version = "2.0.1"
+  s.date    = "2009-10-02"
 
   s.summary = "A Rails plugin to search your models with a simple query language, implemented using a named_scope"
   s.description = <<EOS
@@ -27,6 +27,6 @@ EOS
 
   # Do not change the files and test_files fields by hand. This will be done
   # automatically by the gem release script.
-  s.files      = %w(LICENSE README.rdoc Rakefile init.rb lib lib/scoped_search lib/scoped_search.rb lib/scoped_search/adapters.rb lib/scoped_search/definition.rb lib/scoped_search/query_builder.rb lib/scoped_search/query_language lib/scoped_search/query_language.rb lib/scoped_search/query_language/ast.rb lib/scoped_search/query_language/parser.rb lib/scoped_search/query_language/tokenizer.rb spec spec/database.yml spec/integration spec/integration/api_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/string_querying_spec.rb spec/lib spec/lib/database.rb spec/lib/matchers.rb spec/lib/mocks.rb spec/spec_helper.rb spec/unit spec/unit/ast_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb tasks tasks/database_tests.rake tasks/github-gem.rake)
-  s.test_files = %w(spec/integration/api_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/string_querying_spec.rb spec/unit/ast_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb)
+  s.files      = %w(spec/spec_helper.rb spec/integration/string_querying_spec.rb spec/integration/relation_querying_spec.rb .gitignore spec/lib/mocks.rb scoped_search.gemspec lib/scoped_search/query_language/parser.rb LICENSE spec/lib/matchers.rb lib/scoped_search/definition.rb init.rb spec/unit/tokenizer_spec.rb spec/unit/parser_spec.rb spec/unit/ast_spec.rb lib/scoped_search/query_language/ast.rb spec/lib/database.rb Rakefile tasks/github-gem.rake spec/unit/query_builder_spec.rb lib/scoped_search/query_language.rb lib/scoped_search/query_builder.rb README.rdoc spec/unit/definition_spec.rb spec/database.yml spec/integration/api_spec.rb spec/integration/ordinal_querying_spec.rb lib/scoped_search/query_language/tokenizer.rb lib/scoped_search.rb)
+  s.test_files = %w(spec/integration/string_querying_spec.rb spec/integration/relation_querying_spec.rb spec/unit/tokenizer_spec.rb spec/unit/parser_spec.rb spec/unit/ast_spec.rb spec/unit/query_builder_spec.rb spec/unit/definition_spec.rb spec/integration/api_spec.rb spec/integration/ordinal_querying_spec.rb)
 end
