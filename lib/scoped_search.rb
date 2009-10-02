@@ -1,8 +1,22 @@
+# ScopedSearch is the base module for the scoped_search plugin. This file
+# defines some modules and exception classes, loads the necessary files, and
+# installs itself in ActiveRecord.
+#
+# The ScopedSearch module defines two modules that can be mixed into
+# ActiveRecord::Base as class methods. <tt>ScopedSearch::ClassMethods</tt>
+# will register the scoped_search class function, which can be used to define
+# the search fields. <tt>ScopedSearch::BackwardsCompatibility</tt> will
+# register the <tt>searchable_on</tt> method for backwards compatibility with
+# previous scoped_search versions (1.x).
 module ScopedSearch
 
-  # The ClassMethods module will be included into the ActiveRecord::Base class to add
-  # the ActiveRecord::Base.scoped_search method and the ActiveRecord::Base.search_for
-  # named scope.
+  # The current scoped_search version. Do not change thisvalue by hand,
+  # because it will be updated automatically by the gem release script.
+  VERSION = "2.0.1"
+
+  # The ClassMethods module will be included into the ActiveRecord::Base class
+  # to add the <tt>ActiveRecord::Base.scoped_search</tt> method and the
+  # <tt>ActiveRecord::Base.search_for</tt> named scope.
   module ClassMethods
 
     # Export the scoped_search method fo defining the search options.
@@ -21,14 +35,16 @@ module ScopedSearch
     end
   end
 
-  # The BackwardsCompatibility module can be included into ActiveRecord::Base to provide
-  # a search field definition syntax that is compatible with scoped_seach 1.x
+  # The <tt>BackwardsCompatibility</tt> module can be included into
+  # <tt>ActiveRecord::Base</tt> to provide the <tt>searchable_on</tt> search
+  # field definition syntax that is compatible with scoped_seach 1.x
   #
-  # Currently, it is included into ActiveRecord::Base by default, but this may change in
-  # the future. So, please uodate to the newer syntax as soon as possible.
+  # Currently, it is included into <tt>ActiveRecord::Base</tt> by default, but
+  # this may change in the future. So, please uodate to the newer syntax as
+  # soon as possible.
   module BackwardsCompatibility
 
-    # Defines fields to search on using a syntax compatible with scoped_search 1.2
+    # Defines fields to search on using a syntax compatible with scoped_search 1.x
     def searchable_on(*fields)
 
       options = fields.last.kind_of?(Hash) ? fields.pop : {}
@@ -44,7 +60,7 @@ module ScopedSearch
     end
   end
 
-  # The default ScopedSearch exception class.
+  # The default scoped_search exception class.
   class Exception < StandardError
   end
 
