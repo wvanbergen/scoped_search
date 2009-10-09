@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version = "2.0.1"
   s.date    = "2009-10-02"
 
-  s.summary = "A Rails plugin to search your models with a simple query language, implemented using a named_scope"
+  s.summary = "Easily search you ActiveRecord models with a simple query language using a named scope."
   s.description = <<EOS
     Scoped search makes it easy to search your ActiveRecord-based models.
     It will create a named scope :search_for that can be called with a query string. It will build an SQL query using
