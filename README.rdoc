@@ -10,20 +10,19 @@ and build a query based on the search string they enter. If you want to build a
 more complex search form with multiple fields, searchlogic (see
 http://github.com/binarylogic/searchlogic) may be a good choice for you.
 
-
 == Installing
 
-The recommended method to enable scoped_search in your project is adding the scoped_search gem to your environment. Add the following code to your Rails configuration in <tt>config/environment.rb</tt>:
+The recommended method to enable scoped search in your project is adding the
+scoped_search gem to your environment. Add the following code to your Rails
+configuration in <tt>config/environment.rb</tt>, and run <tt>rake
+gems:install</tt> to install the gem.:
 
   Rails::Initializer.run do |config|
     ...
-    config.gem 'wvanbergen-scoped_search', :lib => 'scoped_search',
-                   :source => 'http://gems.github.com/'
+    config.gem 'scoped_search', :source => 'http://gemcutter.org/'
   end
 
-Run <tt>sudo rake gems:install</tt> to install the gem.
-
-Alternatively, install scoped_search as a Rails plugin:
+Alternatively, install scoped search as a Rails plugin (*deprecated*):
 
   script/plugin install git://github.com/wvanbergen/scoped_search.git
 
