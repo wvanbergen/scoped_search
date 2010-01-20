@@ -19,7 +19,7 @@ gems:install</tt> to install the gem.:
 
   Rails::Initializer.run do |config|
     ...
-    config.gem 'scoped_search', :source => 'http://gemcutter.org/'
+    config.gem 'scoped_search'
   end
 
 Alternatively, install scoped search as a Rails plugin (*deprecated*):
