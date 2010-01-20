@@ -94,9 +94,9 @@ For more info, see the the project wiki: http://wiki.github.com/wvanbergen/scope
 
 == Additional resources
 
-* Source code: http://github.com/wvanbergen/scoped_search/tree/master
+* Source code: http://github.com/wvanbergen/scoped_search/tree
 * Project wiki: http://wiki.github.com/wvanbergen/scoped_search
-* RDoc documentation: http://wvanbergen.github.com/scoped_search
+* RDoc documentation: http://rdoc.info/projects/wvanbergen/scoped_search
 * wvanbergen's blog posts: http://techblog.floorplanner.com/tag/scoped_search
 
 == License
