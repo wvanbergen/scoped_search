@@ -74,6 +74,7 @@ module ScopedSearch
       # scoped_search call on the ActiveRecord-based model class.
       def initialize(definition, options = {})
         @definition = definition
+        @definition.profile = options[:profile] if options[:profile]
         case options
         when Symbol, String
           @field = field.to_sym
@@ -96,17 +97,29 @@ module ScopedSearch
       end
     end
 
-    attr_reader :klass, :fields, :unique_fields
+    attr_reader :klass
 
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
     # named scope if it does not yet exist.
     def initialize(klass)
       @klass         = klass
-      @fields        = {}
-      @unique_fields = []
+      @profiles      = {}
+      @profile       = :default
 
       register_named_scope! unless klass.respond_to?(:search_for)
+    end
+    
+    attr_accessor :profile
+    
+    def fields
+      @profiles[@profile] ||= {}
+      @profiles[@profile][:fields] ||= {}
+    end
+
+    def unique_fields
+      @profiles[@profile] ||= {}
+      @profiles[@profile][:unique_fields] ||= []
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
@@ -139,7 +152,7 @@ module ScopedSearch
 
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
-      @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
+      @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(self, args[0], args[1]) })
     end
   end
 end

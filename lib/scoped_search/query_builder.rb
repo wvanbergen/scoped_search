@@ -14,12 +14,16 @@ module ScopedSearch
     # This method will parse the query string and build an SQL query using the search
     # query. It will return an ampty hash if the search query is empty, in which case
     # the scope call will simply return all records.
-    def self.build_query(definition, query)
+    def self.build_query(definition, *args)
+      query = args[0]      
+      options = args[1] || {}
+      options[:profile] = (options[:profile] || :default).to_sym
+      
       query_builder_class = self.class_for(definition)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
-        return query_builder_class.new(definition, query).build_find_params
+        return query_builder_class.new(definition, query, options[:profile]).build_find_params
       elsif query.kind_of?(String)
-        return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query)).build_find_params
+        return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params
       elsif query.nil?
         return { }
       else
@@ -36,8 +40,9 @@ module ScopedSearch
     end
 
     # Initializes the instance by setting the relevant parameters
-    def initialize(definition, ast)
+    def initialize(definition, ast, profile)
       @definition, @ast = definition, ast
+      @definition.profile = profile unless profile.nil?
     end
 
     # Actually builds the find parameters hash that should be used in the search_for
