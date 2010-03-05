@@ -75,6 +75,7 @@ module ScopedSearch
       def initialize(definition, options = {})
         @definition = definition
         @definition.profile = options[:profile] if options[:profile]
+        
         case options
         when Symbol, String
           @field = field.to_sym
@@ -103,9 +104,11 @@ module ScopedSearch
     # This method will also setup a database adapter and create the :search_for
     # named scope if it does not yet exist.
     def initialize(klass)
-      @klass         = klass
-      @profiles      = {}
-      @profile       = :default
+      @klass                 = klass
+      @fields                = {}
+      @unique_fields         = []
+      @profile_fields        = {:default => {}}
+      @profile_unique_fields = {:default => []}
 
       register_named_scope! unless klass.respond_to?(:search_for)
     end
@@ -113,13 +116,13 @@ module ScopedSearch
     attr_accessor :profile
     
     def fields
-      @profiles[@profile] ||= {}
-      @profiles[@profile][:fields] ||= {}
+      @profile ||= :default
+      @profile_fields[@profile] ||= {}
     end
 
     def unique_fields
-      @profiles[@profile] ||= {}
-      @profiles[@profile][:unique_fields] ||= []
+      @profile ||= :default
+      @profile_unique_fields[@profile] ||= []
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/

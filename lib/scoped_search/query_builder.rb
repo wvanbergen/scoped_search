@@ -17,7 +17,6 @@ module ScopedSearch
     def self.build_query(definition, *args)
       query = args[0]      
       options = args[1] || {}
-      options[:profile] = (options[:profile] || :default).to_sym
       
       query_builder_class = self.class_for(definition)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
@@ -41,8 +40,7 @@ module ScopedSearch
 
     # Initializes the instance by setting the relevant parameters
     def initialize(definition, ast, profile)
-      @definition, @ast = definition, ast
-      @definition.profile = profile unless profile.nil?
+      @definition, @ast, @definition.profile = definition, ast, profile
     end
 
     # Actually builds the find parameters hash that should be used in the search_for

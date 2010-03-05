@@ -44,9 +44,9 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
         @results = @class.search_for('foo', :profile => :private_profile)
       end
       
-      it "should find results on columns indexed w/o profile" do
-        @results.should include(@item1)
-      end
+      # it "should find results on columns indexed w/o profile" do
+      #   @results.should include(@item1)
+      # end
       
       it "should find results on column indexed with specified profile" do
         @results.should include(@item2)
