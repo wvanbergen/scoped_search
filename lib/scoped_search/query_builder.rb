@@ -66,7 +66,7 @@ module ScopedSearch
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
-      find_attributes # Uncomment for debugging
+      # p find_attributes # Uncomment for debugging
       return find_attributes
     end
 
@@ -302,11 +302,17 @@ module ScopedSearch
       
       def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
         if field.textual? && [:like, :unlike].include?(operator)
-          wildcard_value = (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value
-          yield(:parameter, wildcard_value)
+          
+          regexp_value = if value !~ /^\%/ && value !~ /\%$/
+            Regexp.quote(value)
+          else
+            "^#{Regexp.quote(value)}$".sub(/^\^%/, '').sub(/%\$$/, '')
+          end
+          
+          yield(:parameter, regexp_value)
           return "#{self.sql_operator(operator, field)}(#{field.to_sql(operator, &block)}, ?, 'i')"
         else
-          super(field, operator, &block)
+          super(field, operator, value, &block)
         end
       end
     end
