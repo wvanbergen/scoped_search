@@ -139,7 +139,18 @@ module ScopedSearch
 
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
-      @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
+      if @klass.ancestors.include?(ActiveRecord::Base)
+        case ActiveRecord::VERSION::MAJOR
+        when 2
+          @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
+        when 3
+          @klass.scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
+        else
+          raise "This ActiveRecord version is currently not supported!"
+        end
+      else
+        raise "Currently, only ActiveRecord 2.1 or higher is supported!"
+      end
     end
   end
 end

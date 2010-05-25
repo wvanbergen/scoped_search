@@ -7,7 +7,9 @@ module ScopedSearch::Spec::Mocks
   def mock_activerecord_class
     ar_mock = mock('ActiveRecord::Base')
     ar_mock.stub!(:named_scope).with(:search_for, anything)
+    ar_mock.stub!(:scope).with(:search_for, anything)
     ar_mock.stub!(:connection).and_return(mock_database_connection)
+    ar_mock.stub!(:ancestors).and_return([ActiveRecord::Base])
     return ar_mock
   end
 
