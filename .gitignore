@@ -6,3 +6,4 @@ scoped_search-*.gem
 /coverage
 /classes
 /files
+/spec/database.yml

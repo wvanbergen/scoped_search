@@ -10,6 +10,24 @@ and build a query based on the search string they enter. If you want to build a
 more complex search form with multiple fields, searchlogic (see
 http://github.com/binarylogic/searchlogic) may be a good choice for you.
 
+=== Usage
+
+If you include a :profile parameter in scoped_search, the fields specified will only
+be search when you pass :profile into the search_for command:
+
+  class User < ActiveRecord::Base
+    scoped_search :on => :public_information
+    scoped_search :on => :private_information, :profile => :members
+  end
+  
+This will only search the :public_information column:
+
+  User.search_for('blah blah blah')
+  
+And this will only search the :private_information column:
+
+  User.search_for('blah blah blah', :profile => :members)
+
 == Installing
 
 The recommended method to enable scoped search in your project is adding the

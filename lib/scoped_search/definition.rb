@@ -74,6 +74,8 @@ module ScopedSearch
       # scoped_search call on the ActiveRecord-based model class.
       def initialize(definition, options = {})
         @definition = definition
+        @definition.profile = options[:profile] if options[:profile]
+        
         case options
         when Symbol, String
           @field = field.to_sym
@@ -96,17 +98,31 @@ module ScopedSearch
       end
     end
 
-    attr_reader :klass, :fields, :unique_fields
+    attr_reader :klass
 
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
     # named scope if it does not yet exist.
     def initialize(klass)
-      @klass         = klass
-      @fields        = {}
-      @unique_fields = []
+      @klass                 = klass
+      @fields                = {}
+      @unique_fields         = []
+      @profile_fields        = {:default => {}}
+      @profile_unique_fields = {:default => []}
 
       register_named_scope! unless klass.respond_to?(:search_for)
+    end
+    
+    attr_accessor :profile
+    
+    def fields
+      @profile ||= :default
+      @profile_fields[@profile] ||= {}
+    end
+
+    def unique_fields
+      @profile ||= :default
+      @profile_unique_fields[@profile] ||= []
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
@@ -142,9 +158,9 @@ module ScopedSearch
       if @klass.ancestors.include?(ActiveRecord::Base)
         case ActiveRecord::VERSION::MAJOR
         when 2
-          @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
+          @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(self, args[0], args[1]) })
         when 3
-          @klass.scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(args[1] || self, args[0]) })
+          @klass.scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(self, args[0], args[1]) })
         else
           raise "This ActiveRecord version is currently not supported!"
         end
