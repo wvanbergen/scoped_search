@@ -284,6 +284,29 @@ module ScopedSearch
         end
       end
     end
+    
+    # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
+    class OracleEnhancedAdapter < ScopedSearch::QueryBuilder
+      
+      # Use REGEXP_LIKE for case insensitive comparisons
+      def sql_operator(operator, field)
+        case operator
+        when :like   then 'REGEXP_LIKE'
+        when :unlike then 'NOT REGEXP_LIKE'
+        else super(operator, field)
+        end
+      end
+      
+      def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
+        if field.textual? && [:like, :unlike].include?(operator)
+          wildcard_value = (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value
+          yield(:parameter, wildcard_value)
+          return "#{self.sql_operator(operator, field)}(#{field.to_sql(operator, &block)}, ?, 'i')"
+        else
+          super(field, operator, &block)
+        end
+      end
+    end
   end
 
   # Include the modules into the corresponding classes
