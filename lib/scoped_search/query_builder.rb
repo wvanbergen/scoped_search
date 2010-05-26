@@ -15,7 +15,7 @@ module ScopedSearch
     # query. It will return an ampty hash if the search query is empty, in which case
     # the scope call will simply return all records.
     def self.build_query(definition, *args)
-      query = args[0]      
+      query = args[0]
       options = args[1] || {}
       
       query_builder_class = self.class_for(definition)
@@ -110,7 +110,7 @@ module ScopedSearch
           # fall inside/outside the range of timestamps of that day.
           yield(:parameter, timestamp)
           yield(:parameter, timestamp + 1)
-          negate    = (operator == :ne) ? 'NOT' : ''
+          negate    = (operator == :ne) ? 'NOT ' : ''
           field_sql = field.to_sql(operator, &block)
           return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
 
@@ -185,16 +185,21 @@ module ScopedSearch
           fragments = definition.default_fields_for(value).map do |field|
             builder.sql_test(field, field.default_operator, value, &block)
           end
-          "(#{fragments.join(' OR ')})"
+
+          case fragments.length
+            when 0 then nil
+            when 1 then fragments.first
+            else "#{fragments.join(' OR ')}"
+          end
         end
       end
 
       # Defines the to_sql method for AST operator nodes
       module OperatorNode
 
-        # Returns a NOT(...)  SQL fragment that negates the current AST node's children
+        # Returns a NOT (...)  SQL fragment that negates the current AST node's children
         def to_not_sql(builder, definition, &block)
-          "NOT(COALESCE(#{rhs.to_sql(builder, definition, &block)}, 0))"
+          "NOT COALESCE(#{rhs.to_sql(builder, definition, &block)}, 0)"
         end
 
         # Returns an IS (NOT) NULL SQL fragment
@@ -216,7 +221,11 @@ module ScopedSearch
           fragments = definition.default_fields_for(rhs.value, operator).map { |field|
                           builder.sql_test(field, operator, rhs.value, &block) }.compact
 
-          fragments.empty? ? nil : "(#{fragments.join(' OR ')})"
+          case fragments.length
+            when 0 then nil
+            when 1 then fragments.first
+            else "#{fragments.join(' OR ')}"
+          end
         end
 
         # Explicit field name given, run the operator on the specified field only
@@ -249,8 +258,8 @@ module ScopedSearch
       # Defines the to_sql method for AST AND/OR operators
       module LogicalOperatorNode
         def to_sql(builder, definition, &block)
-          fragments = children.map { |c| c.to_sql(builder, definition, &block) }.compact
-          fragments.empty? ? nil : "(#{fragments.join(" #{operator.to_s.upcase} ")})"
+          fragments = children.map { |c| c.to_sql(builder, definition, &block) }.compact.map { |sql| "(#{sql})" }
+          fragments.empty? ? nil : "#{fragments.join(" #{operator.to_s.upcase} ")}"
         end
       end
     end
