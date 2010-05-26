@@ -194,7 +194,7 @@ module ScopedSearch
 
         # Returns a NOT(...)  SQL fragment that negates the current AST node's children
         def to_not_sql(builder, definition, &block)
-          "NOT(COALESCE((#{rhs.to_sql(builder, definition, &block)}), 0))"
+          "NOT(COALESCE(#{rhs.to_sql(builder, definition, &block)}, 0))"
         end
 
         # Returns an IS (NOT) NULL SQL fragment
