@@ -194,7 +194,7 @@ module ScopedSearch
 
         # Returns a NOT(...)  SQL fragment that negates the current AST node's children
         def to_not_sql(builder, definition, &block)
-          "(NOT(#{rhs.to_sql(builder, definition, &block)}) OR #{rhs.to_sql(builder, definition, &block)} IS NULL)"
+          "NOT(COALESCE(#{rhs.to_sql(builder, definition, &block)}, 0))"
         end
 
         # Returns an IS (NOT) NULL SQL fragment
@@ -293,10 +293,10 @@ module ScopedSearch
       
       def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
         if field.textual? && [:like, :unlike].include?(operator)
-          yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value.downcase}%" : value.downcase)
-          return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} ?"
+          yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value)
+          return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} LOWER(?)"
         else
-          super(field, operator, value, &block)
+          return super(field, operator, value, &block)
         end
       end
     end

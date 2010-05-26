@@ -17,7 +17,7 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
 
       @class.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz')
       @class.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz')
-      @class.create!(:string => 'baz', :another => 'temp 3', :explicit => nil)
+      @class.create!(:string => 'baz', :another => nil,      :explicit => nil)
     end
 
     after(:all) do
@@ -30,7 +30,7 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
         @class.search_for('foo').should have(1).item
       end
 
-      it "should find the opther two records using NOT with an exact string match" do
+      it "should find the other two records using NOT with an exact string match" do
         @class.search_for('-foo').should have(2).item
       end
 
@@ -133,11 +133,15 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
       end
 
       it "should find a partial match when the like operator is given" do
-        @class.search_for('~ temp').should have(3).item
+        @class.search_for('~ temp').should have(2).item
+      end
+      
+      it "should find a negation of partial match when the like operator is give with an explicit NOT operator" do
+        @class.search_for('!(~ temp)').should have(1).item
       end
 
       it "should find a partial match when the like operator and the field name is given" do
-        @class.search_for('another ~ temp').should have(3).item
+        @class.search_for('another ~ temp').should have(2).item
       end
     end
 
