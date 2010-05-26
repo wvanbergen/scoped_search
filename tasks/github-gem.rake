@@ -127,7 +127,7 @@ module GithubGem
         release_tasks = [:release_checks, :set_version, :build, :github_release, :gemcutter_release]
         # release_tasks << [:rubyforge_release] if gemspec.rubyforge_project
 
-        desc "Release a new verison of the gem using the VERSION environment variable"
+        desc "Release a new version of the gem using the VERSION environment variable"
         task(:release => release_tasks) { release_task }
         
         namespace(:release) do
@@ -202,6 +202,7 @@ module GithubGem
 
     def next_version_task(increment = nil)
       ENV['VERSION'] = next_version(increment).version
+      puts "Releasing version #{ENV['VERSION']}..."
     end
 
     # Updates the version number in the gemspec file, the VERSION constant in the main
