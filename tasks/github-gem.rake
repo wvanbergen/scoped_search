@@ -138,7 +138,7 @@ module GithubGem
           task(:bump => [:next_bump_version] + release_tasks) { release_task }
 
           desc "Release the next version of the gem, using a minor increment (0.1.0)"
-          task(:minor => [:next_bump_version] + release_tasks) { release_task }
+          task(:minor => [:next_minor_version] + release_tasks) { release_task }
 
           desc "Release the next version of the gem, using a major increment (1.0.0)"
           task(:major => [:next_major_version] + release_tasks) { release_task }
