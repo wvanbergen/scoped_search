@@ -185,7 +185,7 @@ module ScopedSearch
           fragments = definition.default_fields_for(value).map do |field|
             builder.sql_test(field, field.default_operator, value, &block)
           end
-          "(#{fragments.join(' OR ')})"
+          "((#{fragments.join(') OR (')}))"
         end
       end
 
@@ -216,7 +216,7 @@ module ScopedSearch
           fragments = definition.default_fields_for(rhs.value, operator).map { |field|
                           builder.sql_test(field, operator, rhs.value, &block) }.compact
 
-          fragments.empty? ? nil : "(#{fragments.join(' OR ')})"
+          fragments.empty? ? nil : "((#{fragments.join(') OR (')}))"
         end
 
         # Explicit field name given, run the operator on the specified field only
@@ -273,7 +273,7 @@ module ScopedSearch
     end
 
     # The PostgreSQLAdapter make sure that searches are case sensitive when
-    # using the like/unlike operators, by using the PostrgeSQL-specific
+    # using the like/unlike operators, by using the PostgreSQL-specific
     # <tt>ILIKE operator</tt> instead of <tt>LIKE</tt>.
     class PostgreSQLAdapter < ScopedSearch::QueryBuilder
       
