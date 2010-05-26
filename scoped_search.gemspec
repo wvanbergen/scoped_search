@@ -3,7 +3,7 @@ Gem::Specification.new do |s|
   
   # Do not change the version and date fields by hand. This will be done
   # automatically by the gem release script.
-  s.version = "2.1.1"
+  s.version = "2.2.0"
   s.date    = "2010-05-26"
 
   s.summary = "Easily search you ActiveRecord models with a simple query language using a named scope."
