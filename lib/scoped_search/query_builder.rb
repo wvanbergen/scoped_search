@@ -168,7 +168,7 @@ module ScopedSearch
       # This function may yield an :include that should be used in the
       # ActiveRecord::Base#find call, to make sure that the field is avalable
       # for the SQL query.
-      def to_sql(builder, operator = nil, &block) # :yields: finder_option_type, value
+      def to_sql(operator = nil, &block) # :yields: finder_option_type, value
         yield(:include, relation) if relation
         definition.klass.connection.quote_table_name(klass.table_name) + "." +
             definition.klass.connection.quote_column_name(field)
@@ -291,26 +291,10 @@ module ScopedSearch
     # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
     class OracleEnhancedAdapter < ScopedSearch::QueryBuilder
       
-      # Use REGEXP_LIKE for case insensitive comparisons
-      def sql_operator(operator, field)
-        case operator
-        when :like   then 'REGEXP_LIKE'
-        when :unlike then 'NOT REGEXP_LIKE'
-        else super(operator, field)
-        end
-      end
-      
       def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
         if field.textual? && [:like, :unlike].include?(operator)
-          
-          regexp_value = if value !~ /^\%/ && value !~ /\%$/
-            Regexp.quote(value)
-          else
-            "^#{Regexp.quote(value)}$".sub(/^\^%/, '').sub(/%\$$/, '')
-          end
-          
-          yield(:parameter, regexp_value)
-          return "#{self.sql_operator(operator, field)}(#{field.to_sql(operator, &block)}, ?, 'i')"
+          yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value.downcase}%" : value.downcase)
+          return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} ?"
         else
           super(field, operator, value, &block)
         end
