@@ -1,4 +1,4 @@
-require "#{File.dirname(__FILE__)}/../spec_helper"
+require 'spec_helper'
 
 # These specs will run on all databases that are defined in the spec/database.yml file.
 # Comment out any databases that you do not have available for testing purposes if needed.
