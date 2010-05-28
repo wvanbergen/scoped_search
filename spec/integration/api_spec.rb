@@ -62,7 +62,7 @@ describe ScopedSearch, "API" do
   context 'having backwards compatibility' do
 
     before(:each) do
-      class Foo < ActiveRecord::Base
+      class ::Foo < ActiveRecord::Base
         belongs_to :bar
       end
     end
