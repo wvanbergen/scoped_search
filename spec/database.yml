@@ -6,20 +6,51 @@
 # or comment them out if you have no such database connections available
 # to you.
 
+
+<% if Gem.available?('sqlite3-ruby') %>
 sqlite3:
   adapter: "sqlite3"
   database: ":memory:"
+<% end %>
 
+<% if Gem.available?('mysql') %>
 mysql:
   adapter: "mysql"
   host: "localhost"
   username: "root"
   password:
   database: "scoped_search_test"
- 
-# postgresql:
-#   adapter: "postgresql"
-#   host: "localhost"
-#   username: "scoped_search"
-#   password: "scoped_search"
-#   database: "scoped_search_test"
+<% end %>
+
+<% if Gem.available?('postgresql') %>
+postgresql:
+  adapter: "postgresql"
+  host: "localhost"
+  username: "scoped_search"
+  password: "scoped_search"
+  database: "scoped_search_test"
+<% end %>
+
+<% if Gem.available?('activerecord-jdbcsqlite3-adapter') %>
+jdbcsqlite3:
+  adapter: "jdbcsqlite3"
+  database: ":memory:"
+<% end %>
+
+<% if Gem.available?('activerecord-jdbcmysql-adapter') %>
+jdbcmysql:
+  adapter: "jdbcmysql"
+  host: "localhost"
+  username: "root"
+  password:
+  database: "scoped_search_test"
+<% end %>
+
+<% if Gem.available?('activerecord-jdbcpostgresql-adapter') %>
+postgresql:
+  adapter: "postgresql"
+  host: "localhost"
+  username: "scoped_search"
+  password: "scoped_search"
+  database: "scoped_search_test"
+<% end %>

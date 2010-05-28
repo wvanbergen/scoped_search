@@ -1,3 +1,4 @@
+require 'erb'
 ActiveRecord::Migration.verbose = false unless ENV.has_key?('DEBUG')
 
 module ScopedSearch::Spec::Database
@@ -10,15 +11,17 @@ module ScopedSearch::Spec::Database
     end
   end
 
+  def self.test_databases_configuration
+    @database_connections ||= YAML.load(ERB.new(File.read("#{File.dirname(__FILE__)}/../database.yml")).result)
+  end
+  
   def self.test_databases
-    @database_connections ||= YAML.load(File.read("#{File.dirname(__FILE__)}/../database.yml"))
-    @database_connections.keys
+    test_databases_configuration.keys
   end
 
   def self.establish_named_connection(name)
-    @database_connections ||= YAML.load(File.read("#{File.dirname(__FILE__)}/../database.yml"))
-    raise "#{name} database not configured" if @database_connections[name.to_s].nil?
-    ActiveRecord::Base.establish_connection(@database_connections[name.to_s])
+    raise "#{name} database not configured" if test_databases_configuration[name.to_s].nil?
+    ActiveRecord::Base.establish_connection(test_databases_configuration[name.to_s])
   end
 
   def self.establish_default_connection
