@@ -9,10 +9,15 @@ Gem::Specification.new do |s|
   s.summary = "Easily search you ActiveRecord models with a simple query language using a named scope."
   s.description = <<-EOS
     Scoped search makes it easy to search your ActiveRecord-based models.
+    
     It will create a named scope :search_for that can be called with a query string. It will build an SQL query using
     the provided query string and a definition that specifies on what fields to search. Because the functionality is
     built on named_scope, the result of the search_for call can be used like any other named_scope, so it can be
-    chained with another scope or combined with will_paginate."
+    chained with another scope or combined with will_paginate.
+    
+    Because it uses standard SQL, it does not require any setup, indexers or daemons. This makes scoped_search
+    suitable to quickly add basic search functionality to your application with little hassle. On the other hand,
+    it may not be the best choice if it is going to be used on very large datasets or by a large user base.
   EOS
 
   s.authors  = ['Willem van Bergen', 'Wes Hays']
