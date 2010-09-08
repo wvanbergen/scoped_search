@@ -47,8 +47,8 @@ jdbcmysql:
 <% end %>
 
 <% if Gem.available?('activerecord-jdbcpostgresql-adapter') %>
-postgresql:
-  adapter: "postgresql"
+jdbcpostgresql:
+  adapter: "jdbcpostgresql"
   host: "localhost"
   username: "scoped_search"
   password: "scoped_search"
