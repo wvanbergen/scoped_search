@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
 
   s.authors  = ['Willem van Bergen', 'Wes Hays']
   s.email    = ['willem@railsdoctors.com', 'weshays@gbdev.com']
-  s.homepage = 'http://wiki.github.com/wvanbergen/scoped_search'
+  s.homepage = 'http://github.com/wvanbergen/scoped_search/wiki'
 
   s.add_runtime_dependency('activerecord', '>= 2.1.0')
   s.add_development_dependency('rspec', '>= 1.1.4')
