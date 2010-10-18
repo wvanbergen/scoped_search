@@ -36,7 +36,7 @@ Scoped search requires you to define the fields you want to search in:
 
 For more information about options and using fields from relations, see the
 project wiki on search definitions:
-http://wiki.github.com/wvanbergen/scoped_search/search-definition
+http://github.com/wvanbergen/scoped_search/wiki/search-definition
 
 Now, the <b>search_for</b> scope is available for queries. You should pass a
 query string to the scope. This can be empty or nil, in which case all no search
@@ -76,7 +76,7 @@ And this will only search the :private_information column:
 === More information
 
 More information about usage can be found in the project wiki:
-http://wiki.github.com/wvanbergen/scoped_search/usage
+http://github.com/wvanbergen/scoped_search/wiki/usage
 
 == Query language
 
@@ -110,12 +110,13 @@ nickname:
 
   ("Ruby" OR "Rails") -cobol, age >= 18, updated_at > 2009-01-01 && nickname !~ l33t
 
-For more info, see the the project wiki: http://wiki.github.com/wvanbergen/scoped_search/query-language
+For more info, see the the project wiki: http://github.com/wvanbergen/scoped_search/wiki/query-language
 
 == Additional resources
 
 * Source code: http://github.com/wvanbergen/scoped_search/tree
-* Project wiki: http://wiki.github.com/wvanbergen/scoped_search
+* Project wiki: http://github.com/wvanbergen/scoped_search/wiki
+* Issue tracker: http://github.com/wvanbergen/scoped_search/issues
 * RDoc documentation: http://rdoc.info/projects/wvanbergen/scoped_search
 * wvanbergen's blog posts: http://techblog.floorplanner.com/tag/scoped_search
 
