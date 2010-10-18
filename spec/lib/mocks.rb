@@ -1,4 +1,4 @@
-module ScopedSearch::Spec::Mocks
+module ScopedSearch::RSpec::Mocks
 
   def tree(array)
     ScopedSearch::QueryLanguage::AST.from_array(array)

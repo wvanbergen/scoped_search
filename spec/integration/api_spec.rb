@@ -14,11 +14,11 @@ describe ScopedSearch, "API" do
   # be changed for new major releases.
 
   before(:all) do
-    ScopedSearch::Spec::Database.establish_connection
+    ScopedSearch::RSpec::Database.establish_connection
   end
 
   after(:all) do
-    ScopedSearch::Spec::Database.close_connection
+    ScopedSearch::RSpec::Database.close_connection
   end
 
   context 'for unprepared ActiveRecord model' do
@@ -31,13 +31,13 @@ describe ScopedSearch, "API" do
   context 'for a prepared ActiveRecord model' do
 
     before(:all) do
-      @class = ScopedSearch::Spec::Database.create_model(:field => :string) do |klass|
+      @class = ScopedSearch::RSpec::Database.create_model(:field => :string) do |klass|
         klass.scoped_search :on => :field
       end
     end
 
     after(:all) do
-      ScopedSearch::Spec::Database.drop_model(@class)
+      ScopedSearch::RSpec::Database.drop_model(@class)
     end
 
     it "should respond to :search_for to perform searches" do

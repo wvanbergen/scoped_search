@@ -2,14 +2,14 @@ require 'spec_helper'
 
 # These specs will run on all databases that are defined in the spec/database.yml file.
 # Comment out any databases that you do not have available for testing purposes if needed.
-ScopedSearch::Spec::Database.test_databases.each do |db|
+ScopedSearch::RSpec::Database.test_databases.each do |db|
 
   describe ScopedSearch, "using a #{db} database" do
 
     before(:all) do
-      ScopedSearch::Spec::Database.establish_named_connection(db)
+      ScopedSearch::RSpec::Database.establish_named_connection(db)
     
-      @class = ScopedSearch::Spec::Database.create_model(:string => :string, :another => :string, :explicit => :string) do |klass|
+      @class = ScopedSearch::RSpec::Database.create_model(:string => :string, :another => :string, :explicit => :string) do |klass|
         klass.scoped_search :on => :string
         klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
         klass.scoped_search :on => :explicit, :only_explicit => true
@@ -21,8 +21,8 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
     end
 
     after(:all) do
-      ScopedSearch::Spec::Database.drop_model(@class)
-      ScopedSearch::Spec::Database.close_connection
+      ScopedSearch::RSpec::Database.drop_model(@class)
+      ScopedSearch::RSpec::Database.close_connection
     end
 
     context 'in an implicit string field' do

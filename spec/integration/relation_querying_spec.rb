@@ -2,16 +2,16 @@ require 'spec_helper'
 
 # These specs will run on all databases that are defined in the spec/database.yml file.
 # Comment out any databases that you do not have available for testing purposes if needed.
-ScopedSearch::Spec::Database.test_databases.each do |db|
+ScopedSearch::RSpec::Database.test_databases.each do |db|
 
   describe ScopedSearch, "using a #{db} database" do
 
     before(:all) do
-      ScopedSearch::Spec::Database.establish_named_connection(db)
+      ScopedSearch::RSpec::Database.establish_named_connection(db)
     end
 
     after(:all) do
-      ScopedSearch::Spec::Database.close_connection
+      ScopedSearch::RSpec::Database.close_connection
     end
 
     context 'querying a :belongs_to relation' do
@@ -23,7 +23,7 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
         class ::Bar < ActiveRecord::Base; has_many :foos; end
 
         # The class on which to call search_for
-        ::Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
+        ::Foo = ScopedSearch::RSpec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
           klass.belongs_to :bar
           klass.scoped_search :in => :bar, :on => :related
         end
@@ -37,8 +37,8 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
       end
 
       after(:all) do
-        ScopedSearch::Spec::Database.drop_model(Bar)
-        ScopedSearch::Spec::Database.drop_model(Foo)
+        ScopedSearch::RSpec::Database.drop_model(Bar)
+        ScopedSearch::RSpec::Database.drop_model(Foo)
         Object.send :remove_const, :Foo
         Object.send :remove_const, :Bar
       end
@@ -69,7 +69,7 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
         class ::Bar < ActiveRecord::Base; belongs_to :foo; end
 
         # The class on which to call search_for
-        ::Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
+        ::Foo = ScopedSearch::RSpec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
           klass.has_many :bars
           klass.scoped_search :in => :bars, :on => :related
         end
@@ -84,8 +84,8 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
       end
 
       after(:all) do
-        ScopedSearch::Spec::Database.drop_model(Bar)
-        ScopedSearch::Spec::Database.drop_model(Foo)
+        ScopedSearch::RSpec::Database.drop_model(Bar)
+        ScopedSearch::RSpec::Database.drop_model(Foo)
         Object.send :remove_const, :Foo
         Object.send :remove_const, :Bar
       end
@@ -117,7 +117,7 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
         class ::Bar < ActiveRecord::Base; belongs_to :foo; end
 
         # The class on which to call search_for
-        ::Foo = ScopedSearch::Spec::Database.create_model(:foo => :string) do |klass|
+        ::Foo = ScopedSearch::RSpec::Database.create_model(:foo => :string) do |klass|
           klass.has_one :bar
           klass.scoped_search :in => :bar, :on => :related
         end
@@ -131,8 +131,8 @@ ScopedSearch::Spec::Database.test_databases.each do |db|
       end
 
       after(:all) do
-        ScopedSearch::Spec::Database.drop_model(::Bar)
-        ScopedSearch::Spec::Database.drop_model(::Foo)
+        ScopedSearch::RSpec::Database.drop_model(::Bar)
+        ScopedSearch::RSpec::Database.drop_model(::Foo)
         Object.send :remove_const, :Foo
         Object.send :remove_const, :Bar
       end
