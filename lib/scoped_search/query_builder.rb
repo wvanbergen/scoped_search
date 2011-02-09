@@ -12,12 +12,12 @@ module ScopedSearch
     # search_for named scope.
     #
     # This method will parse the query string and build an SQL query using the search
-    # query. It will return an ampty hash if the search query is empty, in which case
+    # query. It will return an empty hash if the search query is empty, in which case
     # the scope call will simply return all records.
     def self.build_query(definition, *args)
       query = args[0]
       options = args[1] || {}
-      
+
       query_builder_class = self.class_for(definition)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
         return query_builder_class.new(definition, query, options[:profile]).build_find_params
@@ -29,7 +29,7 @@ module ScopedSearch
         raise "Unsupported query object: #{query.inspect}!"
       end
     end
-    
+
     # Loads the QueryBuilder class for the connection of the given definition.
     # If no specific adapter is found, the default QueryBuilder class is returned.
     def self.class_for(definition)
@@ -73,7 +73,7 @@ module ScopedSearch
     # A hash that maps the operators of the query language with the corresponding SQL operator.
     SQL_OPERATORS = { :eq =>'=',  :ne => '<>', :like => 'LIKE', :unlike => 'NOT LIKE',
                       :gt => '>', :lt =>'<',   :lte => '<=',    :gte => '>=' }
-    
+
     # Return the SQL operator to use given an operator symbol and field definition.
     #
     # By default, it will simply look up the correct SQL operator in the SQL_OPERATORS
@@ -98,8 +98,8 @@ module ScopedSearch
       # Parse the value as a date/time and ignore invalid timestamps
       timestamp = parse_temporal(value)
       return nil unless timestamp
-      timestamp = Date.parse(timestamp.strftime('%Y-%m-%d')) if field.date?
 
+      timestamp = timestamp.to_date if field.date?
       # Check for the case that a date-only value is given as search keyword,
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
@@ -268,7 +268,7 @@ module ScopedSearch
     # when using the (not) equals operator, regardless of the field's
     # collation setting.
     class MysqlAdapter < ScopedSearch::QueryBuilder
-      
+
       # Patches the default <tt>sql_operator</tt> method to add
       # <tt>BINARY</tt> after the equals and not equals operator to force
       # case-sensitive comparisons.
@@ -285,7 +285,7 @@ module ScopedSearch
     # using the like/unlike operators, by using the PostrgeSQL-specific
     # <tt>ILIKE operator</tt> instead of <tt>LIKE</tt>.
     class PostgreSQLAdapter < ScopedSearch::QueryBuilder
-      
+
       # Switches out the default LIKE operator for ILIKE in the default
       # <tt>sql_operator</tt> method.
       def sql_operator(operator, field)
@@ -296,10 +296,10 @@ module ScopedSearch
         end
       end
     end
-    
+
     # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
     class OracleEnhancedAdapter < ScopedSearch::QueryBuilder
-      
+
       def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
         if field.textual? && [:like, :unlike].include?(operator)
           yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value)
