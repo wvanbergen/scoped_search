@@ -59,7 +59,7 @@ module ScopedSearch::QueryLanguage::Tokenizer
   # reserved language keyword (the KEYWORDS array).
   def tokenize_keyword(&block)
     keyword = current_char
-    keyword << next_char while /[^=<>\s\&\|\)\(,]/ =~ peek_char
+    keyword << next_char while /[^=~<>\s\&\|\)\(,]/ =~ peek_char
     KEYWORDS.has_key?(keyword.downcase) ? yield(KEYWORDS[keyword.downcase]) : yield(keyword)
   end
 
