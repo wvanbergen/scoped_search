@@ -111,6 +111,8 @@ module ScopedSearch
       @profile_unique_fields = {:default => []}
 
       register_named_scope! unless klass.respond_to?(:search_for)
+      register_complete_for! unless klass.respond_to?(:complete_for)
+
     end
     
     attr_accessor :profile
@@ -176,3 +178,13 @@ module ScopedSearch
     end
   end
 end
+
+# Registers the complete_for method within the class that is used for searching.
+ def register_complete_for! # :nodoc
+@klass.class_eval do
+  def self.complete_for (query)
+    search_options = ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query)
+    search_options
+    end
+  end
+ end

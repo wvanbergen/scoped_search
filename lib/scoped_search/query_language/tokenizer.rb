@@ -3,7 +3,7 @@
 module ScopedSearch::QueryLanguage::Tokenizer
 
   # All keywords that the language supports
-  KEYWORDS = { 'and' => :and, 'or' => :or, 'not' => :not, 'set?' => :notnull, 'null?' => :null }
+  KEYWORDS = { 'and' => :and, 'or' => :or, 'not' => :not, 'set?' => :notnull, 'has' => :notnull, 'null?' => :null }
 
   # Every operator the language supports.
   OPERATORS = { '&' => :and, '|' => :or, '&&' => :and, '||' => :or, '-'=> :not, '!' => :not, '~' => :like, '!~' => :unlike,
