@@ -141,7 +141,7 @@ module ScopedSearch
         val = tokens[tokens.size-1]
       end
 
-      opts = {:limit => 10, :select => field.field}
+      opts = {:limit => 10, :select => field.field, :group => field.field }
 
       if field.relation.nil?
         klass = definition.klass
