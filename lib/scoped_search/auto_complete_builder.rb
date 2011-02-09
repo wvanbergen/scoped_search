@@ -45,7 +45,7 @@ module ScopedSearch
       suggestions += LOGICAL_INFIX_OPERATORS if completion.include?(:logical_op)
       suggestions += LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_COMPLETER if completion.include?(:prefix_op)
       suggestions += complete_operator(node) if completion.include?(:infix_op)
-      suggestions += ["right_hand_side !"]   if completion.include?(:value)
+      suggestions += complete_value(node)   if completion.include?(:value)
 
       build_suggestions(suggestions)
     end
@@ -132,6 +132,32 @@ module ScopedSearch
         q.chomp!(token)
       end
       suggestions.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
+    end
+
+    def complete_value(node)
+      field = definition.fields[node.value.to_sym]
+      if field.nil?
+        field = definition.fields[tokens[tokens.size-3].to_sym]
+        val = tokens[tokens.size-1]
+      end
+
+      opts = {:limit => 10, :select => field.field}
+
+      if field.relation.nil?
+        klass = definition.klass
+      else
+        klass = eval(field.relation.to_s.singularize.camelize)
+      end
+
+      if (field.complete_value)
+        if field.textual?
+          opts.merge!(:conditions => "#{field.field} LIKE '#{val}%'") unless val.nil?
+        elsif field.numerical?
+          opts.merge!(:conditions => "#{field.field} >= #{val}") unless val.nil?
+        end
+
+        klass.all(opts).map(&field.field)
+      end
     end
 
     def complete_operator(node)
