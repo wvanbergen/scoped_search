@@ -98,8 +98,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.complete_for('null? explici').should eql(['null? explicit'])
       end
 
-       it "should not complete comparators after prefix statement" do
+      it "should not complete comparators after prefix statement" do
         @class.complete_for('has string ').should_not contain(['has string ='])
+      end
+
+      it "should not complete infix operator" do
+        @class.complete_for('has string ').should_not contain('has string =')
       end
     end
   end

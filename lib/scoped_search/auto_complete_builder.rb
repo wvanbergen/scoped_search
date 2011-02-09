@@ -94,7 +94,7 @@ module ScopedSearch
     def is_left_hand(node)
       lh = !(definition.fields.keys.include?(node.value.to_sym))
 
-      lh = lh or NULL_PREFIX_OPERATORS.include?(tokens[tokens.size - 2]) if (tokens.size > 1)
+      lh = lh || NULL_PREFIX_OPERATORS.include?(tokens[tokens.size - 2]) if (tokens.size > 1)
 
       lh = lh && !is_right_hand
       lh
@@ -118,7 +118,7 @@ module ScopedSearch
 
     def tokenize
       tokens = ScopedSearch::QueryLanguage::Compiler.tokenize(query)
-      # skip parentice, it is not needed for the auto completer.
+      # skip parenthesis, it is not needed for the auto completer.
       tokens.delete_if {|t| t == :lparen || t == :rparen }
       tokens
     end
