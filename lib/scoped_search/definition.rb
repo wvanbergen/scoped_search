@@ -94,8 +94,9 @@ module ScopedSearch
         definition.unique_fields   << self
 
         # Store definition for alias / aliases as well
-        definition.fields[options[:alias]] ||= self                    if options[:alias]
+        definition.fields[options[:alias]]                  ||= self   if options[:alias]
         options[:aliases].each { |al| definition.fields[al] ||= self } if options[:aliases]
+        definition.fields["#{@relation}.#{@field}".to_sym]  ||= self   if @relation
       end
     end
 
