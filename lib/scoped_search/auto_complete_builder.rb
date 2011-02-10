@@ -41,7 +41,7 @@ module ScopedSearch
       completion = complete_options(node)
 
       suggestions = []
-      suggestions += @definition.fields.keys if completion.include?(:keyword)
+      suggestions += complete_keyword if completion.include?(:keyword)
       suggestions += LOGICAL_INFIX_OPERATORS if completion.include?(:logical_op)
       suggestions += LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_COMPLETER if completion.include?(:prefix_op)
       suggestions += complete_operator(node) if completion.include?(:infix_op)
@@ -131,14 +131,27 @@ module ScopedSearch
     end
 
     def build_suggestions(suggestions)
-      token = tokens.last
       return [] if (suggestions.blank?)
+
+      # for relation fields compact the suggestions list to be one suggestion per relation
+      # unless the user has typed the relation name entirely 
+      if tokens.empty? || !(tokens.last.to_s.include?('.'))
+        suggestions = suggestions.map {|s|
+          (s.to_s.split('.')[0].end_with?(tokens.last)) ? s.to_s : s.to_s.split('.')[0]
+        }
+      end
       q=query
       unless q =~ /(\s|\)|,)$/
-        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{token}/}.compact
-        q.chomp!(token)
+        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{tokens.last}/}.compact
+        q.chomp!(tokens.last)
       end
-      suggestions.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
+      suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
+    end
+
+    # suggest all searchable field names.
+    # in relations suggest only the long format relation.field.
+    def complete_keyword
+      definition.fields.map {|f| (f[1].relation.nil?) ? f[0] : (f[0].to_s.include?('.'))? f[0] : nil }.compact
     end
 
     def complete_value(node)
