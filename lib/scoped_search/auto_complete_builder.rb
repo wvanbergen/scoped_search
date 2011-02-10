@@ -56,13 +56,13 @@ module ScopedSearch
       return [:keyword] + [:prefix_op] if tokens.empty?
 
       #prefix operator
-      return [:keyword] if PREFIX_OPERATORS.include?(tokens.last)
+      return [:keyword] if last_token_is(PREFIX_OPERATORS)
 
       # left hand
       if is_left_hand(node)
         options = [:keyword]
-        options += [:logical_op] unless (tokens.size == 1 || (PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS).include?(tokens.last))
-        options += [:prefix_op]  unless PREFIX_OPERATORS.include?(tokens.last)
+        options += [:logical_op] unless (tokens.size == 1 || last_token_is(PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS))
+        options += [:prefix_op]  unless last_token_is(PREFIX_OPERATORS)
         return options
       end
 
@@ -80,7 +80,7 @@ module ScopedSearch
     def is_query_valid
 
       # skip test for null prefix operators if in the process of completing the field name.
-      if ((tokens.size >= 2) and (NULL_PREFIX_OPERATORS.include?(tokens[tokens.size - 2])))
+      if (last_token_is(NULL_PREFIX_OPERATORS, 2))
         if (definition.fields.keys.map {|s| s if s.to_s=~ /^#{tokens.last}/}.compact.empty? )
           raise ScopedSearch::QueryNotSupported, "Field '#{tokens.last}' not recognized for searching!"
         else
@@ -94,16 +94,16 @@ module ScopedSearch
     def is_left_hand(node)
       lh = !(definition.fields.keys.include?(node.value.to_sym))
 
-      lh = lh || NULL_PREFIX_OPERATORS.include?(tokens[tokens.size - 2]) if (tokens.size > 1)
+      lh = lh || last_token_is(NULL_PREFIX_OPERATORS, 2)
 
       lh = lh && !is_right_hand
       lh
     end
 
     def is_right_hand
-      rh = COMPARISON_OPERATORS.include?(tokens.last)
+      rh = last_token_is(COMPARISON_OPERATORS)
       if(tokens.size > 1 && !(query.end_with?(' ')))
-        rh = rh || COMPARISON_OPERATORS.include?(tokens[tokens.size - 2])
+        rh = rh || last_token_is(COMPARISON_OPERATORS, 2)
       end
       rh
     end
@@ -114,6 +114,13 @@ module ScopedSearch
         last = last.children.last
       end
       last
+    end
+
+    def last_token_is(list,index = 1)
+      if tokens.size >= index
+        return list.include?(tokens[tokens.size - index])
+      end
+      return false
     end
 
     def tokenize
