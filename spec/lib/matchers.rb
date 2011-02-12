@@ -21,3 +21,13 @@ end
 RSpec::Matchers.define :parse_to do |tree|
   match { |str| tree == ScopedSearch::QueryLanguage::Compiler.parse(str).to_a }
 end
+
+RSpec::Matchers.define :contain do |*expected|
+  match_for_should do |actual|
+    expected.all? { |e| actual.include?(e) }
+  end
+
+  match_for_should_not do |actual|
+    expected.none? { |e| actual.include?(e) }
+  end
+end

@@ -15,7 +15,7 @@ module ScopedSearch
     # class, so you should not create instances of this class yourself.
     class Field
 
-      attr_reader :definition, :field, :only_explicit, :relation
+      attr_reader :definition, :field, :only_explicit, :relation, :complete_value
 
       # The ActiveRecord-based class that belongs to this field.
       def klass
@@ -83,6 +83,7 @@ module ScopedSearch
           @field = options.delete(:on)
 
           # Set attributes from options hash
+          @complete_value   = options[:complete_value]
           @relation         = options[:in]
           @only_explicit    = !!options[:only_explicit]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
@@ -93,8 +94,9 @@ module ScopedSearch
         definition.unique_fields   << self
 
         # Store definition for alias / aliases as well
-        definition.fields[options[:alias]] ||= self                    if options[:alias]
+        definition.fields[options[:alias]]                  ||= self   if options[:alias]
         options[:aliases].each { |al| definition.fields[al] ||= self } if options[:aliases]
+        definition.fields["#{@relation}.#{@field}".to_sym]  ||= self   if @relation
       end
     end
 
@@ -111,6 +113,8 @@ module ScopedSearch
       @profile_unique_fields = {:default => []}
 
       register_named_scope! unless klass.respond_to?(:search_for)
+      register_complete_for! unless klass.respond_to?(:complete_for)
+
     end
     
     attr_accessor :profile
@@ -176,3 +180,13 @@ module ScopedSearch
     end
   end
 end
+
+# Registers the complete_for method within the class that is used for searching.
+ def register_complete_for! # :nodoc
+@klass.class_eval do
+  def self.complete_for (query)
+    search_options = ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query)
+    search_options
+    end
+  end
+ end

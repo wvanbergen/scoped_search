@@ -1,6 +1,5 @@
 require 'spec_helper'
 
-if ActiveRecord::VERSION::MAJOR == 2
   # These specs will run on all databases that are defined in the spec/database.yml file.
   # Comment out any databases that you do not have available for testing purposes if needed.
   ScopedSearch::RSpec::Database.test_databases.each do |db|
@@ -18,13 +17,13 @@ if ActiveRecord::VERSION::MAJOR == 2
       context 'querying a :belongs_to relation' do
 
         before(:all) do
-
+          
           # The related class
           ActiveRecord::Migration.create_table(:bars) { |t| t.string :related }
           class ::Bar < ActiveRecord::Base; has_many :foos; end
 
           # The class on which to call search_for
-          ::Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
+          ::Foo = ScopedSearch::RSpec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
             klass.belongs_to :bar
             klass.scoped_search :in => :bar, :on => :related
           end
@@ -62,29 +61,29 @@ if ActiveRecord::VERSION::MAJOR == 2
         before(:all) do
 
           # The related class
-          ActiveRecord::Migration.create_table(:bars) { |t| t.string :related; t.integer :foo_id }
-          class ::Bar < ActiveRecord::Base; belongs_to :foo; end
+          ActiveRecord::Migration.create_table(:jars) { |t| t.string :related; t.integer :foo_id }
+          class ::Jar < ActiveRecord::Base; belongs_to :foo; end
 
           # The class on which to call search_for
-          ::Foo = ScopedSearch::Spec::Database.create_model(:foo => :string, :bar_id => :integer) do |klass|
-            klass.has_many :bars
-            klass.scoped_search :in => :bars, :on => :related
+          ::Foo = ScopedSearch::RSpec::Database.create_model(:foo => :string) do |klass|
+            klass.has_many :jars
+            klass.scoped_search :in => :jars, :on => :related
           end
 
           @foo_1 = Foo.create!(:foo => 'foo')
           @foo_2 = Foo.create!(:foo => 'foo too')
           @foo_3 = Foo.create!(:foo => 'foo three')
 
-          Bar.create!(:related => 'bar',         :foo => @foo_1)
-          Bar.create!(:related => 'another bar', :foo => @foo_1)
-          Bar.create!(:related => 'other bar',   :foo => @foo_2)
+          Jar.create!(:related => 'bar',         :foo => @foo_1)
+          Jar.create!(:related => 'another bar', :foo => @foo_1)
+          Jar.create!(:related => 'other bar',   :foo => @foo_2)
         end
 
         after(:all) do
-          ScopedSearch::Spec::Database.drop_model(Bar)
-          ScopedSearch::Spec::Database.drop_model(Foo)
+          ScopedSearch::RSpec::Database.drop_model(Jar)
+          ScopedSearch::RSpec::Database.drop_model(Foo)
           Object.send :remove_const, :Foo
-          Object.send :remove_const, :Bar
+          Object.send :remove_const, :Jar
         end
 
         it "should find all records with at least one bar record containing 'bar'" do
@@ -110,28 +109,29 @@ if ActiveRecord::VERSION::MAJOR == 2
         before(:all) do
 
           # The related class
-          ActiveRecord::Migration.create_table(:bars) { |t| t.string :related; t.integer :foo_id }
-          class ::Bar < ActiveRecord::Base; belongs_to :foo; end
+          ActiveRecord::Migration.create_table(:cars) { |t| t.string :related; t.integer :foo_id }
+          class ::Car < ActiveRecord::Base; belongs_to :foo; end
 
           # The class on which to call search_for
-          ::Foo = ScopedSearch::Spec::Database.create_model(:foo => :string) do |klass|
-            klass.has_one :bar
-            klass.scoped_search :in => :bar, :on => :related
+          ::Foo = ScopedSearch::RSpec::Database.create_model(:foo => :string) do |klass|
+            klass.has_one :car
+            klass.scoped_search :on => :foo
+            klass.scoped_search :in => :car, :on => :related
           end
 
           @foo_1 = ::Foo.create!(:foo => 'foo')
           @foo_2 = ::Foo.create!(:foo => 'foo too')
           @foo_3 = ::Foo.create!(:foo => 'foo three')
 
-          ::Bar.create!(:related => 'bar',         :foo => @foo_1)
-          ::Bar.create!(:related => 'other bar',   :foo => @foo_2)
+          ::Car.create!(:related => 'bar',         :foo => @foo_1)
+          ::Car.create!(:related => 'other bar',   :foo => @foo_2)
         end
 
         after(:all) do
-          ScopedSearch::Spec::Database.drop_model(::Bar)
-          ScopedSearch::Spec::Database.drop_model(::Foo)
+          ScopedSearch::RSpec::Database.drop_model(::Car)
+          ScopedSearch::RSpec::Database.drop_model(::Foo)
           Object.send :remove_const, :Foo
-          Object.send :remove_const, :Bar
+          Object.send :remove_const, :Car
         end
 
         it "should find all records with a bar record containing 'bar" do
@@ -211,18 +211,18 @@ if ActiveRecord::VERSION::MAJOR == 2
         before(:all) do
 
           # Create some tables
-          ActiveRecord::Migration.create_table(:bars) { |t| t.integer :foo_id; t.integer :baz_id }
+          ActiveRecord::Migration.create_table(:mars) { |t| t.integer :foo_id; t.integer :baz_id }
           ActiveRecord::Migration.create_table(:bazs) { |t| t.string :related }
           ActiveRecord::Migration.create_table(:foos) { |t| t.string :foo }
 
           # The related classes
-          class ::Bar < ActiveRecord::Base; belongs_to :baz; belongs_to :foo; end
-          class ::Baz < ActiveRecord::Base; has_many :bars; end
+          class ::Mar < ActiveRecord::Base; belongs_to :baz; belongs_to :foo; end
+          class ::Baz < ActiveRecord::Base; has_many :mars; end
 
           # The class on which to call search_for
           class ::Foo < ActiveRecord::Base
-            has_many :bars
-            has_many :bazs, :through => :bars
+            has_many :mars
+            has_many :bazs, :through => :mars
 
             scoped_search :in => :bazs, :on => :related
           end
@@ -234,20 +234,20 @@ if ActiveRecord::VERSION::MAJOR == 2
           @baz_1 = ::Baz.create(:related => 'baz')
           @baz_2 = ::Baz.create(:related => 'baz too!')
 
-          @bar_1 = ::Bar.create!(:foo => @foo_1, :baz => @baz_1)
-          @bar_2 = ::Bar.create!(:foo => @foo_1)
-          @bar_3 = ::Bar.create!(:foo => @foo_2, :baz => @baz_1)
-          @bar_3 = ::Bar.create!(:foo => @foo_2, :baz => @baz_2)
-          @bar_3 = ::Bar.create!(:foo => @foo_2, :baz => @baz_2)
-          @bar_4 = ::Bar.create!(:foo => @foo_3)
+          @bar_1 = ::Mar.create!(:foo => @foo_1, :baz => @baz_1)
+          @bar_2 = ::Mar.create!(:foo => @foo_1)
+          @bar_3 = ::Mar.create!(:foo => @foo_2, :baz => @baz_1)
+          @bar_3 = ::Mar.create!(:foo => @foo_2, :baz => @baz_2)
+          @bar_3 = ::Mar.create!(:foo => @foo_2, :baz => @baz_2)
+          @bar_4 = ::Mar.create!(:foo => @foo_3)
         end
 
         after(:all) do
           ActiveRecord::Migration.drop_table(:bazs)
-          ActiveRecord::Migration.drop_table(:bars)
+          ActiveRecord::Migration.drop_table(:mars)
           ActiveRecord::Migration.drop_table(:foos)
           Object.send :remove_const, :Foo
-          Object.send :remove_const, :Bar
+          Object.send :remove_const, :Mar
           Object.send :remove_const, :Baz
         end
 
@@ -257,9 +257,4 @@ if ActiveRecord::VERSION::MAJOR == 2
       end
     end
   end
-else
-  puts
-  puts "WARNING:"
-  puts "Currently, relationships querying is only 100% supported on Rails 2.x. Use at your own risk when using Rails 3."
-  puts
-end
+

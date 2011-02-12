@@ -18,7 +18,9 @@ module ScopedSearch::QueryLanguage::Parser
   # Start the parsing process by parsing an expression sequence
   def parse
     @tokens = tokenize
-    @tokens.delete_at(@tokens.size - 1) if @tokens.last.is_a?(Symbol)
+    while @tokens.last.is_a?(Symbol) do
+      @tokens.delete_at(@tokens.size - 1)
+    end
     parse_expression_sequence(true).simplify
   end
 
