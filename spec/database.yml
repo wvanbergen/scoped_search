@@ -13,7 +13,14 @@ sqlite3:
   database: ":memory:"
 <% end %>
 
-<% if Gem.available?('mysql') %>
+<% if Gem.available?('mysql2') %>
+mysql2:
+  adapter: "mysql2"
+  host: "localhost"
+  username: "root"
+  password:
+  database: "scoped_search_test"
+<% elsif Gem.available?('mysql') %>
 mysql:
   adapter: "mysql"
   host: "localhost"
