@@ -1,3 +1,5 @@
+require 'active_record'
+
 # ScopedSearch is the base module for the scoped_search plugin. This file
 # defines some modules and exception classes, loads the necessary files, and
 # installs itself in ActiveRecord.
