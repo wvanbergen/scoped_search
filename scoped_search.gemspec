@@ -26,6 +26,8 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency('activerecord', '>= 2.1.0')
   s.add_development_dependency('rspec', '~> 2.0')
+  
+  s.add_development_dependency('sqlite3-ruby')  
 
   s.rdoc_options << '--title' << s.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
   s.extra_rdoc_files = ['README.rdoc']

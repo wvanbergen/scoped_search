@@ -7,3 +7,5 @@ scoped_search-*.gem
 /classes
 /files
 /spec/database.yml
+.bundle/
+Gemfile.lock

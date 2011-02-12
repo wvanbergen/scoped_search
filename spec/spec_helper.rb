@@ -1,9 +1,7 @@
-$:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
-
 require 'rubygems'
-require 'rspec'
-require 'active_record'
+require 'bundler/setup'
 
+require 'rspec'
 require 'scoped_search'
 
 module ScopedSearch::RSpec; end
