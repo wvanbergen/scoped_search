@@ -143,7 +143,7 @@ module ScopedSearch
       q=query
       unless q =~ /(\s|\)|,)$/
         suggestions = suggestions.map {|s| s if s.to_s =~ /^#{tokens.last}/}.compact
-        q.chomp!(tokens.last)
+        q.chomp!(tokens.last.to_s)
       end
       suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
     end
@@ -151,7 +151,7 @@ module ScopedSearch
     # suggest all searchable field names.
     # in relations suggest only the long format relation.field.
     def complete_keyword
-      definition.fields.map {|f| (f[1].relation.nil?) ? f[0] : (f[0].to_s.include?('.'))? f[0] : nil }.compact
+      definition.fields.map {|f| (f[1].relation.nil?) ? f[0] : (f[0].to_s.include?('.'))? f[0].to_s.camelize : nil }.compact
     end
 
     def complete_value(node)
@@ -161,23 +161,18 @@ module ScopedSearch
         val = tokens[tokens.size-1]
       end
 
+      return [] unless field.complete_value
+
       opts = {:limit => 10, :select => field.field, :group => field.field }
+      klass = (field.relation.nil?) ? definition.klass : eval(field.relation.to_s.singularize.camelize)
 
-      if field.relation.nil?
-        klass = definition.klass
-      else
-        klass = eval(field.relation.to_s.singularize.camelize)
+      if !(val.nil?)
+        opts.merge!(:conditions => "#{field.field} LIKE '#{val}%'") if field.textual?
+        opts.merge!(:conditions => "#{field.field} >= #{val}")      if field.numerical?
       end
 
-      if (field.complete_value)
-        if field.textual?
-          opts.merge!(:conditions => "#{field.field} LIKE '#{val}%'") unless val.nil?
-        elsif field.numerical?
-          opts.merge!(:conditions => "#{field.field} >= #{val}") unless val.nil?
-        end
+      klass.all(opts).map(&field.field).compact
 
-        klass.all(opts).map(&field.field).compact
-      end
     end
 
     def complete_operator(node)
