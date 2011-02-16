@@ -15,7 +15,7 @@ module ScopedSearch
     # class, so you should not create instances of this class yourself.
     class Field
 
-      attr_reader :definition, :field, :only_explicit, :relation, :complete_value
+      attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :key_field, :complete_value
 
       # The ActiveRecord-based class that belongs to this field.
       def klass
@@ -85,6 +85,8 @@ module ScopedSearch
           # Set attributes from options hash
           @complete_value   = options[:complete_value]
           @relation         = options[:in]
+          @key_relation     = options[:in_key]
+          @key_field         = options[:on_key]
           @only_explicit    = !!options[:only_explicit]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         end
@@ -92,6 +94,7 @@ module ScopedSearch
         # Store this field is the field array
         definition.fields[@field] ||= self
         definition.unique_fields   << self
+        definition.key_value_fields[@field] ||=self if options[:on_key]
 
         # Store definition for alias / aliases as well
         definition.fields[options[:alias]]                  ||= self   if options[:alias]
@@ -108,8 +111,10 @@ module ScopedSearch
     def initialize(klass)
       @klass                 = klass
       @fields                = {}
+      @key_value_fields      = {}
       @unique_fields         = []
       @profile_fields        = {:default => {}}
+      @profile_key_value_fields  = {:default => {}}
       @profile_unique_fields = {:default => []}
 
       register_named_scope! unless klass.respond_to?(:search_for)
@@ -127,6 +132,11 @@ module ScopedSearch
     def unique_fields
       @profile ||= :default
       @profile_unique_fields[@profile] ||= []
+    end
+
+    def key_value_fields
+      @profile ||= :default
+      @profile_key_value_fields[@profile] ||= {}
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/

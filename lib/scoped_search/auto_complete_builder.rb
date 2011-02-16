@@ -47,7 +47,7 @@ module ScopedSearch
       suggestions += complete_operator(node) if completion.include?(:infix_op)
       suggestions += complete_value(node)   if completion.include?(:value)
 
-      build_suggestions(suggestions)
+      build_suggestions(suggestions, completion.include?(:value))
     end
 
     # parse the query and return the complete options
@@ -87,15 +87,13 @@ module ScopedSearch
           return
         end
       end
-
-      QueryBuilder.build_query(definition, query)
+      #todo: revert this when query supports key value
+      #QueryBuilder.build_query(definition, query)
     end
 
     def is_left_hand(node)
-      lh = !(definition.fields.keys.include?(node.value.to_sym))
-
+      lh = !(definition.fields.keys.include?(node.value.to_sym)) #(field_by_name(node.value))
       lh = lh || last_token_is(NULL_PREFIX_OPERATORS, 2)
-
       lh = lh && !is_right_hand
       lh
     end
@@ -130,12 +128,12 @@ module ScopedSearch
       tokens
     end
 
-    def build_suggestions(suggestions)
+    def build_suggestions(suggestions, is_value)
       return [] if (suggestions.blank?)
 
       # for relation fields compact the suggestions list to be one suggestion per relation
       # unless the user has typed the relation name entirely 
-      if tokens.empty? || !(tokens.last.to_s.include?('.'))
+      if (tokens.empty? || !(tokens.last.to_s.include?('.') ) && !(is_value))
         suggestions = suggestions.map {|s|
           (s.to_s.split('.')[0].end_with?(tokens.last)) ? s.to_s : s.to_s.split('.')[0]
         }
@@ -151,32 +149,81 @@ module ScopedSearch
     # suggest all searchable field names.
     # in relations suggest only the long format relation.field.
     def complete_keyword
-      definition.fields.map {|f| (f[1].relation.nil?) ? f[0] : (f[0].to_s.include?('.'))? f[0].to_s.camelize : nil }.compact
+      keywords = []
+      definition.fields.each do|f|
+        if (f[1].key_field)
+          keywords += complete_key(f[1], tokens.last)
+        elsif f[1].relation && !(f[0].to_s.include?('.'))
+          next
+        else
+          keywords << f[0]
+        end
+      end
+      keywords
+    end
+
+    def complete_key(field, val)
+      return [field.relation] if !val || !val.is_a?(String) || !(val.include?('.'))
+      val = val.sub(/.*\./,'')
+
+      if(field.key_relation)
+        klass = eval(field.key_relation.to_s.singularize.camelize)
+      elsif(field.relation)
+        klass = eval(field.relation.to_s.singularize.camelize)
+      else
+        klass = definition.klass
+      end
+
+      field_name = (field.key_field) ? field.key_field : field.field
+      opts = {:limit => 10, :select => field_name, :group => field_name }
+
+      if (val)
+        opts.merge!(:conditions => "#{field_name} LIKE '#{val}%'") if field.textual?
+        opts.merge!(:conditions => "#{field_name} >= #{val}")      if field.numerical?
+      end
+
+      klass.all(opts).map(&field_name).compact.map{ |f| "#{field.relation}.#{f}"}
     end
 
     def complete_value(node)
-      field = definition.fields[node.value.to_sym]
-      if field.nil?
-        field = definition.fields[tokens[tokens.size-3].to_sym]
+
+      field = field_by_name(node.value)
+      key_name = node.value.sub(/^.*\./,"")
+      if field.nil? && (tokens.size >= 2)
+        field = field_by_name(tokens[tokens.size-3])
+        key_name = tokens[tokens.size-3].to_s.sub(/^.*\./,"")
         val = tokens[tokens.size-1]
       end
 
-      return [] unless field.complete_value
+      return [] unless field && field.complete_value
 
-      opts = {:limit => 10, :select => field.field, :group => field.field }
-      klass = (field.relation.nil?) ? definition.klass : eval(field.relation.to_s.singularize.camelize)
+      field_name = (field.key_field) ? field.key_field : field.field
 
-      if !(val.nil?)
-        opts.merge!(:conditions => "#{field.field} LIKE '#{val}%'") if field.textual?
-        opts.merge!(:conditions => "#{field.field} >= #{val}")      if field.numerical?
+      if val && field.textual?
+        opts = {:conditions => "#{field_name} LIKE '#{val}%'"}
+      elsif val && field.numerical?
+        opts = {:conditions => "#{field_name} >= #{val}"}
+      else
+        opts = {}
       end
 
+
+      if field.key_field
+        klass = eval(field.key_relation.to_s.singularize.camelize)
+        opts.merge!(:conditions => {field.key_field => key_name})
+        return klass.first(opts).send(field.relation).map(&field.field).uniq
+      end
+
+      klass = (field.relation.nil?) ? definition.klass : eval(field.relation.to_s.singularize.camelize)
+      opts.merge!(:limit => 10, :select => field.field, :group => field.field )
       klass.all(opts).map(&field.field).compact
 
     end
 
+
+
     def complete_operator(node)
-      field = definition.fields[node.value.to_sym]
+      field = field_by_name(node.value)
       return [] if field.nil?
 
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
@@ -184,6 +231,16 @@ module ScopedSearch
       return ['=', '>', '<']                  if field.temporal?
     end
 
+    def field_by_name(name)
+      field = definition.fields[name.to_sym]
+      if(field.nil?)
+        klass_name = name.to_s.split('.')[0].singularize.camelize
+        definition.key_value_fields.values.each do |f|
+          return f if f.klass.name =~ /.*::#{klass_name}$/
+        end
+      end
+      field
+    end
   end
 
 end
