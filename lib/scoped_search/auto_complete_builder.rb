@@ -162,66 +162,56 @@ module ScopedSearch
       keywords
     end
 
+    #this method completes the keys list in a key-value schema in the format table.keyName
     def complete_key(field, val)
       return [field.relation] if !val || !val.is_a?(String) || !(val.include?('.'))
       val = val.sub(/.*\./,'')
 
-      if(field.key_relation)
-        klass = eval(field.key_relation.to_s.singularize.camelize)
-      elsif(field.relation)
-        klass = eval(field.relation.to_s.singularize.camelize)
-      else
-        klass = definition.klass
-      end
-
-      field_name = (field.key_field) ? field.key_field : field.field
-      opts = {:limit => 10, :select => field_name, :group => field_name }
-
-      if (val)
-        opts.merge!(:conditions => "#{field_name} LIKE '#{val}%'") if field.textual?
-        opts.merge!(:conditions => "#{field_name} >= #{val}")      if field.numerical?
-      end
+      klass = field.key_klass
+      field_name = field.key_field 
+      opts = value_conditions(field, val)
+      opts.merge!(:limit => 10, :select => field_name, :group => field_name )
 
       klass.all(opts).map(&field_name).compact.map{ |f| "#{field.relation}.#{f}"}
     end
 
+    # this method auto-completes values of fields that have a :complete_value marker 
     def complete_value(node)
-
-      field = field_by_name(node.value)
-      key_name = node.value.sub(/^.*\./,"")
-      if field.nil? && (tokens.size >= 2)
-        field = field_by_name(tokens[tokens.size-3])
-        key_name = tokens[tokens.size-3].to_s.sub(/^.*\./,"")
+      if last_token_is(COMPARISON_OPERATORS)
+        token = tokens[tokens.size-2]
+        val = ''
+      else
+        token = tokens[tokens.size-3]
         val = tokens[tokens.size-1]
       end
 
+      field = field_by_name(token)
       return [] unless field && field.complete_value
 
-      field_name = (field.key_field) ? field.key_field : field.field
-
-      if val && field.textual?
-        opts = {:conditions => "#{field_name} LIKE '#{val}%'"}
-      elsif val && field.numerical?
-        opts = {:conditions => "#{field_name} >= #{val}"}
-      else
-        opts = {}
-      end
-
+      key_name = token.sub(/^.*\./,"")
+      opts = value_conditions(field, val)
 
       if field.key_field
-        klass = eval(field.key_relation.to_s.singularize.camelize)
+        klass = field.key_klass
         opts.merge!(:conditions => {field.key_field => key_name})
         return klass.first(opts).send(field.relation).map(&field.field).uniq
+      else
+        klass = field.klass
+        opts.merge!(:limit => 10, :select => field.field, :group => field.field )
+        return klass.all(opts).map(&field.field).compact
       end
-
-      klass = (field.relation.nil?) ? definition.klass : eval(field.relation.to_s.singularize.camelize)
-      opts.merge!(:limit => 10, :select => field.field, :group => field.field )
-      klass.all(opts).map(&field.field).compact
-
     end
 
+    #this method returns conditions for selecting completion from partial value
+    def value_conditions(field, val)
+      return {} if val.nil?
+      field_name = (field.key_field) ? field.key_field : field.field
+      return {:conditions => "#{field_name} LIKE '#{val}%'"} if  field.textual?
+      return {:conditions => "#{field_name} >= #{val}"} if field.numerical?
+      return {}
+    end
 
-
+    # This method complete infix operators by field type
     def complete_operator(node)
       field = field_by_name(node.value)
       return [] if field.nil?
@@ -231,6 +221,7 @@ module ScopedSearch
       return ['=', '>', '<']                  if field.temporal?
     end
 
+    # this method return definitions::field object from string
     def field_by_name(name)
       field = definition.fields[name.to_sym]
       if(field.nil?)

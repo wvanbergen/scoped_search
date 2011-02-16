@@ -25,6 +25,16 @@ module ScopedSearch
           definition.klass
         end
       end
+      # The ActiveRecord-based class that belongs the key field in a key-value pair.
+      def key_klass
+         if key_relation
+          definition.klass.reflections[key_relation].klass
+        elsif relation
+          definition.klass.reflections[relation].klass
+        else
+          definition.klass
+        end
+      end
 
       # Returns the ActiveRecord column definition that corresponds to this field.
       def column
