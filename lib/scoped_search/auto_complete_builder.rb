@@ -176,7 +176,7 @@ module ScopedSearch
           opts.merge!(:conditions => "#{field.field} >= #{val}") unless val.nil?
         end
 
-        klass.all(opts).map(&field.field)
+        klass.all(opts).map(&field.field).compact
       end
     end
 
