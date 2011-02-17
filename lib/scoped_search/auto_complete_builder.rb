@@ -45,7 +45,7 @@ module ScopedSearch
       suggestions += LOGICAL_INFIX_OPERATORS if completion.include?(:logical_op)
       suggestions += LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_COMPLETER if completion.include?(:prefix_op)
       suggestions += complete_operator(node) if completion.include?(:infix_op)
-      suggestions += complete_value(node)   if completion.include?(:value)
+      suggestions += complete_value          if completion.include?(:value)
 
       build_suggestions(suggestions, completion.include?(:value))
     end
@@ -80,15 +80,9 @@ module ScopedSearch
     def is_query_valid
 
       # skip test for null prefix operators if in the process of completing the field name.
-      if (last_token_is(NULL_PREFIX_OPERATORS, 2))
-        if (definition.fields.keys.map {|s| s if s.to_s=~ /^#{tokens.last}/}.compact.empty? )
-          raise ScopedSearch::QueryNotSupported, "Field '#{tokens.last}' not recognized for searching!"
-        else
-          return
-        end
-      end
-      #todo: revert this when query supports key value
-      #QueryBuilder.build_query(definition, query)
+      return if(last_token_is(NULL_PREFIX_OPERATORS, 2) && !(query =~ /(\s|\)|,)$/))
+   
+      QueryBuilder.build_query(definition, query)
     end
 
     def is_left_hand(node)
@@ -176,7 +170,7 @@ module ScopedSearch
     end
 
     # this method auto-completes values of fields that have a :complete_value marker 
-    def complete_value(node)
+    def complete_value
       if last_token_is(COMPARISON_OPERATORS)
         token = tokens[tokens.size-2]
         val = ''

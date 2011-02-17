@@ -180,8 +180,8 @@ module ScopedSearch
         if (key_field)
           a_klass = (key_relation) ? key_klass : klass
           sql = a_klass.connection.quote_table_name(a_klass.table_name.to_s) + "." +
-              a_klass.connection.quote_column_name(key_field.to_s)
-          sql += " = ? AND " + klass.connection.quote_table_name(klass.table_name.to_s) + "." +
+              a_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
+              klass.connection.quote_table_name(klass.table_name.to_s) + "." +
               klass.connection.quote_column_name(field.to_s)
         else
           sql = klass.connection.quote_table_name(klass.table_name.to_s) + "." +
@@ -200,7 +200,7 @@ module ScopedSearch
         def to_sql(builder, definition, &block)
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(value).map do |field|
-            builder.sql_test(field, field.default_operator, value, &block)
+            builder.sql_test(field, field.default_operator, value,'', &block)
           end
 
           case fragments.length
@@ -221,9 +221,12 @@ module ScopedSearch
 
         # Returns an IS (NOT) NULL SQL fragment
         def to_null_sql(builder, definition, &block)
-          field = definition.fields[rhs.value.to_sym]
+          field = definition.field_by_name(rhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
 
+          if field.key_field
+            yield(:parameter, rhs.value.to_s.sub(/^.*\./,''))
+          end
           case operator
             when :null    then "#{field.to_sql(builder, &block)} IS NULL"
             when :notnull then "#{field.to_sql(builder, &block)} IS NOT NULL"
@@ -236,7 +239,7 @@ module ScopedSearch
 
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(rhs.value, operator).map { |field|
-                          builder.sql_test(field, operator, rhs.value, &block) }.compact
+                          builder.sql_test(field, operator, rhs.value,'', &block) }.compact
 
           case fragments.length
             when 0 then nil
