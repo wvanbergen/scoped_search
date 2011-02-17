@@ -141,7 +141,10 @@ module ScopedSearch
     # <tt>field</tt>:: The field to test.
     # <tt>operator</tt>:: The operator used for comparison.
     # <tt>value</tt>:: The value to compare the field with.
-    def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
+    def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
+      if field.key_field
+        yield(:parameter, lhs.sub(/^.*\./,''))
+      end
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield(:parameter, "%#{value}%")
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
@@ -169,9 +172,23 @@ module ScopedSearch
       # ActiveRecord::Base#find call, to make sure that the field is avalable
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
-        yield(:include, relation) if relation
-        definition.klass.connection.quote_table_name(klass.table_name.to_s) + "." +
-            definition.klass.connection.quote_column_name(field.to_s)
+        if key_relation
+          yield(:include, key_relation)
+        elsif relation
+          yield(:include, relation)
+        end
+        if (key_field)
+          a_klass = (key_relation) ? key_klass : klass
+          sql = a_klass.connection.quote_table_name(a_klass.table_name.to_s) + "." +
+              a_klass.connection.quote_column_name(key_field.to_s)
+          sql += " = ? AND " + klass.connection.quote_table_name(klass.table_name.to_s) + "." +
+              klass.connection.quote_column_name(field.to_s)
+        else
+          sql = klass.connection.quote_table_name(klass.table_name.to_s) + "." +
+              klass.connection.quote_column_name(field.to_s)
+        end
+        sql
+
       end
     end
 
@@ -234,9 +251,21 @@ module ScopedSearch
           raise ScopedSearch::QueryNotSupported, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
 
           # Search only on the given field.
-          field = definition.fields[lhs.value.to_sym]
+          field = field_by_name(definition, lhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
-          builder.sql_test(field, operator, rhs.value, &block)
+          builder.sql_test(field, operator, rhs.value,lhs.value, &block)
+        end
+
+        # this method return definitions::field object from string
+        def field_by_name(definition, name)
+          field = definition.fields[name.to_sym]
+          if(field.nil?)
+            klass_name = name.to_s.split('.')[0].singularize.camelize
+            definition.key_value_fields.values.each do |f|
+              return f if f.klass.name =~ /.*::#{klass_name}$/
+            end
+          end
+          field
         end
 
         # Convert this AST node to an SQL fragment.
@@ -300,12 +329,18 @@ module ScopedSearch
     # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
     class OracleEnhancedAdapter < ScopedSearch::QueryBuilder
 
-      def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
+      def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
+        if field.key_field
+          yield(:parameter, lhs.sub(/^.*\./,''))
+        end
         if field.textual? && [:like, :unlike].include?(operator)
           yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value)
           return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} LOWER(?)"
+        elsif field.temporal?
+          return datetime_test(field, operator, value, &block)
         else
-          return super(field, operator, value, &block)
+          yield(:parameter, value)
+          return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
         end
       end
     end
