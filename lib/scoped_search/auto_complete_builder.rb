@@ -185,7 +185,7 @@ module ScopedSearch
         val = tokens[tokens.size-1]
       end
 
-      field = field_by_name(token)
+      field = definition.field_by_name(token)
       return [] unless field && field.complete_value
 
       key_name = token.sub(/^.*\./,"")
@@ -213,7 +213,7 @@ module ScopedSearch
 
     # This method complete infix operators by field type
     def complete_operator(node)
-      field = field_by_name(node.value)
+      field = definition.field_by_name(node.value)
       return [] if field.nil?
 
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
@@ -221,17 +221,6 @@ module ScopedSearch
       return ['=', '>', '<']                  if field.temporal?
     end
 
-    # this method return definitions::field object from string
-    def field_by_name(name)
-      field = definition.fields[name.to_sym]
-      if(field.nil?)
-        klass_name = name.to_s.split('.')[0].singularize.camelize
-        definition.key_value_fields.values.each do |f|
-          return f if f.klass.name =~ /.*::#{klass_name}$/
-        end
-      end
-      field
-    end
   end
 
 end

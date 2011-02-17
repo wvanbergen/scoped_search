@@ -251,21 +251,9 @@ module ScopedSearch
           raise ScopedSearch::QueryNotSupported, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
 
           # Search only on the given field.
-          field = field_by_name(definition, lhs.value)
+          field = definition.field_by_name(lhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
           builder.sql_test(field, operator, rhs.value,lhs.value, &block)
-        end
-
-        # this method return definitions::field object from string
-        def field_by_name(definition, name)
-          field = definition.fields[name.to_sym]
-          if(field.nil?)
-            klass_name = name.to_s.split('.')[0].singularize.camelize
-            definition.key_value_fields.values.each do |f|
-              return f if f.klass.name =~ /.*::#{klass_name}$/
-            end
-          end
-          field
         end
 
         # Convert this AST node to an SQL fragment.

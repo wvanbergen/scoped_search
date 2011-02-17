@@ -149,6 +149,18 @@ module ScopedSearch
       @profile_key_value_fields[@profile] ||= {}
     end
 
+    # this method return definitions::field object from string
+    def field_by_name(name)
+      field = fields[name.to_sym]
+      if(field.nil?)
+        klass_name = name.to_s.split('.')[0].singularize.camelize
+        key_value_fields.values.each do |f|
+          return f if f.klass.name =~ /.*::#{klass_name}$/
+        end
+      end
+      field
+    end
+
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
 
     # Returns a list of appropriate fields to search in given a search keyword and operator.
