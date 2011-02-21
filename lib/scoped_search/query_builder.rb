@@ -48,6 +48,7 @@ module ScopedSearch
     def build_find_params
       parameters = []
       includes   = []
+      joins   = []
 
       # Build SQL WHERE clause using the AST
       sql = @ast.to_sql(self, definition) do |notification, value|
@@ -56,9 +57,10 @@ module ScopedSearch
         # Store the parameters, includes, etc so that they can be added to
         # the find-hash later on.
         case notification
-        when :parameter then parameters << value
-        when :include   then includes   << value
-        else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
+          when :parameter then parameters << value
+          when :include   then includes   << value
+          when :joins   then joins   << value
+          else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
 
@@ -66,6 +68,9 @@ module ScopedSearch
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
+      find_attributes[:joins]      = joins              unless joins.empty?
+
+
       # p find_attributes # Uncomment for debugging
       return find_attributes
     end
@@ -173,22 +178,44 @@ module ScopedSearch
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
         if key_relation
-          yield(:include, key_relation)
+          num = rand(1000000)
+          yield(:joins, construct_join_sql(key_relation, num) )
+          return "#{key_klass.table_name}_#{num}." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
+                 "#{klass.table_name}_#{num}." + klass.connection.quote_column_name(field.to_s)
         elsif relation
           yield(:include, relation)
         end
-        if (key_field)
-          a_klass = (key_relation) ? key_klass : klass
-          sql = a_klass.connection.quote_table_name(a_klass.table_name.to_s) + "." +
-              a_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
-              klass.connection.quote_table_name(klass.table_name.to_s) + "." +
-              klass.connection.quote_column_name(field.to_s)
-        else
-          sql = klass.connection.quote_table_name(klass.table_name.to_s) + "." +
-              klass.connection.quote_column_name(field.to_s)
-        end
-        sql
+        klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+      end
 
+      # This method construct join statement for a key value table
+      # It assume the following table structure
+      #  +----------+  +---------+ +--------+
+      #  | main     |  | value   | | key    |
+      #  | main_pk  |  | main_fk | |        |
+      #  |          |  | key_fk  | | key_pk |
+      #  +----------+  +---------+ +--------+
+      # uniq name for the joins are needed in case that there is more than one condition
+      # on different keys in the same query.
+      def construct_join_sql(key_relation, num )
+
+        key = key_relation.to_s.singularize.to_sym
+        main = definition.klass.table_name.singularize.to_sym
+
+        main_table = definition.klass.table_name # => hosts
+        main_table_pk = klass.reflections[main].klass.primary_key # =>id
+
+        value_table = klass.table_name.to_s # => fact_values
+        value_table_fk_main = klass.reflections[main].association_foreign_key # => host_id
+        value_table_fk_key = klass.reflections[key].association_foreign_key # => fact_name_id
+
+        key_table = klass.reflections[key].table_name # => fact_names
+        key_table_pk = klass.reflections[key].klass.primary_key #=> id
+
+        join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})
+                         INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}_#{num}.#{value_table_fk_key}) "
+
+        return join_sql
       end
     end
 
