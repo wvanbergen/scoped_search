@@ -92,3 +92,8 @@ require 'scoped_search/auto_complete_builder'
 # Import the search_on method in the ActiveReocrd::Base class
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
 ActiveRecord::Base.send(:extend, ScopedSearch::BackwardsCompatibility)
+
+if defined?(ActionController)
+  require "scoped_search/rails_helper"
+  ActionController::Base.helper(ScopedSearch::RailsHelper)
+end
