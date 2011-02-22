@@ -70,7 +70,7 @@ module ScopedSearch
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins              unless joins.empty?
       find_attributes[:order]      = options[:order]    unless options[:order].nil?
-
+      find_attributes[:group]      = options[:group]    unless options[:group].nil?
 
       # p find_attributes # Uncomment for debugging
       return find_attributes
