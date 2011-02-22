@@ -20,9 +20,9 @@ module ScopedSearch
 
       query_builder_class = self.class_for(definition)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
-        return query_builder_class.new(definition, query, options[:profile]).build_find_params
+        return query_builder_class.new(definition, query, options[:profile]).build_find_params(options)
       elsif query.kind_of?(String)
-        return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params
+        return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params(options)
       elsif query.nil?
         return { }
       else
@@ -45,7 +45,7 @@ module ScopedSearch
 
     # Actually builds the find parameters hash that should be used in the search_for
     # named scope.
-    def build_find_params
+    def build_find_params(options)
       parameters = []
       includes   = []
       joins   = []
@@ -69,6 +69,7 @@ module ScopedSearch
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins              unless joins.empty?
+      find_attributes[:order]      = options[:order]    unless options[:order].nil?
 
 
       # p find_attributes # Uncomment for debugging
