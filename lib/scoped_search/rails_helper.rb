@@ -11,17 +11,20 @@ module ScopedSearch
     #
     # * <tt>:by</tt> - the name of the named scope. This helper will prepend this value with "ascend_by_" and "descend_by_"
     # * <tt>:as</tt> - the text used in the link, defaults to whatever is passed to :by
-    def sort(params, options = {}, html_options = {})
+    def sort(field, options = {}, html_options = {})
 
-      if !options[:as]
-        id = options[:by].to_s.downcase == "id"
-        options[:as] = id ? options[:by].to_s.upcase : options[:by].to_s.humanize
+      unless options[:as]
+        id           = field.to_s.downcase == "id"
+        options[:as] = id ? field.to_s.upcase : field.to_s.humanize
       end
-      options[:ascend] ||= "#{options[:by]} ASC"
-      options[:descend] ||= "#{options[:by]} DESC"
-      ascending = params[:order] == options[:ascend]
-      new_sort = ascending ? options[:descend] : options[:ascend]
-      selected = [options[:ascend], options[:descend]].include?(params[:order])
+
+      ascend  = "#{field} ASC"
+      descend = "#{field} DESC"
+
+      ascending = params[:order] == ascend
+      new_sort = ascending ? descend : ascend
+      selected = [ascend, descend].include?(params[:order])
+
       if selected
         css_classes = html_options[:class] ? html_options[:class].split(" ") : []
         if ascending
@@ -33,9 +36,8 @@ module ScopedSearch
         end
         html_options[:class] = css_classes.join(" ")
       end
-      val = params[:host] ? params[:host][:search] : params[:search] ? params[:search] : ''
-      url_options = params.merge(:order => new_sort).merge(:search => val)
-      url_options.delete(:host)
+
+      url_options = params.merge(:order => new_sort).merge(:search => params[:search])
 
       options[:as] = raw(options[:as]) if defined?(RailsXss)
 
@@ -112,6 +114,10 @@ module ScopedSearch
       javascript_tag(function)
     end
 
+    def auto_complete_clear_value_button(field_id)
+      content_tag (:input,"" ,:type=>"button", :class=>"auto_complete_clear", :value=>"X", :onclick=>"$('#{field_id}').clear();")
+    end
+
     # Use this method in your view to generate a return for the AJAX auto complete requests.
     #
     # The auto_complete_result can of course also be called from a view belonging to the
@@ -125,11 +131,11 @@ module ScopedSearch
     # Wrapper for text_field with added AJAX auto completion functionality.
     #
     # In your controller, you'll need to define an action called
-    # auto_complete_for to respond the AJAX calls,
-    def text_field_with_auto_complete(object, method, tag_options = {}, completion_options = {})
-      text_field(object, method, tag_options) +
-          content_tag("div", "", :id => "#{object}_#{method}_auto_complete", :class => "auto_complete") +
-          auto_complete_field("#{object}_#{method}", { :url => { :action => "auto_complete_search" } }.update(completion_options))
+    # auto_complete_method to respond the AJAX calls,
+    def auto_complete_field_tag(method, val,tag_options = {}, completion_options = {})
+      text_field_tag(method, val,tag_options) +
+          content_tag("div", "", :id => "#{method}_auto_complete", :class => "auto_complete") +
+          auto_complete_field("#{method}", { :url => { :action => "auto_complete_#{method}" } }.update(completion_options))
     end
 
   end
