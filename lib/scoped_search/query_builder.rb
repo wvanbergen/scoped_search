@@ -15,7 +15,7 @@ module ScopedSearch
     # query. It will return an empty hash if the search query is empty, in which case
     # the scope call will simply return all records.
     def self.build_query(definition, *args)
-      query = args[0]
+      query = args[0] ||=''
       options = args[1] || {}
 
       query_builder_class = self.class_for(definition)
@@ -23,8 +23,6 @@ module ScopedSearch
         return query_builder_class.new(definition, query, options[:profile]).build_find_params(options)
       elsif query.kind_of?(String)
         return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params(options)
-      elsif query.nil?
-        return { }
       else
         raise "Unsupported query object: #{query.inspect}!"
       end
@@ -64,6 +62,7 @@ module ScopedSearch
         end
       end
 
+      options[:order] ||= definition.default_order
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?

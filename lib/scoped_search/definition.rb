@@ -85,6 +85,7 @@ module ScopedSearch
       def initialize(definition, options = {})
         @definition = definition
         @definition.profile = options[:profile] if options[:profile]
+        @definition.default_order = options[:on] if options.has_key?(:default_order)
         
         case options
         when Symbol, String
@@ -113,7 +114,7 @@ module ScopedSearch
       end
     end
 
-    attr_reader :klass
+    attr_reader :klass , :default_order
 
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
@@ -126,12 +127,13 @@ module ScopedSearch
       @profile_fields        = {:default => {}}
       @profile_key_value_fields  = {:default => {}}
       @profile_unique_fields = {:default => []}
+      @default_order         = nil
 
       register_named_scope! unless klass.respond_to?(:search_for)
       register_complete_for! unless klass.respond_to?(:complete_for)
 
     end
-    
+    attr_accessor :default_order
     attr_accessor :profile
     
     def fields
