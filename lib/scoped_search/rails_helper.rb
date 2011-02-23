@@ -37,7 +37,7 @@ module ScopedSearch
         html_options[:class] = css_classes.join(" ")
       end
 
-      url_options = params.merge(:order => new_sort).merge(:search => params[:search])
+      url_options = params.merge(:order => new_sort)
 
       options[:as] = raw(options[:as]) if defined?(RailsXss)
 
@@ -133,9 +133,10 @@ module ScopedSearch
     # In your controller, you'll need to define an action called
     # auto_complete_method to respond the AJAX calls,
     def auto_complete_field_tag(method, val,tag_options = {}, completion_options = {})
-      text_field_tag(method, val,tag_options) +
+      text_field_tag(method, val,tag_options.merge(:class => "auto_complete_input")) +
           content_tag("div", "", :id => "#{method}_auto_complete", :class => "auto_complete") +
-          auto_complete_field("#{method}", { :url => { :action => "auto_complete_#{method}" } }.update(completion_options))
+          auto_complete_field("#{method}", { :url => { :action => "auto_complete_#{method}" } }.update(completion_options)) +
+          auto_complete_clear_value_button("#{method}")
     end
 
   end
