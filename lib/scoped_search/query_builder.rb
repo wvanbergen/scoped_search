@@ -180,8 +180,8 @@ module ScopedSearch
         if key_relation
           num = rand(1000000)
           yield(:joins, construct_join_sql(key_relation, num) )
-          return "#{key_klass.table_name}_#{num}." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
-                 "#{klass.table_name}_#{num}." + klass.connection.quote_column_name(field.to_s)
+          return "\"#{key_klass.table_name}_#{num}\"." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
+                 "\"#{klass.table_name}_#{num}\"." + klass.connection.quote_column_name(field.to_s)
         elsif relation
           yield(:include, relation)
         end
@@ -200,7 +200,7 @@ module ScopedSearch
       def construct_join_sql(key_relation, num )
 
         key = key_relation.to_s.singularize.to_sym
-        main = definition.klass.table_name.singularize.to_sym
+        main = definition.klass.to_s.underscore.to_sym
 
         main_table = definition.klass.table_name # => hosts
         main_table_pk = klass.reflections[main].klass.primary_key # =>id

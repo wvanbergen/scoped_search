@@ -157,7 +157,7 @@ module ScopedSearch
       if(field.nil?)
         klass_name = name.to_s.split('.')[0].singularize.camelize
         key_value_fields.values.each do |f|
-          return f if f.klass.name =~ /.*::#{klass_name}$/
+          return f if f.klass.name =~ /.*#{klass_name}$/
         end
       end
       field
@@ -203,6 +203,9 @@ module ScopedSearch
             search_scope = @klass.scoped
             search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
+            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
+            search_scope = search_scope.order(find_options[:order]) if find_options[:order]
+            search_scope = search_scope.group(find_options[:group]) if find_options[:group]
             search_scope
           })
         else
