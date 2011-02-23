@@ -27,7 +27,7 @@ require 'spec_helper'
           ::Bar = ScopedSearch::RSpec::Database.create_model(:name => :string) do |klass|
             klass.has_many :facts
             klass.has_many :keys, :through => :facts
-            klass.scoped_search :in => :facts, :on => :value, :in_key => :keys, :on_key => :name
+            klass.scoped_search :in => :facts, :on => :value, :in_key => :keys, :on_key => :name, :complete_value => true
           end
 
           @key1 = Key.create!(:name => 'color')
@@ -58,7 +58,11 @@ require 'spec_helper'
 
         it "should find all bars with a fact name size and fact value 5" do
             Bar.search_for('facts.size = 5').should have(1).items
-         end
+        end
+
+        it "should find all bars with a fact color green and fact size 5" do
+          Bar.search_for('facts.color = green and facts.size = 5').should have(1).items
+        end
 
         it "should find all bars that has size value" do
           Bar.search_for('has facts.size').should have(1).items
@@ -66,6 +70,14 @@ require 'spec_helper'
 
         it "should find all bars that has color value" do
           Bar.search_for('has facts.color').should have(2).items
+        end
+
+        it "should complete facts names" do
+          Bar.complete_for('facts.').should have(2).items
+        end
+
+         it "should complete values for fact name = color" do
+          Bar.complete_for('facts.color = ').should have(2).items
         end
 
       end
