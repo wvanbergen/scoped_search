@@ -114,7 +114,7 @@ module ScopedSearch
       end
     end
 
-    attr_reader :klass , :default_order
+    attr_reader :klass
 
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
@@ -133,8 +133,8 @@ module ScopedSearch
       register_complete_for! unless klass.respond_to?(:complete_for)
 
     end
-    attr_accessor :default_order
-    attr_accessor :profile
+   
+    attr_accessor :profile, :default_order
     
     def fields
       @profile ||= :default
