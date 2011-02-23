@@ -6,7 +6,7 @@ gemspec
 # You can specify the databasde connection details in spec/database.yml
 
 # gem 'mysql2' # preferred over 'mysql'
-gem 'mysql'
+#gem 'mysql'
 # gem 'postgresql'
 
 # # JDBC connections

@@ -45,9 +45,9 @@ module ScopedSearch
       suggestions += LOGICAL_INFIX_OPERATORS if completion.include?(:logical_op)
       suggestions += LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_COMPLETER if completion.include?(:prefix_op)
       suggestions += complete_operator(node) if completion.include?(:infix_op)
-      suggestions += complete_value(node)   if completion.include?(:value)
+      suggestions += complete_value          if completion.include?(:value)
 
-      build_suggestions(suggestions)
+      build_suggestions(suggestions, completion.include?(:value))
     end
 
     # parse the query and return the complete options
@@ -80,22 +80,14 @@ module ScopedSearch
     def is_query_valid
 
       # skip test for null prefix operators if in the process of completing the field name.
-      if (last_token_is(NULL_PREFIX_OPERATORS, 2))
-        if (definition.fields.keys.map {|s| s if s.to_s=~ /^#{tokens.last}/}.compact.empty? )
-          raise ScopedSearch::QueryNotSupported, "Field '#{tokens.last}' not recognized for searching!"
-        else
-          return
-        end
-      end
-
+      return if(last_token_is(NULL_PREFIX_OPERATORS, 2) && !(query =~ /(\s|\)|,)$/))
+   
       QueryBuilder.build_query(definition, query)
     end
 
     def is_left_hand(node)
-      lh = !(definition.fields.keys.include?(node.value.to_sym))
-
+      lh = !(definition.fields.keys.include?(node.value.to_sym)) #(field_by_name(node.value))
       lh = lh || last_token_is(NULL_PREFIX_OPERATORS, 2)
-
       lh = lh && !is_right_hand
       lh
     end
@@ -130,12 +122,12 @@ module ScopedSearch
       tokens
     end
 
-    def build_suggestions(suggestions)
+    def build_suggestions(suggestions, is_value)
       return [] if (suggestions.blank?)
 
       # for relation fields compact the suggestions list to be one suggestion per relation
       # unless the user has typed the relation name entirely 
-      if tokens.empty? || !(tokens.last.to_s.include?('.'))
+      if (tokens.empty? || !(tokens.last.to_s.include?('.') ) && !(is_value))
         suggestions = suggestions.map {|s|
           (s.to_s.split('.')[0].end_with?(tokens.last)) ? s.to_s : s.to_s.split('.')[0]
         }
@@ -143,7 +135,7 @@ module ScopedSearch
       q=query
       unless q =~ /(\s|\)|,)$/
         suggestions = suggestions.map {|s| s if s.to_s =~ /^#{tokens.last}/}.compact
-        q.chomp!(tokens.last)
+        q.chomp!(tokens.last.to_s)
       end
       suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
     end
@@ -151,37 +143,71 @@ module ScopedSearch
     # suggest all searchable field names.
     # in relations suggest only the long format relation.field.
     def complete_keyword
-      definition.fields.map {|f| (f[1].relation.nil?) ? f[0] : (f[0].to_s.include?('.'))? f[0] : nil }.compact
+      keywords = []
+      definition.fields.each do|f|
+        if (f[1].key_field)
+          keywords += complete_key(f[1], tokens.last)
+        elsif f[1].relation && !(f[0].to_s.include?('.'))
+          next
+        else
+          keywords << f[0]
+        end
+      end
+      keywords
     end
 
-    def complete_value(node)
-      field = definition.fields[node.value.to_sym]
-      if field.nil?
-        field = definition.fields[tokens[tokens.size-3].to_sym]
+    #this method completes the keys list in a key-value schema in the format table.keyName
+    def complete_key(field, val)
+      return [field.relation] if !val || !val.is_a?(String) || !(val.include?('.'))
+      val = val.sub(/.*\./,'')
+
+      klass = field.key_klass
+      field_name = field.key_field 
+      opts = value_conditions(field, val)
+      opts.merge!(:limit => 10, :select => field_name, :group => field_name )
+
+      klass.all(opts).map(&field_name).compact.map{ |f| "#{field.relation}.#{f}"}
+    end
+
+    # this method auto-completes values of fields that have a :complete_value marker 
+    def complete_value
+      if last_token_is(COMPARISON_OPERATORS)
+        token = tokens[tokens.size-2]
+        val = ''
+      else
+        token = tokens[tokens.size-3]
         val = tokens[tokens.size-1]
       end
 
-      opts = {:limit => 10, :select => field.field, :group => field.field }
+      field = definition.field_by_name(token)
+      return [] unless field && field.complete_value
 
-      if field.relation.nil?
-        klass = definition.klass
+      key_name = token.sub(/^.*\./,"")
+      opts = value_conditions(field, val)
+
+      if field.key_field
+        klass = field.key_klass
+        opts.merge!(:conditions => {field.key_field => key_name})
+        return klass.first(opts).send(field.relation).map(&field.field).uniq
       else
-        klass = eval(field.relation.to_s.singularize.camelize)
-      end
-
-      if (field.complete_value)
-        if field.textual?
-          opts.merge!(:conditions => "#{field.field} LIKE '#{val}%'") unless val.nil?
-        elsif field.numerical?
-          opts.merge!(:conditions => "#{field.field} >= #{val}") unless val.nil?
-        end
-
-        klass.all(opts).map(&field.field).compact
+        klass = field.klass
+        opts.merge!(:limit => 10, :select => field.field, :group => field.field )
+        return klass.all(opts).map(&field.field).compact
       end
     end
 
+    #this method returns conditions for selecting completion from partial value
+    def value_conditions(field, val)
+      return {} if val.nil?
+      field_name = (field.key_field) ? field.key_field : field.field
+      return {:conditions => "#{field_name} LIKE '#{val}%'"} if  field.textual?
+      return {:conditions => "#{field_name} >= #{val}"} if field.numerical?
+      return {}
+    end
+
+    # This method complete infix operators by field type
     def complete_operator(node)
-      field = definition.fields[node.value.to_sym]
+      field = definition.field_by_name(node.value)
       return [] if field.nil?
 
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?

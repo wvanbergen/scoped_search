@@ -15,16 +15,14 @@ module ScopedSearch
     # query. It will return an empty hash if the search query is empty, in which case
     # the scope call will simply return all records.
     def self.build_query(definition, *args)
-      query = args[0]
+      query = args[0] ||=''
       options = args[1] || {}
 
       query_builder_class = self.class_for(definition)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
-        return query_builder_class.new(definition, query, options[:profile]).build_find_params
+        return query_builder_class.new(definition, query, options[:profile]).build_find_params(options)
       elsif query.kind_of?(String)
-        return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params
-      elsif query.nil?
-        return { }
+        return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params(options)
       else
         raise "Unsupported query object: #{query.inspect}!"
       end
@@ -45,9 +43,10 @@ module ScopedSearch
 
     # Actually builds the find parameters hash that should be used in the search_for
     # named scope.
-    def build_find_params
+    def build_find_params(options)
       parameters = []
       includes   = []
+      joins   = []
 
       # Build SQL WHERE clause using the AST
       sql = @ast.to_sql(self, definition) do |notification, value|
@@ -56,16 +55,22 @@ module ScopedSearch
         # Store the parameters, includes, etc so that they can be added to
         # the find-hash later on.
         case notification
-        when :parameter then parameters << value
-        when :include   then includes   << value
-        else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
+          when :parameter then parameters << value
+          when :include   then includes   << value
+          when :joins   then joins   << value
+          else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
 
+      options[:order] ||= definition.default_order
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
+      find_attributes[:joins]      = joins              unless joins.empty?
+      find_attributes[:order]      = options[:order]    unless options[:order].nil?
+      find_attributes[:group]      = options[:group]    unless options[:group].nil?
+
       # p find_attributes # Uncomment for debugging
       return find_attributes
     end
@@ -141,7 +146,10 @@ module ScopedSearch
     # <tt>field</tt>:: The field to test.
     # <tt>operator</tt>:: The operator used for comparison.
     # <tt>value</tt>:: The value to compare the field with.
-    def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
+    def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
+      if field.key_field
+        yield(:parameter, lhs.sub(/^.*\./,''))
+      end
       if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
         yield(:parameter, "%#{value}%")
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
@@ -169,9 +177,45 @@ module ScopedSearch
       # ActiveRecord::Base#find call, to make sure that the field is avalable
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
-        yield(:include, relation) if relation
-        definition.klass.connection.quote_table_name(klass.table_name.to_s) + "." +
-            definition.klass.connection.quote_column_name(field.to_s)
+        if key_relation
+          num = rand(1000000)
+          yield(:joins, construct_join_sql(key_relation, num) )
+          return "#{key_klass.table_name}_#{num}." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
+                 "#{klass.table_name}_#{num}." + klass.connection.quote_column_name(field.to_s)
+        elsif relation
+          yield(:include, relation)
+        end
+        klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+      end
+
+      # This method construct join statement for a key value table
+      # It assume the following table structure
+      #  +----------+  +---------+ +--------+
+      #  | main     |  | value   | | key    |
+      #  | main_pk  |  | main_fk | |        |
+      #  |          |  | key_fk  | | key_pk |
+      #  +----------+  +---------+ +--------+
+      # uniq name for the joins are needed in case that there is more than one condition
+      # on different keys in the same query.
+      def construct_join_sql(key_relation, num )
+
+        key = key_relation.to_s.singularize.to_sym
+        main = definition.klass.table_name.singularize.to_sym
+
+        main_table = definition.klass.table_name # => hosts
+        main_table_pk = klass.reflections[main].klass.primary_key # =>id
+
+        value_table = klass.table_name.to_s # => fact_values
+        value_table_fk_main = klass.reflections[main].association_foreign_key # => host_id
+        value_table_fk_key = klass.reflections[key].association_foreign_key # => fact_name_id
+
+        key_table = klass.reflections[key].table_name # => fact_names
+        key_table_pk = klass.reflections[key].klass.primary_key #=> id
+
+        join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})
+                         INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}_#{num}.#{value_table_fk_key}) "
+
+        return join_sql
       end
     end
 
@@ -183,7 +227,7 @@ module ScopedSearch
         def to_sql(builder, definition, &block)
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(value).map do |field|
-            builder.sql_test(field, field.default_operator, value, &block)
+            builder.sql_test(field, field.default_operator, value,'', &block)
           end
 
           case fragments.length
@@ -204,9 +248,12 @@ module ScopedSearch
 
         # Returns an IS (NOT) NULL SQL fragment
         def to_null_sql(builder, definition, &block)
-          field = definition.fields[rhs.value.to_sym]
+          field = definition.field_by_name(rhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
 
+          if field.key_field
+            yield(:parameter, rhs.value.to_s.sub(/^.*\./,''))
+          end
           case operator
             when :null    then "#{field.to_sql(builder, &block)} IS NULL"
             when :notnull then "#{field.to_sql(builder, &block)} IS NOT NULL"
@@ -219,7 +266,7 @@ module ScopedSearch
 
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(rhs.value, operator).map { |field|
-                          builder.sql_test(field, operator, rhs.value, &block) }.compact
+                          builder.sql_test(field, operator, rhs.value,'', &block) }.compact
 
           case fragments.length
             when 0 then nil
@@ -234,9 +281,9 @@ module ScopedSearch
           raise ScopedSearch::QueryNotSupported, "Value not a leaf node"      unless rhs.kind_of?(ScopedSearch::QueryLanguage::AST::LeafNode)
 
           # Search only on the given field.
-          field = definition.fields[lhs.value.to_sym]
+          field = definition.field_by_name(lhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
-          builder.sql_test(field, operator, rhs.value, &block)
+          builder.sql_test(field, operator, rhs.value,lhs.value, &block)
         end
 
         # Convert this AST node to an SQL fragment.
@@ -300,12 +347,18 @@ module ScopedSearch
     # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
     class OracleEnhancedAdapter < ScopedSearch::QueryBuilder
 
-      def sql_test(field, operator, value, &block) # :yields: finder_option_type, value
+      def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
+        if field.key_field
+          yield(:parameter, lhs.sub(/^.*\./,''))
+        end
         if field.textual? && [:like, :unlike].include?(operator)
           yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value)
           return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} LOWER(?)"
+        elsif field.temporal?
+          return datetime_test(field, operator, value, &block)
         else
-          return super(field, operator, value, &block)
+          yield(:parameter, value)
+          return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
         end
       end
     end
