@@ -146,7 +146,7 @@ module ScopedSearch
       keywords = []
       definition.fields.each do|f|
         if (f[1].key_field)
-          keywords += complete_key(f[1], tokens.last)
+          keywords += complete_key(f[0], f[1], tokens.last)
         else
           keywords << f[0]
         end
@@ -155,8 +155,8 @@ module ScopedSearch
     end
 
     #this method completes the keys list in a key-value schema in the format table.keyName
-    def complete_key(field, val)
-      return [field.relation] if !val || !val.is_a?(String) || !(val.include?('.'))
+    def complete_key(name, field, val)
+      return [name] if !val || !val.is_a?(String) || !(val.include?('.'))
       val = val.sub(/.*\./,'')
 
       klass = field.key_klass
@@ -164,7 +164,7 @@ module ScopedSearch
       opts = value_conditions(field, val)
       opts.merge!(:limit => 10, :select => field_name, :group => field_name )
 
-      klass.all(opts).map(&field_name).compact.map{ |f| "#{field.relation}.#{f}"}
+      klass.all(opts).map(&field_name).compact.map{ |f| "#{name}.#{f}"}
     end
 
     # this method auto-completes values of fields that have a :complete_value marker 

@@ -106,7 +106,6 @@ module ScopedSearch
         definition.fields[@field] ||= self unless options[:rename]
         definition.fields[options[:rename]] ||= self   if options[:rename]
         definition.unique_fields   << self
-        definition.fields[@relation] ||=self if @key_field && @relation
 
         # Store definition for alias / aliases as well
         definition.fields[options[:alias]]                  ||= self   if options[:alias]

@@ -27,7 +27,7 @@ require "#{File.dirname(__FILE__)}/../spec_helper"
           ::Bar = ScopedSearch::RSpec::Database.create_model(:name => :string) do |klass|
             klass.has_many :facts
             klass.has_many :keys, :through => :facts
-            klass.scoped_search :in => :facts, :on => :value, :in_key => :keys, :on_key => :name, :complete_value => true
+            klass.scoped_search :in => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
           end
 
           @key1 = Key.create!(:name => 'color')
