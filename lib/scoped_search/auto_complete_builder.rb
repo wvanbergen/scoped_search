@@ -147,8 +147,6 @@ module ScopedSearch
       definition.fields.each do|f|
         if (f[1].key_field)
           keywords += complete_key(f[1], tokens.last)
-        elsif f[1].relation && !(f[0].to_s.include?('.'))
-          next
         else
           keywords << f[0]
         end
