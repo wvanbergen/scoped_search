@@ -103,14 +103,13 @@ module ScopedSearch
         end
 
         # Store this field is the field array
-        definition.fields[@field] ||= self
+        definition.fields[@field] ||= self unless options[:rename]
+        definition.fields[options[:rename]] ||= self   if options[:rename]
         definition.unique_fields   << self
-        definition.key_value_fields[@field] ||=self if options[:on_key]
 
         # Store definition for alias / aliases as well
         definition.fields[options[:alias]]                  ||= self   if options[:alias]
         options[:aliases].each { |al| definition.fields[al] ||= self } if options[:aliases]
-        definition.fields["#{@relation}.#{@field}".to_sym]  ||= self   if @relation
       end
     end
 
@@ -122,10 +121,8 @@ module ScopedSearch
     def initialize(klass)
       @klass                 = klass
       @fields                = {}
-      @key_value_fields      = {}
       @unique_fields         = []
       @profile_fields        = {:default => {}}
-      @profile_key_value_fields  = {:default => {}}
       @profile_unique_fields = {:default => []}
       @default_order         = nil
 
@@ -146,20 +143,10 @@ module ScopedSearch
       @profile_unique_fields[@profile] ||= []
     end
 
-    def key_value_fields
-      @profile ||= :default
-      @profile_key_value_fields[@profile] ||= {}
-    end
-
     # this method return definitions::field object from string
     def field_by_name(name)
       field = fields[name.to_sym]
-      if(field.nil?)
-        klass_name = name.to_s.split('.')[0].singularize.camelize
-        key_value_fields.values.each do |f|
-          return f if f.klass.name =~ /.*#{klass_name}$/
-        end
-      end
+      field ||= fields[name.to_s.split('.')[0].to_sym]
       field
     end
 

@@ -19,7 +19,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         klass.scoped_search :on => [:string, :int, :date]
         klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
         klass.scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
-        klass.scoped_search :on => :related, :in => :bars
+        klass.scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
         
       end
 

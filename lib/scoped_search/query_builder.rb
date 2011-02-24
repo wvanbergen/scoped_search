@@ -64,11 +64,12 @@ module ScopedSearch
 
 
       # Build hash for ActiveRecord::Base#find for the named scope
+      order = order_by(options)
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins              unless joins.empty?
-      find_attributes[:order]      = order_by(options)
+      find_attributes[:order]      = order              unless order.nil?
       find_attributes[:group]      = options[:group]    unless options[:group].nil?
 
       # p find_attributes # Uncomment for debugging
@@ -76,8 +77,8 @@ module ScopedSearch
     end
 
     def order_by(options)
-      order ||= definition.default_order
       order ||= options[:order]
+      order ||= definition.default_order
       order = "#{definition.klass.table_name}.#{order}" unless order.nil? || order.to_s.include?('.')
       order
     end
