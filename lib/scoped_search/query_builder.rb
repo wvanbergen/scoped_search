@@ -62,17 +62,24 @@ module ScopedSearch
         end
       end
 
-      options[:order] ||= definition.default_order
+
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins              unless joins.empty?
-      find_attributes[:order]      = options[:order]    unless options[:order].nil?
+      find_attributes[:order]      = order_by(options)
       find_attributes[:group]      = options[:group]    unless options[:group].nil?
 
       # p find_attributes # Uncomment for debugging
       return find_attributes
+    end
+
+    def order_by(options)
+      order ||= definition.default_order
+      order ||= options[:order]
+      order = "#{definition.klass.table_name}.#{order}" unless order.nil? || order.to_s.include?('.')
+      order
     end
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
