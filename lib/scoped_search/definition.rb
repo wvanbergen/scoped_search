@@ -97,7 +97,7 @@ module ScopedSearch
           @complete_value   = options[:complete_value]
           @relation         = options[:in]
           @key_relation     = options[:in_key]
-          @key_field         = options[:on_key]
+          @key_field        = options[:on_key]
           @only_explicit    = !!options[:only_explicit]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         end
