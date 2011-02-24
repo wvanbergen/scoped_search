@@ -11,15 +11,15 @@ describe ScopedSearch::QueryBuilder do
   end
 
   it "should return empty conditions if the search query is nil" do
-    ScopedSearch::QueryBuilder.build_query(@definition, nil).should == { }
+    ScopedSearch::QueryBuilder.build_query(@definition, nil).should == { :order => nil }
   end
 
   it "should return empty conditions if the query is blank" do
-    ScopedSearch::QueryBuilder.build_query(@definition, "").should == { }
+    ScopedSearch::QueryBuilder.build_query(@definition, "").should == { :order => nil }
   end
 
   it "should return empty conditions if the query is whitespace only" do
-    ScopedSearch::QueryBuilder.build_query(@definition, "\t ").should == {  }
+    ScopedSearch::QueryBuilder.build_query(@definition, "\t ").should == { :order => nil }
   end
 
 end
