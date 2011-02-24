@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "#{File.dirname(__FILE__)}/../spec_helper"
 
 # These specs will run on all databases that are defined in the spec/database.yml file.
 # Comment out any databases that you do not have available for testing purposes if needed.
@@ -190,6 +190,19 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should return all records without a value if the string field is being checked with null?" do
         @class.search_for('null? explicit').should have(1).items
+      end
+    end
+    context 'using order' do
+      it "sort by string ASC" do
+        @class.search_for('',:order => 'string ASC').first.string.should eql('bar')
+      end
+
+      it "sort by string DESC" do
+        @class.search_for('',:order => 'string DESC').first.string.should eql('foo')
+      end
+
+       it "group by explicit" do
+        @class.search_for('',:group => 'explicit').should have(2).items
       end
     end
   end

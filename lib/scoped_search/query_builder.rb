@@ -62,17 +62,24 @@ module ScopedSearch
         end
       end
 
-      options[:order] ||= definition.default_order
+
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins              unless joins.empty?
-      find_attributes[:order]      = options[:order]    unless options[:order].nil?
+      find_attributes[:order]      = order_by(options)
       find_attributes[:group]      = options[:group]    unless options[:group].nil?
 
       # p find_attributes # Uncomment for debugging
       return find_attributes
+    end
+
+    def order_by(options)
+      order ||= definition.default_order
+      order ||= options[:order]
+      order = "#{definition.klass.table_name}.#{order}" unless order.nil? || order.to_s.include?('.')
+      order
     end
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
@@ -180,8 +187,8 @@ module ScopedSearch
         if key_relation
           num = rand(1000000)
           yield(:joins, construct_join_sql(key_relation, num) )
-          return "#{key_klass.table_name}_#{num}." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
-                 "#{klass.table_name}_#{num}." + klass.connection.quote_column_name(field.to_s)
+          return "\"#{key_klass.table_name}_#{num}\"." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
+                 "\"#{klass.table_name}_#{num}\"." + klass.connection.quote_column_name(field.to_s)
         elsif relation
           yield(:include, relation)
         end
@@ -200,7 +207,7 @@ module ScopedSearch
       def construct_join_sql(key_relation, num )
 
         key = key_relation.to_s.singularize.to_sym
-        main = definition.klass.table_name.singularize.to_sym
+        main = definition.klass.to_s.underscore.to_sym
 
         main_table = definition.klass.table_name # => hosts
         main_table_pk = klass.reflections[main].klass.primary_key # =>id

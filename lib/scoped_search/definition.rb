@@ -114,7 +114,7 @@ module ScopedSearch
       end
     end
 
-    attr_reader :klass , :default_order
+    attr_reader :klass
 
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
@@ -133,8 +133,8 @@ module ScopedSearch
       register_complete_for! unless klass.respond_to?(:complete_for)
 
     end
-    attr_accessor :default_order
-    attr_accessor :profile
+   
+    attr_accessor :profile, :default_order
     
     def fields
       @profile ||= :default
@@ -157,7 +157,7 @@ module ScopedSearch
       if(field.nil?)
         klass_name = name.to_s.split('.')[0].singularize.camelize
         key_value_fields.values.each do |f|
-          return f if f.klass.name =~ /.*::#{klass_name}$/
+          return f if f.klass.name =~ /.*#{klass_name}$/
         end
       end
       field
@@ -203,6 +203,9 @@ module ScopedSearch
             search_scope = @klass.scoped
             search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
+            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
+            search_scope = search_scope.order(find_options[:order]) if find_options[:order]
+            search_scope = search_scope.group(find_options[:group]) if find_options[:group]
             search_scope
           })
         else

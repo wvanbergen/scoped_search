@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "#{File.dirname(__FILE__)}/../spec_helper"
 
 describe ScopedSearch::QueryBuilder do
 
@@ -6,6 +6,7 @@ describe ScopedSearch::QueryBuilder do
     @definition = mock('ScopedSearch::Definition')
     @definition.stub!(:klass).and_return(Class.new(ActiveRecord::Base))
     @definition.stub!(:profile).and_return(:default)
+    @definition.stub!(:default_order).and_return(nil)
     @definition.stub!(:profile=).and_return(true)
   end
 
