@@ -185,13 +185,13 @@ module ScopedSearch
       opts = value_conditions(field, val)
 
       if field.key_field
-        klass = field.key_klass
         opts.merge!(:conditions => {field.key_field => key_name})
-        return klass.first(opts).send(field.relation).map(&field.field).uniq
+        key_klass = field.key_klass.first(opts)
+        raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
+        return key_klass.send(field.relation).map(&field.field).uniq 
       else
-        klass = field.klass
         opts.merge!(:limit => 10, :select => field.field, :group => field.field )
-        return klass.all(opts).map(&field.field).compact
+        return field.klass.all(opts).map(&field.field).compact
       end
     end
 
