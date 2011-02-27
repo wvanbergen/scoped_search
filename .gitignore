@@ -9,3 +9,4 @@ scoped_search-*.gem
 /spec/database.yml
 .bundle/
 Gemfile.lock
+.idea/
