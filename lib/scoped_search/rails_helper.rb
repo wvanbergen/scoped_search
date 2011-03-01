@@ -94,7 +94,7 @@ module ScopedSearch
       function << "'#{field_id}', "
       function << "'" + (options[:update] || "#{field_id}_auto_complete") + "', "
       function << "'#{url_for(options[:url])}'"
-
+      
       js_options = {}
       js_options[:tokens] = array_or_string_for_javascript(options[:tokens])            if options[:tokens]
       js_options[:callback]   = "function(element, value) { return #{options[:with]} }" if options[:with]
@@ -114,8 +114,26 @@ module ScopedSearch
       javascript_tag(function)
     end
 
+    def auto_complete_field_jquery(method, options = {})
+      function = "$(document).ready(function(){ $('input[data-autocomplete]').railsAutocomplete(); });"
+      function << "(function(jQuery) {	var self = null; jQuery.fn.railsAutocomplete = function() { "
+      function << "return this.live('focus',function() { if (!this.railsAutoCompleter) {"
+      function << "this.railsAutoCompleter = new jQuery.railsAutocomplete(this);}	});	};"
+
+      function << "jQuery.railsAutocomplete = function (e) {_e = e; this.init(_e);	};"
+	    function << "jQuery.railsAutocomplete.fn = jQuery.railsAutocomplete.prototype = {railsAutocomplete: '0.0.1'};"
+	    function << "jQuery.railsAutocomplete.fn.extend = jQuery.railsAutocomplete.extend = jQuery.extend;"
+
+      function << "jQuery.railsAutocomplete.fn.extend({init: function(e) {e.delimiter = $(e).attr('data-delimiter') || null;"
+      function << "function split( val ) {return val.split( e.delimiter );}function extractLast( term ) {return split( term ).pop();}"
+      function << "$(e).autocomplete({source: function( request, response ) {$.getJSON( $(e).attr('data-autocomplete'), {"
+      function << "#{method}: extractLast( request.term )}, response );}});} });})(jQuery);"
+      
+      javascript_tag(function)
+    end
+
     def auto_complete_clear_value_button(field_id)
-      html_options = {:tabindex => '-1',:class=>"auto_complete_clear",:title =>'Clear Search', :onclick=>"$('#{field_id}').clear();"}
+      html_options = {:tabindex => '-1',:class=>"auto_complete_clear",:title =>'Clear Search', :onclick=>"document.getElementById('#{field_id}').value = '';"}
       a_link("X", "#", html_options)
     end
 
@@ -132,7 +150,7 @@ module ScopedSearch
     def auto_complete_result(entries, phrase = nil)
       return unless entries
       items = entries.map { |entry| content_tag("li", phrase ? highlight(entry, phrase) : h(entry)) }
-      content_tag("ul", items.uniq)
+      content_tag("ul", items)
     end
 
     # Wrapper for text_field with added AJAX auto completion functionality.
@@ -140,10 +158,23 @@ module ScopedSearch
     # In your controller, you'll need to define an action called
     # auto_complete_method to respond the AJAX calls,
     def auto_complete_field_tag(method, val,tag_options = {}, completion_options = {})
+      auto_completer_options = { :url => { :action => "auto_complete_#{method}" } }.update(completion_options)
+
       text_field_tag(method, val,tag_options.merge(:class => "auto_complete_input")) +
+          auto_complete_clear_value_button(method) +
           content_tag("div", "", :id => "#{method}_auto_complete", :class => "auto_complete") +
-          auto_complete_field("#{method}", { :url => { :action => "auto_complete_#{method}" } }.update(completion_options)) +
-          auto_complete_clear_value_button("#{method}")
+          auto_complete_field(method, auto_completer_options)
+    end
+
+    # Wrapper for text_field with added JQuery auto completion functionality.
+    #
+    # In your controller, you'll need to define an action called
+    # auto_complete_method to respond the JQuery calls,
+    def auto_complete_field_tag_jquery(method, val,tag_options = {}, completion_options = {})
+      path = eval("#{controller_name}_path")
+      options = { 'data-autocomplete'.to_sym => "#{path}/auto_complete_#{method}" }.update(tag_options.merge(:class => "auto_complete_input"))
+      text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
+          auto_complete_field_jquery(method, completion_options)
     end
 
   end
