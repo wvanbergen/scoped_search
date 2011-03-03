@@ -116,13 +116,14 @@ module ScopedSearch
       # Check for the case that a date-only value is given as search keyword,
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
-      if timestamp.day_fraction == 0 && field.datetime?
+      span = (timestamp.day_fraction == 0) ? 1.day : 1.hour
+      if field.datetime?
 
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
           yield(:parameter, timestamp)
-          yield(:parameter, timestamp + 1)
+          yield(:parameter, timestamp + span)
           negate    = (operator == :ne) ? 'NOT ' : ''
           field_sql = field.to_sql(operator, &block)
           return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
@@ -130,13 +131,13 @@ module ScopedSearch
         elsif operator == :gt
           # Make sure timestamps on the given date are not included in the results
           # by moving the date to the next day.
-          timestamp += 1
+          timestamp += span
           operator = :gte
 
         elsif operator == :lte
           # Make sure the timestamps of the given date are included by moving the
           # date to the next date.
-          timestamp += 1
+          timestamp += span
           operator = :lt
         end
       end
@@ -170,7 +171,13 @@ module ScopedSearch
     end
 
     # Try to parse a string as a datetime.
+    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago','Jan 23, 2004'
+    # And many more formats that are documented in Ruby DateTime API Doc.
     def parse_temporal(value)
+      return Date.current if value =~ /\btoday\b/i
+      return 1.day.ago.to_date if value =~ /\byesterday\b/i
+      return (eval(value.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*\d+\s+\bhours?\b\s+\bago\b\s*\z/i
+      return (eval(value.gsub(/\s+/,'.').downcase)).to_date if value =~ /\A\s*\d+\s+\b(days?|months?|years?)\b\s+\bago\b\s*\z/i
       DateTime.parse(value, true) rescue nil
     end
 

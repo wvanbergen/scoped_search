@@ -135,7 +135,7 @@ module ScopedSearch
       end
       q=query
       unless q =~ /(\s|\)|,)$/
-        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{tokens.last}/}.compact
+        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{tokens.last}/i}.compact
         q.chomp!(tokens.last.to_s)
       end
       suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
@@ -181,18 +181,39 @@ module ScopedSearch
       field = definition.field_by_name(token)
       return [] unless field && field.complete_value
 
-      key_name = token.sub(/^.*\./,"")
-      opts = value_conditions(field, val)
+      return complete_date_value if field.temporal?
+      return complete_key_value(field, token, val) if field.key_field
 
-      if field.key_field
-        opts.merge!(:conditions => {field.key_field => key_name})
-        key_klass = field.key_klass.first(opts)
-        raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
-        return key_klass.send(field.relation).map(&field.field).uniq 
-      else
-        opts.merge!(:limit => 10, :select => field.field, :group => field.field )
-        return field.klass.all(opts).map(&field.field).compact
-      end
+      opts = value_conditions(field, val)
+      opts.merge!(:limit => 10, :select => field.field, :group => field.field )
+      return field.klass.all(opts).map(&field.field).compact
+    end
+
+    # date value completer
+    def complete_date_value
+      now = DateTime.current
+      options =[]
+      options << '"1 hour ago"'
+      options << '"2 hours ago"'
+      options << '"3 hours ago"'
+      options << 'Today'
+      options << 'Yesterday'
+      options << 2.days.ago.strftime('%A')
+      options << 3.days.ago.strftime('%A')
+      options << 4.days.ago.strftime('%A')
+      options << 5.days.ago.strftime('%A')
+      options << '"6 days ago"'
+      options << 7.days.ago.strftime('"%b %d,%Y"')
+      options
+    end
+
+    # complete values in a key-value schema
+    def complete_key_value(field, token, val)
+      key_name = token.sub(/^.*\./,"")
+      opts = value_conditions(field, val).merge!(:conditions => {field.key_field => key_name})
+      key_klass = field.key_klass.first(opts)
+      raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
+      return key_klass.send(field.relation).map(&field.field).uniq
     end
 
     #this method returns conditions for selecting completion from partial value
