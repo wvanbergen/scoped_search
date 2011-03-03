@@ -109,7 +109,7 @@ module ScopedSearch
     def datetime_test(field, operator, value, &block) # :yields: finder_option_type, value
 
       # Parse the value as a date/time and ignore invalid timestamps
-      timestamp = parse_temporal(value)
+      timestamp = definition.parse_temporal(value)
       return nil unless timestamp
 
       timestamp = timestamp.to_date if field.date?
@@ -168,17 +168,6 @@ module ScopedSearch
         yield(:parameter, value)
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end
-    end
-
-    # Try to parse a string as a datetime.
-    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago','Jan 23, 2004'
-    # And many more formats that are documented in Ruby DateTime API Doc.
-    def parse_temporal(value)
-      return Date.current if value =~ /\btoday\b/i
-      return 1.day.ago.to_date if value =~ /\byesterday\b/i
-      return (eval(value.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*\d+\s+\bhours?\b\s+\bago\b\s*\z/i
-      return (eval(value.gsub(/\s+/,'.').downcase)).to_date if value =~ /\A\s*\d+\s+\b(days?|months?|years?)\b\s+\bago\b\s*\z/i
-      DateTime.parse(value, true) rescue nil
     end
 
     # This module gets included into the Field class to add SQL generation.

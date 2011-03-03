@@ -153,6 +153,58 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should find no record with a timestamp later than today" do
         @class.search_for('> 2009-01-02').should have(0).item
       end
+
+    end
+    context 'humenized date and time query' do
+
+      before(:all) do
+        @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
+        @hour_ago_record = @class.create!(:timestamp => Time.current - 1.hour, :date => Date.current)
+        @day_ago_record = @class.create!(:timestamp => Time.current - 1.day, :date => Date.current - 1.day)
+        @month_ago_record = @class.create!(:timestamp => Time.current - 1.month, :date => Date.current - 1.month)
+        @year_ago_record = @class.create!(:timestamp => Time.current - 1.year, :date => Date.current - 1.year)
+      end
+
+      after(:all) do
+        @curent_record.destroy
+        @hour_ago_record.destroy
+        @day_ago_record.destroy
+        @month_ago_record.destroy
+        @year_ago_record.destroy
+      end
+
+      it "should accept Today as date format" do
+        @class.search_for('date = Today').should have(2).item
+      end
+
+      it "should accept Yesterday as date format" do
+        @class.search_for('date = yesterday').should have(1).item
+      end
+
+      it "should find all timestamps and date from today using the = operator" do
+        @class.search_for('= Today').should have(2).item
+      end
+
+      it "should find all timestamps and date from today no operator" do
+        @class.search_for('Today').should have(2).item
+      end
+
+      it "should accept 2 days ago as date format" do
+        @class.search_for('date < "2 days ago"').should have(2).item
+      end
+
+       it "should accept 3 hours ago as date format" do
+        @class.search_for('timestamp > "3 hours ago"').should have(2).item
+       end
+
+       it "should accept 1 month ago as date format" do
+        @class.search_for('date > "1 month ago"').should have(3).item
+       end
+
+      it "should accept 1 year ago as date format" do
+        @class.search_for('date > "1 year ago"').should have(4).item
+      end
+
     end
   end
 end

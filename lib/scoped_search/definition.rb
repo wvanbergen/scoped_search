@@ -158,9 +158,20 @@ module ScopedSearch
       column_types  = []
       column_types += [:string, :text]                      if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:integer, :double, :float, :decimal] if value =~ NUMERICAL_REGXP
-      column_types += [:datetime, :date, :timestamp]        if (DateTime.parse(value) rescue nil)
+      column_types += [:datetime, :date, :timestamp]        if (parse_temporal(value))
 
       default_fields.select { |field| column_types.include?(field.type) }
+    end
+
+    # Try to parse a string as a datetime.
+    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago','Jan 23, 2004'
+    # And many more formats that are documented in Ruby DateTime API Doc.
+    def parse_temporal(value)
+      return Date.current if value =~ /\btoday\b/i
+      return 1.day.ago.to_date if value =~ /\byesterday\b/i
+      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*\d+\s+\bhours?\b\s+\bago\b\s*\z/i
+      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_date if value =~ /\A\s*\d+\s+\b(days?|months?|years?)\b\s+\bago\b\s*\z/i
+      DateTime.parse(value, true) rescue nil
     end
 
     # Returns a list of fields that should be searched on by default.
