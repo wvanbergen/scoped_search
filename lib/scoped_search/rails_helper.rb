@@ -139,8 +139,8 @@ module ScopedSearch
 
     def a_link(name, href, html_options)
       tag_options = tag_options(html_options)
-      href_attr = "href=\"#{href}\""
-      "<a #{href_attr}#{tag_options}>#{name}</a>".html_safe
+      link = "<a href=\"#{href}\"#{tag_options}>#{name}</a>"
+      return link.respond_to?(:html_safe) ? link.html_safe : link
     end
 
     # Use this method in your view to generate a return for the AJAX auto complete requests.
