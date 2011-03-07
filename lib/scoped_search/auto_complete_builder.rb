@@ -181,6 +181,7 @@ module ScopedSearch
       field = definition.field_by_name(token)
       return [] unless field && field.complete_value
 
+      return complete_set(field) if field.set?
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field
 
@@ -189,9 +190,12 @@ module ScopedSearch
       return field.klass.all(opts).map(&field.field).compact
     end
 
+    # set value completer
+    def complete_set (field)
+      field.complete_value.keys
+    end
     # date value completer
     def complete_date_value
-      now = DateTime.current
       options =[]
       options << '"1 hour ago"'
       options << '"2 hours ago"'
@@ -228,7 +232,7 @@ module ScopedSearch
     def complete_operator(node)
       field = definition.field_by_name(node.value)
       return [] if field.nil?
-
+      return ['=', '!=']                      if field.set?
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
       return ['=', '!=', '~', '!~']           if field.textual?
       return ['=', '>', '<']                  if field.temporal?

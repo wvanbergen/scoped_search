@@ -72,6 +72,11 @@ module ScopedSearch
         [:string, :text].include?(type)
       end
 
+      # Returns true if this is a set.
+      def set?
+        complete_value.is_a?(Hash)
+      end
+
       # Returns the default search operator for this field.
       def default_operator
         @default_operator ||= case type
