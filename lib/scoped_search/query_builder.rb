@@ -116,9 +116,8 @@ module ScopedSearch
       # Check for the case that a date-only value is given as search keyword,
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
-      span = (timestamp.day_fraction == 0) ? 1.day : 1.hour
       if field.datetime?
-
+        span = (timestamp.day_fraction == 0) ? 1.day :  1.hour
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.

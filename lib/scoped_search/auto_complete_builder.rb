@@ -197,9 +197,9 @@ module ScopedSearch
     # date value completer
     def complete_date_value
       options =[]
+      options << '"30 minutes ago"'
       options << '"1 hour ago"'
       options << '"2 hours ago"'
-      options << '"3 hours ago"'
       options << 'Today'
       options << 'Yesterday'
       options << 2.days.ago.strftime('%A')

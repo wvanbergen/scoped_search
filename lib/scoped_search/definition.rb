@@ -176,8 +176,8 @@ module ScopedSearch
     def parse_temporal(value)
       return Date.current if value =~ /\btoday\b/i
       return 1.day.ago.to_date if value =~ /\byesterday\b/i
-      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*\d+\s+\bhours?\b\s+\bago\b\s*\z/i
-      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_date if value =~ /\A\s*\d+\s+\b(days?|months?|years?)\b\s+\bago\b\s*\z/i
+      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*\d+\s+\bhours?|minutes?\b\s+\bago\b\s*\z/i
+      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_date if value =~ /\A\s*\d+\s+\b(days?|weeks?|months?|years?)\b\s+\bago\b\s*\z/i
       DateTime.parse(value, true) rescue nil
     end
 
