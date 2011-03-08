@@ -175,6 +175,7 @@ module ScopedSearch
       elsif field.set?
         return set_test(field, operator, value, &block)
       else
+        value = value.to_i if field.numerical?
         yield(:parameter, value)
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end
@@ -199,7 +200,9 @@ module ScopedSearch
         elsif relation
           yield(:include, relation)
         end
-        klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+        column_name = klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+        column_name = "(#{column_name} >> #{offset*word_size} & #{2**word_size - 1})" if offset
+        column_name
       end
 
       # This method construct join statement for a key value table
