@@ -102,7 +102,7 @@ module ScopedSearch
     # Return the SQL operator to use given an operator symbol and field definition.
     #
     # By default, it will simply look up the correct SQL operator in the SQL_OPERATORS
-    # hash, but this can be overrided by a database adapter.
+    # hash, but this can be overridden by a database adapter.
     def sql_operator(operator, field)
       SQL_OPERATORS[operator]
     end
@@ -200,7 +200,7 @@ module ScopedSearch
       # SQL query.
       #
       # This function may yield an :include that should be used in the
-      # ActiveRecord::Base#find call, to make sure that the field is avalable
+      # ActiveRecord::Base#find call, to make sure that the field is available
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
         if key_relation
