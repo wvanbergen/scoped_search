@@ -61,14 +61,21 @@ module ScopedSearch
           else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
-
+        # Build SQL ORDER BY clause
+      order = order_by(options[:order]) do |notification, value|
+        case notification
+          when :parameter then parameters << value
+          when :include   then includes   << value
+          when :joins   then joins   << value
+          else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
+        end
+      end
 
       # Build hash for ActiveRecord::Base#find for the named scope
-      order = order_by(options)
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
-      find_attributes[:joins]      = joins              unless joins.empty?
+      find_attributes[:joins]      = joins.uniq         unless joins.empty?
       find_attributes[:order]      = order              unless order.nil?
       find_attributes[:group]      = options[:group]    unless options[:group].nil?
 
@@ -76,11 +83,16 @@ module ScopedSearch
       return find_attributes
     end
 
-    def order_by(options)
-      order ||= options[:order]
+    def order_by(order, &block)
       order ||= definition.default_order
-      order = "#{definition.klass.table_name}.#{order}" unless order.nil? || order.to_s.include?('.')
-      order
+      if order
+        field = definition.field_by_name(order.to_s.split(' ')[0])
+        raise ScopedSearch::QueryNotSupported, "the field '#{order.to_s.split(' ')[0]}' in the order statement is not valid field for search" unless field
+        sql = field.to_sql(&block)
+        direction = (order.to_s.downcase.include?('desc')) ? " DESC" : " ASC"
+        order = sql + direction
+      end
+      return order
     end
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
@@ -218,15 +230,15 @@ module ScopedSearch
         key = key_relation.to_s.singularize.to_sym
         main = definition.klass.to_s.underscore.to_sym
 
-        main_table = definition.klass.table_name # => hosts
-        main_table_pk = klass.reflections[main].klass.primary_key # =>id
+        main_table = definition.klass.table_name
+        main_table_pk = klass.reflections[main].klass.primary_key
 
-        value_table = klass.table_name.to_s # => fact_values
-        value_table_fk_main = klass.reflections[main].association_foreign_key # => host_id
-        value_table_fk_key = klass.reflections[key].association_foreign_key # => fact_name_id
+        value_table = klass.table_name.to_s
+        value_table_fk_main = klass.reflections[main].association_foreign_key
+        value_table_fk_key = klass.reflections[key].association_foreign_key
 
-        key_table = klass.reflections[key].table_name # => fact_names
-        key_table_pk = klass.reflections[key].klass.primary_key #=> id
+        key_table = klass.reflections[key].table_name
+        key_table_pk = klass.reflections[key].klass.primary_key 
 
         join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})
                          INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}_#{num}.#{value_table_fk_key}) "
