@@ -111,13 +111,13 @@ module ScopedSearch
         end
 
         # Store this field is the field array
-        definition.fields[@field] ||= self unless options[:rename]
-        definition.fields[options[:rename]] ||= self   if options[:rename]
-        definition.unique_fields   << self
+        definition.fields[@field]                  ||= self unless options[:rename]
+        definition.fields[options[:rename].to_sym] ||= self if     options[:rename]
+        definition.unique_fields                   << self
 
         # Store definition for alias / aliases as well
-        definition.fields[options[:alias]]                  ||= self   if options[:alias]
-        options[:aliases].each { |al| definition.fields[al] ||= self } if options[:aliases]
+        definition.fields[options[:alias].to_sym]                  ||= self   if options[:alias]
+        options[:aliases].each { |al| definition.fields[al.to_sym] ||= self } if options[:aliases]
       end
     end
 
