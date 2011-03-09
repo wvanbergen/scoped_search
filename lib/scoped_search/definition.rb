@@ -90,8 +90,9 @@ module ScopedSearch
       def initialize(definition, options = {})
         @definition = definition
         @definition.profile = options[:profile] if options[:profile]
-        @definition.default_order = options[:on] if options.has_key?(:default_order)
-        
+        @definition.default_order = "#{options[:on]} DESC" if options[:default_order].to_s.downcase.include?('desc')
+        @definition.default_order = "#{options[:on]} ASC" if options[:default_order].to_s.downcase.include?('asc')
+
         case options
         when Symbol, String
           @field = field.to_sym
