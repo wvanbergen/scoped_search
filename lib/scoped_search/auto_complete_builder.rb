@@ -135,7 +135,7 @@ module ScopedSearch
       end
       q=query
       unless q =~ /(\s|\)|,)$/
-        val = Regexp.escape(tokens.last).gsub('\*', '.*')
+        val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
         suggestions = suggestions.map {|s| s if s.to_s =~ /^#{val}/i}.compact
         q.chomp!(tokens.last.to_s)
       end
