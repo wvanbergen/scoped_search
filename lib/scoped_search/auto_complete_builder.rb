@@ -224,7 +224,7 @@ module ScopedSearch
     def value_conditions(field, val)
       return {} if val.nil?
       field_name = (field.key_field) ? field.key_field : field.field
-      return {:conditions => "#{field_name} LIKE '#{val}%'"} if  field.textual?
+      return {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')} if  field.textual?
       return {}
     end
 

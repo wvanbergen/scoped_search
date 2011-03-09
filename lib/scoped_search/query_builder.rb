@@ -178,8 +178,8 @@ module ScopedSearch
       if field.key_field
         yield(:parameter, lhs.sub(/^.*\./,''))
       end
-      if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
-        yield(:parameter, "%#{value}%")
+      if [:like, :unlike].include?(operator)
+        yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       elsif field.temporal?
         return datetime_test(field, operator, value, &block)
@@ -380,7 +380,7 @@ module ScopedSearch
           yield(:parameter, lhs.sub(/^.*\./,''))
         end
         if field.textual? && [:like, :unlike].include?(operator)
-          yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value)
+          yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.to_s.tr_s('%*', '%'))
           return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} LOWER(?)"
         elsif field.temporal?
           return datetime_test(field, operator, value, &block)
