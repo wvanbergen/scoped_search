@@ -85,13 +85,19 @@ module ScopedSearch
         end
       end
 
+      def default_order(options)
+        return nil if options[:default_order].nil?
+        field_name = options[:on] unless options[:rename]
+        field_name = options[:rename] if options[:rename]
+        order = (options[:default_order].to_s.downcase.include?('desc')) ? "DESC" : "ASC"
+        return "#{field_name} #{order}"
+      end
       # Initializes a Field instance given the definition passed to the
       # scoped_search call on the ActiveRecord-based model class.
       def initialize(definition, options = {})
         @definition = definition
         @definition.profile = options[:profile] if options[:profile]
-        @definition.default_order = "#{options[:on]} DESC" if options[:default_order].to_s.downcase.include?('desc')
-        @definition.default_order = "#{options[:on]} ASC" if options[:default_order].to_s.downcase.include?('asc')
+        @definition.default_order = default_order(options)
 
         case options
         when Symbol, String
