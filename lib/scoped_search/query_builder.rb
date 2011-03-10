@@ -178,7 +178,9 @@ module ScopedSearch
       if field.key_field
         yield(:parameter, lhs.sub(/^.*\./,''))
       end
-      if [:like, :unlike].include?(operator)
+      if field.ext_method
+        return field.to_in_set_sql(value)
+      elsif [:like, :unlike].include?(operator)
         yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       elsif field.temporal?
@@ -244,6 +246,12 @@ module ScopedSearch
                          INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}_#{num}.#{value_table_fk_key}) "
 
         return join_sql
+      end
+
+      def to_in_set_sql(value)
+        a = definition.klass.send(ext_method.to_sym, value) rescue []
+        raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' should return array" unless a.kind_of?(Array)
+        return "#{definition.klass.table_name}.#{definition.klass.primary_key} IN (#{a.join(',')})"
       end
     end
 

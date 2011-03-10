@@ -15,7 +15,7 @@ module ScopedSearch
     # class, so you should not create instances of this class yourself.
     class Field
 
-      attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :key_field, :complete_value, :offset, :word_size
+      attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :key_field, :complete_value, :offset, :word_size, :ext_method
 
       # The ActiveRecord-based class that belongs to this field.
       def klass
@@ -112,6 +112,7 @@ module ScopedSearch
           @key_field        = options[:on_key]
           @offset           = options[:offset]
           @word_size        = options[:word_size] || 1
+          @ext_method       = options[:ext_method]
           @only_explicit    = !!options[:only_explicit]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         end
