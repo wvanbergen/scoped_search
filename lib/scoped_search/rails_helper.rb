@@ -41,7 +41,7 @@ module ScopedSearch
 
       options[:as] = raw(options[:as]) if defined?(RailsXss)
 
-      link_to (options[:as], url_for(url_options), html_options)
+      link_to(options[:as], url_for(url_options), html_options)
     end
 
     # Adds AJAX auto complete functionality to the text input field with the
@@ -115,7 +115,7 @@ module ScopedSearch
     end
 
     def auto_complete_clear_value_button(field_id)
-      content_tag (:input,"" ,:type=>"button", :class=>"auto_complete_clear", :value=>"X", :onclick=>"$('#{field_id}').clear();")
+      content_tag(:input,"" ,:type=>"button", :class=>"auto_complete_clear", :value=>"X", :onclick=>"$('#{field_id}').clear();")
     end
 
     # Use this method in your view to generate a return for the AJAX auto complete requests.
