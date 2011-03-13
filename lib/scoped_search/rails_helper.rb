@@ -41,7 +41,7 @@ module ScopedSearch
 
       options[:as] = raw(options[:as]) if defined?(RailsXss)
 
-      link_to(options[:as], url_for(url_options), html_options)
+      a_link(options[:as], html_escape(url_for(url_options)),html_options)
     end
 
     # Adds AJAX auto complete functionality to the text input field with the
@@ -114,8 +114,33 @@ module ScopedSearch
       javascript_tag(function)
     end
 
+    def auto_complete_field_jquery(method, options = {})
+      function = <<-EOF
+      $(document).ready(function(){ $('input[data-autocomplete]').railsAutocomplete(); });
+      (function(jQuery) {	var self = null; jQuery.fn.railsAutocomplete = function() {
+        return this.live('focus',function() { if (!this.railsAutoCompleter) {
+        this.railsAutoCompleter = new jQuery.railsAutocomplete(this);}	});	};
+        jQuery.railsAutocomplete = function (e) {_e = e; this.init(_e);	};
+        jQuery.railsAutocomplete.fn = jQuery.railsAutocomplete.prototype = {railsAutocomplete: '0.0.1'};
+        jQuery.railsAutocomplete.fn.extend = jQuery.railsAutocomplete.extend = jQuery.extend;
+        jQuery.railsAutocomplete.fn.extend({init: function(e) {e.delimiter = $(e).attr('data-delimiter') || null;
+                                           function split( val ) {return val.split( e.delimiter );}function extractLast( term ) {return split( term ).pop();}
+                                           $(e).autocomplete({source: function( request, response ) {$.getJSON( $(e).attr('data-autocomplete'), {
+                                             #{method}: extractLast( request.term )}, response );}
+                                           });} });})(jQuery);
+      EOF
+      javascript_tag(function)
+    end
+
     def auto_complete_clear_value_button(field_id)
-      content_tag(:input,"" ,:type=>"button", :class=>"auto_complete_clear", :value=>"X", :onclick=>"$('#{field_id}').clear();")
+      html_options = {:tabindex => '-1',:class=>"auto_complete_clear",:title =>'Clear Search', :onclick=>"document.getElementById('#{field_id}').value = '';"}
+      a_link("X", "#", html_options)
+    end
+
+    def a_link(name, href, html_options)
+      tag_options = tag_options(html_options)
+      link = "<a href=\"#{href}\"#{tag_options}>#{name}</a>"
+      return link.respond_to?(:html_safe) ? link.html_safe : link
     end
 
     # Use this method in your view to generate a return for the AJAX auto complete requests.
@@ -125,7 +150,7 @@ module ScopedSearch
     def auto_complete_result(entries, phrase = nil)
       return unless entries
       items = entries.map { |entry| content_tag("li", phrase ? highlight(entry, phrase) : h(entry)) }
-      content_tag("ul", items.uniq)
+      content_tag("ul", items)
     end
 
     # Wrapper for text_field with added AJAX auto completion functionality.
@@ -133,10 +158,23 @@ module ScopedSearch
     # In your controller, you'll need to define an action called
     # auto_complete_method to respond the AJAX calls,
     def auto_complete_field_tag(method, val,tag_options = {}, completion_options = {})
+      auto_completer_options = { :url => { :action => "auto_complete_#{method}" } }.update(completion_options)
+
       text_field_tag(method, val,tag_options.merge(:class => "auto_complete_input")) +
+          auto_complete_clear_value_button(method) +
           content_tag("div", "", :id => "#{method}_auto_complete", :class => "auto_complete") +
-          auto_complete_field("#{method}", { :url => { :action => "auto_complete_#{method}" } }.update(completion_options)) +
-          auto_complete_clear_value_button("#{method}")
+          auto_complete_field(method, auto_completer_options)
+    end
+
+    # Wrapper for text_field with added JQuery auto completion functionality.
+    #
+    # In your controller, you'll need to define an action called
+    # auto_complete_method to respond the JQuery calls,
+    def auto_complete_field_tag_jquery(method, val,tag_options = {}, completion_options = {})
+      path = eval("#{controller_name}_path")
+      options = { 'data-autocomplete'.to_sym => "#{path}/auto_complete_#{method}" }.update(tag_options.merge(:class => "auto_complete_input"))
+      text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
+          auto_complete_field_jquery(method, completion_options)
     end
 
   end

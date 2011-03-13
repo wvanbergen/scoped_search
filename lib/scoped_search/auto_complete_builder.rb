@@ -41,7 +41,7 @@ module ScopedSearch
       completion = complete_options(node)
 
       suggestions = []
-      suggestions += complete_keyword if completion.include?(:keyword)
+      suggestions += complete_keyword        if completion.include?(:keyword)
       suggestions += LOGICAL_INFIX_OPERATORS if completion.include?(:logical_op)
       suggestions += LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_COMPLETER if completion.include?(:prefix_op)
       suggestions += complete_operator(node) if completion.include?(:infix_op)
@@ -51,7 +51,7 @@ module ScopedSearch
     end
 
     # parse the query and return the complete options
-    def complete_options node
+    def complete_options(node)
 
       return [:keyword] + [:prefix_op] if tokens.empty?
 
@@ -78,15 +78,14 @@ module ScopedSearch
     # Test the validity of the existing query, this method will throw exception on illegal
     # query syntax.
     def is_query_valid
-
       # skip test for null prefix operators if in the process of completing the field name.
       return if(last_token_is(NULL_PREFIX_OPERATORS, 2) && !(query =~ /(\s|\)|,)$/))
-   
       QueryBuilder.build_query(definition, query)
     end
 
     def is_left_hand(node)
-      lh = !(definition.fields.keys.include?(node.value.to_sym)) #(field_by_name(node.value))
+      field = definition.field_by_name(node.value)
+      lh = field.nil? || field.key_field && !(query.end_with?(' '))
       lh = lh || last_token_is(NULL_PREFIX_OPERATORS, 2)
       lh = lh && !is_right_hand
       lh
@@ -134,7 +133,8 @@ module ScopedSearch
       end
       q=query
       unless q =~ /(\s|\)|,)$/
-        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{tokens.last}/}.compact
+        val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
+        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{val}/i}.compact
         q.chomp!(tokens.last.to_s)
       end
       suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
@@ -180,34 +180,57 @@ module ScopedSearch
       field = definition.field_by_name(token)
       return [] unless field && field.complete_value
 
-      key_name = token.sub(/^.*\./,"")
-      opts = value_conditions(field, val)
+      return complete_set(field) if field.set?
+      return complete_date_value if field.temporal?
+      return complete_key_value(field, token, val) if field.key_field
 
-      if field.key_field
-        klass = field.key_klass
-        opts.merge!(:conditions => {field.key_field => key_name})
-        return klass.first(opts).send(field.relation).map(&field.field).uniq
-      else
-        klass = field.klass
-        opts.merge!(:limit => 10, :select => field.field, :group => field.field )
-        return klass.all(opts).map(&field.field).compact
-      end
+      opts = value_conditions(field, val)
+      opts.merge!(:limit => 10, :select => field.field, :group => field.field )
+      return field.klass.all(opts).map(&field.field).compact
+    end
+
+    # set value completer
+    def complete_set(field)
+      field.complete_value.keys
+    end
+    # date value completer
+    def complete_date_value
+      options =[]
+      options << '"30 minutes ago"'
+      options << '"1 hour ago"'
+      options << '"2 hours ago"'
+      options << 'Today'
+      options << 'Yesterday'
+      options << 2.days.ago.strftime('%A')
+      options << 3.days.ago.strftime('%A')
+      options << 4.days.ago.strftime('%A')
+      options << 5.days.ago.strftime('%A')
+      options << '"6 days ago"'
+      options << 7.days.ago.strftime('"%b %d,%Y"')
+      options
+    end
+
+    # complete values in a key-value schema
+    def complete_key_value(field, token, val)
+      key_name = token.sub(/^.*\./,"")
+      opts = value_conditions(field, val).merge(:conditions => {field.key_field => key_name})
+      key_klass = field.key_klass.first(opts)
+      raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
+      return key_klass.send(field.relation).map(&field.field).uniq
     end
 
     #this method returns conditions for selecting completion from partial value
     def value_conditions(field, val)
-      return {} if val.nil?
+      return {} if val.nil? || !field.textual?
       field_name = (field.key_field) ? field.key_field : field.field
-      return {:conditions => "#{field_name} LIKE '#{val}%'"} if  field.textual?
-      return {:conditions => "#{field_name} >= #{val}"} if field.numerical?
-      return {}
+      return {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
     end
 
     # This method complete infix operators by field type
     def complete_operator(node)
       field = definition.field_by_name(node.value)
       return [] if field.nil?
-
+      return ['=', '!=']                      if field.set?
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
       return ['=', '!=', '~', '!~']           if field.textual?
       return ['=', '>', '<']                  if field.temporal?

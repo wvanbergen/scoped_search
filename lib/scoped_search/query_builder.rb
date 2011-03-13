@@ -61,14 +61,21 @@ module ScopedSearch
           else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
-
+        # Build SQL ORDER BY clause
+      order = order_by(options[:order]) do |notification, value|
+        case notification
+          when :parameter then parameters << value
+          when :include   then includes   << value
+          when :joins   then joins   << value
+          else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
+        end
+      end
 
       # Build hash for ActiveRecord::Base#find for the named scope
-      order = order_by(options)
       find_attributes = {}
       find_attributes[:conditions] = [sql] + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
-      find_attributes[:joins]      = joins              unless joins.empty?
+      find_attributes[:joins]      = joins.uniq         unless joins.empty?
       find_attributes[:order]      = order              unless order.nil?
       find_attributes[:group]      = options[:group]    unless options[:group].nil?
 
@@ -76,11 +83,16 @@ module ScopedSearch
       return find_attributes
     end
 
-    def order_by(options)
-      order ||= options[:order]
+    def order_by(order, &block)
       order ||= definition.default_order
-      order = "#{definition.klass.table_name}.#{order}" unless order.nil? || order.to_s.include?('.')
-      order
+      if order
+        field = definition.field_by_name(order.to_s.split(' ')[0])
+        raise ScopedSearch::QueryNotSupported, "the field '#{order.to_s.split(' ')[0]}' in the order statement is not valid field for search" unless field
+        sql = field.to_sql(&block)
+        direction = (order.to_s.downcase.include?('desc')) ? " DESC" : " ASC"
+        order = sql + direction
+      end
+      return order
     end
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
@@ -90,7 +102,7 @@ module ScopedSearch
     # Return the SQL operator to use given an operator symbol and field definition.
     #
     # By default, it will simply look up the correct SQL operator in the SQL_OPERATORS
-    # hash, but this can be overrided by a database adapter.
+    # hash, but this can be overridden by a database adapter.
     def sql_operator(operator, field)
       SQL_OPERATORS[operator]
     end
@@ -109,20 +121,20 @@ module ScopedSearch
     def datetime_test(field, operator, value, &block) # :yields: finder_option_type, value
 
       # Parse the value as a date/time and ignore invalid timestamps
-      timestamp = parse_temporal(value)
+      timestamp = definition.parse_temporal(value)
       return nil unless timestamp
 
       timestamp = timestamp.to_date if field.date?
       # Check for the case that a date-only value is given as search keyword,
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
-      if timestamp.day_fraction == 0 && field.datetime?
-
+      if field.datetime?
+        span = (timestamp.day_fraction == 0) ? 1.day :  1.hour
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
           yield(:parameter, timestamp)
-          yield(:parameter, timestamp + 1)
+          yield(:parameter, timestamp + span)
           negate    = (operator == :ne) ? 'NOT ' : ''
           field_sql = field.to_sql(operator, &block)
           return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
@@ -130,13 +142,13 @@ module ScopedSearch
         elsif operator == :gt
           # Make sure timestamps on the given date are not included in the results
           # by moving the date to the next day.
-          timestamp += 1
+          timestamp += span
           operator = :gte
 
         elsif operator == :lte
           # Make sure the timestamps of the given date are included by moving the
           # date to the next date.
-          timestamp += 1
+          timestamp += span
           operator = :lt
         end
       end
@@ -144,6 +156,14 @@ module ScopedSearch
       # Yield the timestamp and return the SQL test
       yield(:parameter, timestamp)
       "#{field.to_sql(operator, &block)} #{sql_operator(operator, field)} ?"
+    end
+
+    # Validate the key name is in the set and translate the value to the set value. 
+    def set_test(field, operator,value, &block)
+      set_value = field.complete_value[value.to_sym]
+      raise ScopedSearch::QueryNotSupported, "'#{field.field}' should be one of '#{field.complete_value.keys.join(', ')}', but the query was '#{value}'" unless set_value
+      yield(:parameter, set_value)
+      return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
     end
 
     # Generates a simple SQL test expression, for a field and value using an operator.
@@ -158,20 +178,20 @@ module ScopedSearch
       if field.key_field
         yield(:parameter, lhs.sub(/^.*\./,''))
       end
-      if [:like, :unlike].include?(operator) && value !~ /^\%/ && value !~ /\%$/
-        yield(:parameter, "%#{value}%")
+      if field.ext_method
+        return field.to_in_set_sql(value)
+      elsif [:like, :unlike].include?(operator)
+        yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       elsif field.temporal?
         return datetime_test(field, operator, value, &block)
+      elsif field.set?
+        return set_test(field, operator, value, &block)
       else
+        value = value.to_i if field.numerical?
         yield(:parameter, value)
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end
-    end
-
-    # Try to parse a string as a datetime.
-    def parse_temporal(value)
-      DateTime.parse(value, true) rescue nil
     end
 
     # This module gets included into the Field class to add SQL generation.
@@ -182,7 +202,7 @@ module ScopedSearch
       # SQL query.
       #
       # This function may yield an :include that should be used in the
-      # ActiveRecord::Base#find call, to make sure that the field is avalable
+      # ActiveRecord::Base#find call, to make sure that the field is available
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
         if key_relation
@@ -193,7 +213,9 @@ module ScopedSearch
         elsif relation
           yield(:include, relation)
         end
-        klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+        column_name = klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+        column_name = "(#{column_name} >> #{offset*word_size} & #{2**word_size - 1})" if offset
+        column_name
       end
 
       # This method construct join statement for a key value table
@@ -210,20 +232,26 @@ module ScopedSearch
         key = key_relation.to_s.singularize.to_sym
         main = definition.klass.to_s.underscore.to_sym
 
-        main_table = definition.klass.table_name # => hosts
-        main_table_pk = klass.reflections[main].klass.primary_key # =>id
+        main_table = definition.klass.table_name
+        main_table_pk = klass.reflections[main].klass.primary_key
 
-        value_table = klass.table_name.to_s # => fact_values
-        value_table_fk_main = klass.reflections[main].association_foreign_key # => host_id
-        value_table_fk_key = klass.reflections[key].association_foreign_key # => fact_name_id
+        value_table = klass.table_name.to_s
+        value_table_fk_main = klass.reflections[main].association_foreign_key
+        value_table_fk_key = klass.reflections[key].association_foreign_key
 
-        key_table = klass.reflections[key].table_name # => fact_names
-        key_table_pk = klass.reflections[key].klass.primary_key #=> id
+        key_table = klass.reflections[key].table_name
+        key_table_pk = klass.reflections[key].klass.primary_key 
 
         join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})
                          INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}_#{num}.#{value_table_fk_key}) "
 
         return join_sql
+      end
+
+      def to_in_set_sql(value)
+        a = definition.klass.send(ext_method.to_sym, value) rescue []
+        raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' should return array" unless a.kind_of?(Array)
+        return "#{definition.klass.table_name}.#{definition.klass.primary_key} IN (#{a.join(',')})"
       end
     end
 
@@ -360,7 +388,7 @@ module ScopedSearch
           yield(:parameter, lhs.sub(/^.*\./,''))
         end
         if field.textual? && [:like, :unlike].include?(operator)
-          yield(:parameter, (value !~ /^\%/ && value !~ /\%$/) ? "%#{value}%" : value)
+          yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.to_s.tr_s('%*', '%'))
           return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} LOWER(?)"
         elsif field.temporal?
           return datetime_test(field, operator, value, &block)

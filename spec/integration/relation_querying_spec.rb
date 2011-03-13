@@ -53,6 +53,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should find records for which the bar relation is not set using null?" do
         Loo.search_for('null? related').should have(1).items
       end
+
+      it "should find records for which the bar relation is not set using null?" do
+        Loo.search_for('',:order => 'related asc').first.foo.should eql('foo four')
+      end
+
     end
 
     context 'querying a :has_many relation' do

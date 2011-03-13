@@ -20,7 +20,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       ScopedSearch::RSpec::Database.close_connection
     end
 
-    context 'quering numerical fields' do
+    context 'querying numerical fields' do
 
       before(:all) do
         @record = @class.create!(:int =>  9)
@@ -152,6 +152,99 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find no record with a timestamp later than today" do
         @class.search_for('> 2009-01-02').should have(0).item
+      end
+
+    end
+    context 'humenized date and time query' do
+
+      before(:all) do
+        @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
+        @hour_ago_record = @class.create!(:timestamp => Time.current - 1.hour, :date => Date.current)
+        @day_ago_record = @class.create!(:timestamp => Time.current - 1.day, :date => Date.current - 1.day)
+        @month_ago_record = @class.create!(:timestamp => Time.current - 1.month, :date => Date.current - 1.month)
+        @year_ago_record = @class.create!(:timestamp => Time.current - 1.year, :date => Date.current - 1.year)
+      end
+
+      after(:all) do
+        @curent_record.destroy
+        @hour_ago_record.destroy
+        @day_ago_record.destroy
+        @month_ago_record.destroy
+        @year_ago_record.destroy
+      end
+
+      it "should accept Today as date format" do
+        @class.search_for('date = Today').should have(2).item
+      end
+
+      it "should accept Yesterday as date format" do
+        @class.search_for('date = yesterday').should have(1).item
+      end
+
+      it "should find all timestamps and date from today using the = operator" do
+        @class.search_for('= Today').should have(2).item
+      end
+
+      it "should find all timestamps and date from today no operator" do
+        @class.search_for('Today').should have(2).item
+      end
+
+      it "should accept 2 days ago as date format" do
+        @class.search_for('date < "2 days ago"').should have(2).item
+      end
+
+       it "should accept 3 hours ago as date format" do
+        @class.search_for('timestamp > "3 hours ago"').should have(2).item
+       end
+
+       it "should accept 1 month ago as date format" do
+        @class.search_for('date > "1 month ago"').should have(3).item
+       end
+
+      it "should accept 1 year ago as date format" do
+        @class.search_for('date > "1 year ago"').should have(4).item
+      end
+
+    end
+
+       context 'querying bitwize fields' do
+
+      before(:all) do
+        @foo = ScopedSearch::RSpec::Database.create_model(:int => :integer) do |klass|
+          klass.scoped_search :on => :int, :offset => 0, :word_size => 8, :rename => :first
+          klass.scoped_search :on => :int, :offset => 1, :word_size => 8, :rename => :sec
+        end
+        # 1026 => is first = 2 and sec = 4
+        @record = @foo.create!(:int =>  1026)
+      end
+
+      after(:all) do
+        ScopedSearch::RSpec::Database.drop_model(@foo)
+        @record.destroy
+      end
+
+      it "should not find any record because first equal = 2" do
+        @foo.search_for('first = 4').should have(0).item
+      end
+
+      it "should find the record" do
+        @foo.search_for('first = 2').should have(1).item
+      end
+
+      it "should not find any record with a grater than operator" do
+        @foo.search_for('first > 9').should have(0).item
+      end
+
+      it "should find the record with an >= operator" do
+        @foo.search_for('sec >= 4').should have(1).item
+      end
+
+      it "should find the record with AND operator is used" do
+        @foo.search_for('sec <= 8 and first = 2').should have(1).item
+      end
+
+      it "should return the record in if one predicate is true and OR is used as operator" do
+        @foo.search_for('sec <= 8 || first > 8').should have(1).item
       end
     end
   end

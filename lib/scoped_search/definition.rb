@@ -15,7 +15,7 @@ module ScopedSearch
     # class, so you should not create instances of this class yourself.
     class Field
 
-      attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :key_field, :complete_value
+      attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :key_field, :complete_value, :offset, :word_size, :ext_method
 
       # The ActiveRecord-based class that belongs to this field.
       def klass
@@ -72,6 +72,11 @@ module ScopedSearch
         [:string, :text].include?(type)
       end
 
+      # Returns true if this is a set.
+      def set?
+        complete_value.is_a?(Hash)
+      end
+
       # Returns the default search operator for this field.
       def default_operator
         @default_operator ||= case type
@@ -80,13 +85,20 @@ module ScopedSearch
         end
       end
 
+      def default_order(options)
+        return nil if options[:default_order].nil?
+        field_name = options[:on] unless options[:rename]
+        field_name = options[:rename] if options[:rename]
+        order = (options[:default_order].to_s.downcase.include?('desc')) ? "DESC" : "ASC"
+        return "#{field_name} #{order}"
+      end
       # Initializes a Field instance given the definition passed to the
       # scoped_search call on the ActiveRecord-based model class.
       def initialize(definition, options = {})
         @definition = definition
         @definition.profile = options[:profile] if options[:profile]
-        @definition.default_order = options[:on] if options.has_key?(:default_order)
-        
+        @definition.default_order = default_order(options)
+
         case options
         when Symbol, String
           @field = field.to_sym
@@ -98,18 +110,21 @@ module ScopedSearch
           @relation         = options[:in]
           @key_relation     = options[:in_key]
           @key_field        = options[:on_key]
+          @offset           = options[:offset]
+          @word_size        = options[:word_size] || 1
+          @ext_method       = options[:ext_method]
           @only_explicit    = !!options[:only_explicit]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         end
 
         # Store this field is the field array
-        definition.fields[@field] ||= self unless options[:rename]
-        definition.fields[options[:rename]] ||= self   if options[:rename]
-        definition.unique_fields   << self
+        definition.fields[@field]                  ||= self unless options[:rename]
+        definition.fields[options[:rename].to_sym] ||= self if     options[:rename]
+        definition.unique_fields                   << self
 
         # Store definition for alias / aliases as well
-        definition.fields[options[:alias]]                  ||= self   if options[:alias]
-        options[:aliases].each { |al| definition.fields[al] ||= self } if options[:aliases]
+        definition.fields[options[:alias].to_sym]                  ||= self   if options[:alias]
+        options[:aliases].each { |al| definition.fields[al.to_sym] ||= self } if options[:aliases]
       end
     end
 
@@ -158,9 +173,20 @@ module ScopedSearch
       column_types  = []
       column_types += [:string, :text]                      if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:integer, :double, :float, :decimal] if value =~ NUMERICAL_REGXP
-      column_types += [:datetime, :date, :timestamp]        if (DateTime.parse(value) rescue nil)
+      column_types += [:datetime, :date, :timestamp]        if (parse_temporal(value))
 
-      default_fields.select { |field| column_types.include?(field.type) }
+      default_fields.select { |field| column_types.include?(field.type) && !field.set? }
+    end
+
+    # Try to parse a string as a datetime.
+    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago','Jan 23, 2004'
+    # And many more formats that are documented in Ruby DateTime API Doc.
+    def parse_temporal(value)
+      return Date.current if value =~ /\btoday\b/i
+      return 1.day.ago.to_date if value =~ /\byesterday\b/i
+      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*\d+\s+\bhours?|minutes?\b\s+\bago\b\s*\z/i
+      return (eval(value.strip.gsub(/\s+/,'.').downcase)).to_date if value =~ /\A\s*\d+\s+\b(days?|weeks?|months?|years?)\b\s+\bago\b\s*\z/i
+      DateTime.parse(value, true) rescue nil
     end
 
     # Returns a list of fields that should be searched on by default.
