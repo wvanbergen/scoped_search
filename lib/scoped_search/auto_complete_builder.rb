@@ -41,7 +41,7 @@ module ScopedSearch
       completion = complete_options(node)
 
       suggestions = []
-      suggestions += complete_keyword if completion.include?(:keyword)
+      suggestions += complete_keyword        if completion.include?(:keyword)
       suggestions += LOGICAL_INFIX_OPERATORS if completion.include?(:logical_op)
       suggestions += LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_COMPLETER if completion.include?(:prefix_op)
       suggestions += complete_operator(node) if completion.include?(:infix_op)
@@ -78,10 +78,8 @@ module ScopedSearch
     # Test the validity of the existing query, this method will throw exception on illegal
     # query syntax.
     def is_query_valid
-
       # skip test for null prefix operators if in the process of completing the field name.
       return if(last_token_is(NULL_PREFIX_OPERATORS, 2) && !(query =~ /(\s|\)|,)$/))
-   
       QueryBuilder.build_query(definition, query)
     end
 
@@ -192,7 +190,7 @@ module ScopedSearch
     end
 
     # set value completer
-    def complete_set (field)
+    def complete_set(field)
       field.complete_value.keys
     end
     # date value completer
@@ -215,7 +213,7 @@ module ScopedSearch
     # complete values in a key-value schema
     def complete_key_value(field, token, val)
       key_name = token.sub(/^.*\./,"")
-      opts = value_conditions(field, val).merge!(:conditions => {field.key_field => key_name})
+      opts = value_conditions(field, val).merge(:conditions => {field.key_field => key_name})
       key_klass = field.key_klass.first(opts)
       raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
       return key_klass.send(field.relation).map(&field.field).uniq
@@ -223,10 +221,9 @@ module ScopedSearch
 
     #this method returns conditions for selecting completion from partial value
     def value_conditions(field, val)
-      return {} if val.nil?
+      return {} if val.nil? || !field.textual?
       field_name = (field.key_field) ? field.key_field : field.field
-      return {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')} if  field.textual?
-      return {}
+      return {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
     end
 
     # This method complete infix operators by field type

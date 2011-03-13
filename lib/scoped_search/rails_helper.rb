@@ -94,7 +94,7 @@ module ScopedSearch
       function << "'#{field_id}', "
       function << "'" + (options[:update] || "#{field_id}_auto_complete") + "', "
       function << "'#{url_for(options[:url])}'"
-      
+
       js_options = {}
       js_options[:tokens] = array_or_string_for_javascript(options[:tokens])            if options[:tokens]
       js_options[:callback]   = "function(element, value) { return #{options[:with]} }" if options[:with]
@@ -115,20 +115,20 @@ module ScopedSearch
     end
 
     def auto_complete_field_jquery(method, options = {})
-      function = "$(document).ready(function(){ $('input[data-autocomplete]').railsAutocomplete(); });"
-      function << "(function(jQuery) {	var self = null; jQuery.fn.railsAutocomplete = function() { "
-      function << "return this.live('focus',function() { if (!this.railsAutoCompleter) {"
-      function << "this.railsAutoCompleter = new jQuery.railsAutocomplete(this);}	});	};"
-
-      function << "jQuery.railsAutocomplete = function (e) {_e = e; this.init(_e);	};"
-	    function << "jQuery.railsAutocomplete.fn = jQuery.railsAutocomplete.prototype = {railsAutocomplete: '0.0.1'};"
-	    function << "jQuery.railsAutocomplete.fn.extend = jQuery.railsAutocomplete.extend = jQuery.extend;"
-
-      function << "jQuery.railsAutocomplete.fn.extend({init: function(e) {e.delimiter = $(e).attr('data-delimiter') || null;"
-      function << "function split( val ) {return val.split( e.delimiter );}function extractLast( term ) {return split( term ).pop();}"
-      function << "$(e).autocomplete({source: function( request, response ) {$.getJSON( $(e).attr('data-autocomplete'), {"
-      function << "#{method}: extractLast( request.term )}, response );}});} });})(jQuery);"
-      
+      function = <<-EOF
+      $(document).ready(function(){ $('input[data-autocomplete]').railsAutocomplete(); });
+      (function(jQuery) {	var self = null; jQuery.fn.railsAutocomplete = function() {
+        return this.live('focus',function() { if (!this.railsAutoCompleter) {
+        this.railsAutoCompleter = new jQuery.railsAutocomplete(this);}	});	};
+        jQuery.railsAutocomplete = function (e) {_e = e; this.init(_e);	};
+        jQuery.railsAutocomplete.fn = jQuery.railsAutocomplete.prototype = {railsAutocomplete: '0.0.1'};
+        jQuery.railsAutocomplete.fn.extend = jQuery.railsAutocomplete.extend = jQuery.extend;
+        jQuery.railsAutocomplete.fn.extend({init: function(e) {e.delimiter = $(e).attr('data-delimiter') || null;
+                                           function split( val ) {return val.split( e.delimiter );}function extractLast( term ) {return split( term ).pop();}
+                                           $(e).autocomplete({source: function( request, response ) {$.getJSON( $(e).attr('data-autocomplete'), {
+                                             #{method}: extractLast( request.term )}, response );}
+                                           });} });})(jQuery);
+      EOF
       javascript_tag(function)
     end
 
