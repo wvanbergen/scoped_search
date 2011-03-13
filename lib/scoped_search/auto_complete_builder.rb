@@ -51,7 +51,7 @@ module ScopedSearch
     end
 
     # parse the query and return the complete options
-    def complete_options node
+    def complete_options(node)
 
       return [:keyword] + [:prefix_op] if tokens.empty?
 
