@@ -156,15 +156,13 @@ module ScopedSearch
 
     #this method completes the keys list in a key-value schema in the format table.keyName
     def complete_key(name, field, val)
-      return [name] if !val || !val.is_a?(String) || !(val.include?('.'))
+      return ["#{name}."] if !val || !val.is_a?(String) || !(val.include?('.'))
       val = val.sub(/.*\./,'')
 
-      klass = field.key_klass
-      field_name = field.key_field 
-      opts = value_conditions(field, val)
-      opts.merge!(:limit => 10, :select => field_name, :group => field_name )
+      field_name = field.key_field
+      opts =  value_conditions(field.key_field, val).merge(:limit => 20, :select => field_name, :group => field_name )
 
-      klass.all(opts).map(&field_name).compact.map{ |f| "#{name}.#{f}"}
+      field.key_klass.all(opts).map(&field_name).compact.map{ |f| "#{name}.#{f}"}
     end
 
     # this method auto-completes values of fields that have a :complete_value marker 
@@ -184,7 +182,7 @@ module ScopedSearch
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field
 
-      opts = value_conditions(field, val)
+      opts = value_conditions(field.field, val)
       opts.merge!(:limit => 10, :select => field.field, :group => field.field )
       return field.klass.all(opts).map(&field.field).compact
     end
@@ -213,17 +211,16 @@ module ScopedSearch
     # complete values in a key-value schema
     def complete_key_value(field, token, val)
       key_name = token.sub(/^.*\./,"")
-      opts = value_conditions(field, val).merge(:conditions => {field.key_field => key_name})
+      opts = value_conditions(field.field,val).merge(:conditions => {field.key_field => key_name})
       key_klass = field.key_klass.first(opts)
       raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
-      return key_klass.send(field.relation).map(&field.field).uniq
+      value_table = field.relation ? field.relation : field.klass.table_name.to_sym
+      return key_klass.send(value_table).map(&field.field.to_sym).uniq
     end
 
     #this method returns conditions for selecting completion from partial value
-    def value_conditions(field, val)
-      return {} if val.nil? || !field.textual?
-      field_name = (field.key_field) ? field.key_field : field.field
-      return {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
+    def value_conditions(field_name, val)
+      return val.empty? ? {} : {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
     end
 
     # This method complete infix operators by field type

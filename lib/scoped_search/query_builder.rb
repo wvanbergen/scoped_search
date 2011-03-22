@@ -208,8 +208,9 @@ module ScopedSearch
         if key_relation
           num = rand(1000000)
           yield(:joins, construct_join_sql(key_relation, num) )
-          return "\"#{key_klass.table_name}_#{num}\"." + key_klass.connection.quote_column_name(key_field.to_s) + " = ? AND " +
-                 "\"#{klass.table_name}_#{num}\"." + klass.connection.quote_column_name(field.to_s)
+          klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
+          return "\"#{key_klass.table_name}_#{num}\".\"#{key_field.to_s}\" = ? AND " +
+                 "\"#{klass_table_name}\".\"#{field.to_s}\""
         elsif relation
           yield(:include, relation)
         end
@@ -228,22 +229,25 @@ module ScopedSearch
       # uniq name for the joins are needed in case that there is more than one condition
       # on different keys in the same query.
       def construct_join_sql(key_relation, num )
-
+        join_sql = ""
         key = key_relation.to_s.singularize.to_sym
         main = definition.klass.to_s.underscore.to_sym
 
-        main_table = definition.klass.table_name
-        main_table_pk = klass.reflections[main].klass.primary_key
+        key_table = klass.reflections[key].table_name
+        key_table_pk = klass.reflections[key].klass.primary_key
 
         value_table = klass.table_name.to_s
-        value_table_fk_main = klass.reflections[main].association_foreign_key
         value_table_fk_key = klass.reflections[key].association_foreign_key
 
-        key_table = klass.reflections[key].table_name
-        key_table_pk = klass.reflections[key].klass.primary_key 
+        if klass.reflections[main]
+          main_table = definition.klass.table_name
+          main_table_pk = klass.reflections[main].klass.primary_key
+          value_table_fk_main = klass.reflections[main].association_foreign_key
 
-        join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})
-                         INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}_#{num}.#{value_table_fk_key}) "
+          join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})"
+          value_table = " #{value_table}_#{num}"
+        end
+        join_sql += "\n INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}.#{value_table_fk_key}) "
 
         return join_sql
       end
