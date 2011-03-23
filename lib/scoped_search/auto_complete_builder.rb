@@ -183,7 +183,7 @@ module ScopedSearch
       return complete_key_value(field, token, val) if field.key_field
 
       opts = value_conditions(field.field, val)
-      opts.merge!(:limit => 10, :select => field.field, :group => field.field )
+      opts.merge!(:limit => 20, :select => "DISTINCT #{field.field}")
       return field.klass.all(opts).map(&field.field).compact
     end
 
