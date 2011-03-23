@@ -97,7 +97,7 @@ module ScopedSearch
       def initialize(definition, options = {})
         @definition = definition
         @definition.profile = options[:profile] if options[:profile]
-        @definition.default_order = default_order(options)
+        @definition.default_order ||= default_order(options)
 
         case options
         when Symbol, String
@@ -139,7 +139,7 @@ module ScopedSearch
       @unique_fields         = []
       @profile_fields        = {:default => {}}
       @profile_unique_fields = {:default => []}
-      @default_order         = nil
+
 
       register_named_scope! unless klass.respond_to?(:search_for)
       register_complete_for! unless klass.respond_to?(:complete_for)
