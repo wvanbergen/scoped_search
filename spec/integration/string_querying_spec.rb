@@ -11,7 +11,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     
       @class = ScopedSearch::RSpec::Database.create_model(:string => :string, :another => :string, :explicit => :string) do |klass|
         klass.scoped_search :on => :string
-        klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
+        klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias, :default_order => :desc
         klass.scoped_search :on => :explicit, :only_explicit => true
       end
 
@@ -199,6 +199,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "sort by string DESC" do
         @class.search_for('',:order => 'string DESC').first.string.should eql('foo')
+      end
+
+       it "default order by another DESC" do
+        @class.search_for('').first.string.should eql('bar')
       end
 
        it "group by explicit" do
