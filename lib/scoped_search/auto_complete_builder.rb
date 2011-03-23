@@ -211,16 +211,19 @@ module ScopedSearch
     # complete values in a key-value schema
     def complete_key_value(field, token, val)
       key_name = token.sub(/^.*\./,"")
-      opts = value_conditions(field.field,val).merge(:conditions => {field.key_field => key_name})
-      key_klass = field.key_klass.first(opts)
-      raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" unless key_klass
-      value_table = field.relation ? field.relation : field.klass.table_name.to_sym
-      return key_klass.send(value_table).map(&field.field.to_sym).uniq
+      key_opts = value_conditions(field.field,val).merge(:conditions => {field.key_field => key_name})
+      key_klass = field.key_klass.first(key_opts)
+      raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" if key_klass.nil?
+
+      key  = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
+      fk   = field.klass.reflections[key].association_foreign_key.to_sym
+      opts = {:conditions => {fk => key_klass.id}, :select => "DISTINCT #{field.field}"}
+      return field.klass.all(opts).map(&field.field)
     end
 
     #this method returns conditions for selecting completion from partial value
     def value_conditions(field_name, val)
-      return val.empty? ? {} : {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
+      return val.blank? ? {} : {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
     end
 
     # This method complete infix operators by field type

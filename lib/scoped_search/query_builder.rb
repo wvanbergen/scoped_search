@@ -231,7 +231,7 @@ module ScopedSearch
       def construct_join_sql(key_relation, num )
         join_sql = ""
         key = key_relation.to_s.singularize.to_sym
-        main = definition.klass.to_s.underscore.to_sym
+        main = definition.klass.to_s.gsub(/.*::/,'').underscore.to_sym
 
         key_table = klass.reflections[key].table_name
         key_table_pk = klass.reflections[key].klass.primary_key
