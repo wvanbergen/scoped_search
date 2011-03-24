@@ -161,7 +161,7 @@ module ScopedSearch
     # Validate the key name is in the set and translate the value to the set value. 
     def set_test(field, operator,value, &block)
       set_value = field.complete_value[value.to_sym]
-      raise ScopedSearch::QueryNotSupported, "'#{field.field}' should be one of '#{field.complete_value.keys.join(', ')}', but the query was '#{value}'" unless set_value
+      raise ScopedSearch::QueryNotSupported, "'#{field.field}' should be one of '#{field.complete_value.keys.join(', ')}', but the query was '#{value}'" if set_value.nil?
       yield(:parameter, set_value)
       return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
     end
