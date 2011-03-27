@@ -215,10 +215,15 @@ module ScopedSearch
       key_klass = field.key_klass.first(key_opts)
       raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" if key_klass.nil?
 
-      key  = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
-      fk   = field.klass.reflections[key].association_foreign_key.to_sym
-      opts = {:conditions => {fk => key_klass.id}, :select => "DISTINCT #{field.field}"}
-      return field.klass.all(opts).map(&field.field)
+      opts = {:select => "DISTINCT #{field.field}"}
+      if(field.key_klass != field.klass)
+        key  = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
+        fk   = field.klass.reflections[key].association_foreign_key.to_sym
+        opts.merge!(:conditions => {fk => key_klass.id})
+      else
+        opts.merge!(key_opts)
+      end
+      return field.klass.all(opts.merge(:limit => 20)).map(&field.field)
     end
 
     #this method returns conditions for selecting completion from partial value

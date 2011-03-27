@@ -211,6 +211,11 @@ module ScopedSearch
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
           return "\"#{key_klass.table_name}_#{num}\".\"#{key_field.to_s}\" = ? AND " +
                  "\"#{klass_table_name}\".\"#{field.to_s}\""
+        elsif key_field
+          yield(:joins, construct_simple_join_sql(num))
+          klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
+          return "\"#{key_klass.table_name}_#{num}\".\"#{key_field.to_s}\" = ? AND " +
+                 "\"#{klass_table_name}\".\"#{field.to_s}\""
         elsif relation
           yield(:include, relation)
         end
@@ -249,6 +254,28 @@ module ScopedSearch
         end
         join_sql += "\n INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}.#{value_table_fk_key}) "
 
+        return join_sql
+      end
+
+      # This method construct join statement for a key value table
+      # It assume the following table structure
+      #  +----------+  +---------+
+      #  | main     |  | key     |
+      #  | main_pk  |  | value   |
+      #  |          |  | main_fk |
+      #  +----------+  +---------+
+      # uniq name for the joins are needed in case that there is more than one condition
+      # on different keys in the same query.
+      def construct_simple_join_sql( num )
+        main = definition.klass.to_s.gsub(/.*::/,'').underscore.to_sym
+        key_value_table = klass.table_name
+
+        main_table = definition.klass.table_name
+        main_table_pk = klass.reflections[main].klass.primary_key
+        value_table_fk_main = klass.reflections[main].options[:foreign_key]
+        value_table_fk_main ||= klass.reflections[main].association_foreign_key
+
+        join_sql = "\n  INNER JOIN #{key_value_table} #{key_value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{key_value_table}_#{num}.#{value_table_fk_main})"
         return join_sql
       end
 
