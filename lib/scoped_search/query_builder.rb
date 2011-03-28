@@ -158,12 +158,24 @@ module ScopedSearch
       "#{field.to_sql(operator, &block)} #{sql_operator(operator, field)} ?"
     end
 
-    # Validate the key name is in the set and translate the value to the set value. 
+    # Validate the key name is in the set and translate the value to the set value.
     def set_test(field, operator,value, &block)
       set_value = field.complete_value[value.to_sym]
       raise ScopedSearch::QueryNotSupported, "'#{field.field}' should be one of '#{field.complete_value.keys.join(', ')}', but the query was '#{value}'" if set_value.nil?
+      raise ScopedSearch::QueryNotSupported, "Operator '#{operator}' not supported for '#{field.field}'" unless [:eq,:ne].include?(operator)
+      negate = ''
+      if [true,false].include?(set_value)
+        negate = 'NOT ' if operator == :ne
+        if field.numerical?
+          operator =  (set_value == true) ?  :gt : :eq
+          set_value = 0
+        else
+          operator = (set_value == true) ? :ne : :eq
+          set_value = false
+        end
+      end
       yield(:parameter, set_value)
-      return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
+      return "#{negate}(#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?)"
     end
 
     # Generates a simple SQL test expression, for a field and value using an operator.
