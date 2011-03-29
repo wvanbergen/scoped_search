@@ -217,8 +217,8 @@ module ScopedSearch
       # ActiveRecord::Base#find call, to make sure that the field is available
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
+        num = rand(1000000)
         if key_relation
-          num = rand(1000000)
           yield(:joins, construct_join_sql(key_relation, num) )
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
           return "\"#{key_klass.table_name}_#{num}\".\"#{key_field.to_s}\" = ? AND " +
