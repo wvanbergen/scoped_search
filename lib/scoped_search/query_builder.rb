@@ -191,7 +191,7 @@ module ScopedSearch
         yield(:parameter, lhs.sub(/^.*\./,''))
       end
       if field.ext_method
-        return field.to_in_set_sql(value)
+        return field.to_ext_method_sql(lhs, operator, value)
       elsif [:like, :unlike].include?(operator)
         yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
@@ -291,10 +291,11 @@ module ScopedSearch
         return join_sql
       end
 
-      def to_in_set_sql(value)
-        a = definition.klass.send(ext_method.to_sym, value) rescue []
-        raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' should return array" unless a.kind_of?(Array)
-        return "#{definition.klass.table_name}.#{definition.klass.primary_key} IN (#{a.join(',')})"
+      def to_ext_method_sql(key, operator, value)
+        raise ScopedSearch::QueryNotSupported, "'#{definition.klass}' doesn't respond to '#{ext_method}'" unless definition.klass.respond_to?(ext_method)
+        sql = definition.klass.send(ext_method.to_sym,key, operator, value) rescue []
+        raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' should return string" unless sql.kind_of?(String)
+        return sql
       end
     end
 
