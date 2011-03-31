@@ -238,7 +238,7 @@ module ScopedSearch
       return ['=', '!=']                      if field.set?
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
       return ['=', '!=', '~', '!~']           if field.textual?
-      return ['=', '>', '<']                  if field.temporal?
+      return ['at', 'after', 'before']        if field.temporal?
     end
 
   end
