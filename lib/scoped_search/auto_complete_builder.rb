@@ -140,7 +140,7 @@ module ScopedSearch
         }
       end
 
-      suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}.sort
+      suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
     end
 
     # suggest all searchable field names.
@@ -151,10 +151,10 @@ module ScopedSearch
         if (f[1].key_field)
           keywords += complete_key(f[0], f[1], tokens.last)
         else
-          keywords << f[0]
+          keywords << f[0].to_s
         end
       end
-      keywords
+      keywords.sort
     end
 
     #this method completes the keys list in a key-value schema in the format table.keyName
@@ -242,6 +242,7 @@ module ScopedSearch
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
       return ['=', '!=', '~', '!~']           if field.textual?
       return ['=', '>', '<']                  if field.temporal?
+
     end
 
   end
