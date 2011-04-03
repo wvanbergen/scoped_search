@@ -100,7 +100,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'auto complete relations' do
       it "should complete related object name" do
-        Foo.complete_for('ba').should contain(' bars')
+        Foo.complete_for('ba').should contain(' bars.related')
       end
 
       it "should complete related object name with field name" do
