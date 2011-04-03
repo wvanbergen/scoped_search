@@ -124,20 +124,23 @@ module ScopedSearch
     def build_suggestions(suggestions, is_value)
       return [] if (suggestions.blank?)
 
-      # for relation fields compact the suggestions list to be one suggestion per relation
-      # unless the user has typed the relation name entirely 
-      if (tokens.empty? || !(tokens.last.to_s.include?('.') ) && !(is_value))
-        suggestions = suggestions.map {|s|
-          (s.to_s.split('.')[0].end_with?(tokens.last)) ? s.to_s : s.to_s.split('.')[0]
-        }
-      end
       q=query
       unless q =~ /(\s|\)|,)$/
         val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
         suggestions = suggestions.map {|s| s if s.to_s =~ /^#{val}/i}.compact
         q.chomp!(tokens.last.to_s)
       end
-      suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
+
+      # for doted field names compact the suggestions list to be one suggestion
+      # unless the user has typed the relation name entirely or the suggestion list
+      # is short.
+      if (suggestions.size > 10 && (tokens.empty? || !(tokens.last.to_s.include?('.')) ) && !(is_value))
+        suggestions = suggestions.map {|s|
+          (s.to_s.split('.')[0].end_with?(tokens.last)) ? s.to_s : s.to_s.split('.')[0]
+        }
+      end
+
+      suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}.sort
     end
 
     # suggest all searchable field names.
@@ -238,7 +241,7 @@ module ScopedSearch
       return ['=', '!=']                      if field.set?
       return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
       return ['=', '!=', '~', '!~']           if field.textual?
-      return ['at', 'after', 'before']        if field.temporal?
+      return ['=', '>', '<']                  if field.temporal?
     end
 
   end
