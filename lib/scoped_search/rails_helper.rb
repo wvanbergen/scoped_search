@@ -158,7 +158,7 @@ module ScopedSearch
 
     def auto_complete_clear_value_button(field_id)
       html_options = {:tabindex => '-1',:class=>"auto_complete_clear",:title =>'Clear Search', :onclick=>"document.getElementById('#{field_id}').value = '';"}
-      a_link("X", "#", html_options)
+      a_link("", "#", html_options)
     end
 
     def a_link(name, href, html_options)
