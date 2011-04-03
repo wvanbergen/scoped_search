@@ -114,21 +114,45 @@ module ScopedSearch
       javascript_tag(function)
     end
 
-    def auto_complete_field_jquery(method, options = {})
+    def auto_complete_field_jquery(method, url, options = {})
       function = <<-EOF
-      $(document).ready(function(){ $('input[data-autocomplete]').railsAutocomplete(); });
-      (function(jQuery) {	var self = null; jQuery.fn.railsAutocomplete = function() {
-        return this.live('focus',function() { if (!this.railsAutoCompleter) {
-        this.railsAutoCompleter = new jQuery.railsAutocomplete(this);}	});	};
-        jQuery.railsAutocomplete = function (e) {_e = e; this.init(_e);	};
-        jQuery.railsAutocomplete.fn = jQuery.railsAutocomplete.prototype = {railsAutocomplete: '0.0.1'};
-        jQuery.railsAutocomplete.fn.extend = jQuery.railsAutocomplete.extend = jQuery.extend;
-        jQuery.railsAutocomplete.fn.extend({init: function(e) {e.delimiter = $(e).attr('data-delimiter') || null;
-                                           function split( val ) {return val.split( e.delimiter );}function extractLast( term ) {return split( term ).pop();}
-                                           $(e).autocomplete({source: function( request, response ) {$.getJSON( $(e).attr('data-autocomplete'), {
-                                             #{method}: extractLast( request.term )}, response );}
-                                           });} });})(jQuery);
-      EOF
+      $("##{method}")
+      .autocomplete({
+			source: function( request, response ) {
+					$.getJSON( "#{url}", { #{method}: request.term }, response );
+				},
+			minLength: #{options[:minLength] || 0},
+      delay: #{options[:delay] || 200}
+      })
+      .bind( "autocompletesearch", function(event, ui) {
+         $(".auto_complete_clear").toggle();
+      })
+      .bind( "autocompleteopen", function(event, ui) {
+         $(".auto_complete_clear").toggle();
+      })
+      .bind( "keydown", function( event ) {
+				if ( event.keyCode === $.ui.keyCode.TAB &&
+						$( this ).data( "autocomplete" ).menu.active ) {
+					event.preventDefault();
+				}
+			});
+     
+        $.widget( "#{method}", $.ui.autocomplete, {
+		_renderMenu: function( ul, items ) {
+			var self = this,
+				currentCategory = "";
+			$.each( items, function( index, item ) {
+				if ( item.category != currentCategory ) {
+					ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+					currentCategory = item.category;
+				}
+				self._renderItem( ul, item );
+			});
+		}
+	});
+ EOF
+
+
       javascript_tag(function)
     end
 
@@ -172,9 +196,9 @@ module ScopedSearch
     # auto_complete_method to respond the JQuery calls,
     def auto_complete_field_tag_jquery(method, val,tag_options = {}, completion_options = {})
       path = eval("#{controller_name}_path")
-      options = { 'data-autocomplete'.to_sym => "#{path}/auto_complete_#{method}" }.update(tag_options.merge(:class => "auto_complete_input"))
+      options = tag_options.merge(:class => "auto_complete_input")
       text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
-          auto_complete_field_jquery(method, completion_options)
+          auto_complete_field_jquery(method, "#{path}/auto_complete_#{method}", completion_options)
     end
 
   end
