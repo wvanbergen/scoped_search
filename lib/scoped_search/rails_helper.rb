@@ -116,19 +116,33 @@ module ScopedSearch
 
     def auto_complete_field_jquery(method, url, options = {})
       function = <<-EOF
+      $.widget( "custom.catcomplete", $.ui.autocomplete, {
+        _renderMenu: function( ul, items ) {
+          var self = this,
+            currentCategory = "";
+          $.each( items, function( index, item ) {
+            if ( item.category != undefined && item.category != currentCategory ) {
+              ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+              currentCategory = item.category;
+            }
+            self._renderItem( ul, item );
+          });
+        }
+      });
+
       $("##{method}")
-      .autocomplete({
+      .catcomplete({
 			source: function( request, response ) {
 					$.getJSON( "#{url}", { #{method}: request.term }, response );
 				},
-			minLength: #{options[:minLength] || 0},
+			minLength: #{options[:min_length] || 0},
       delay: #{options[:delay] || 200}
       })
-      .bind( "autocompletesearch", function(event, ui) {
-         $(".auto_complete_clear").toggle();
+      .bind( "catcompletesearch", function(event, ui) {
+         $(".auto_complete_clear").hide();
       })
-      .bind( "autocompleteopen", function(event, ui) {
-         $(".auto_complete_clear").toggle();
+      .bind( "catcompleteopen", function(event, ui) {
+         $(".auto_complete_clear").show();
       })
       .bind( "keydown", function( event ) {
 				if ( event.keyCode === $.ui.keyCode.TAB &&
@@ -136,20 +150,7 @@ module ScopedSearch
 					event.preventDefault();
 				}
 			});
-     
-        $.widget( "#{method}", $.ui.autocomplete, {
-		_renderMenu: function( ul, items ) {
-			var self = this,
-				currentCategory = "";
-			$.each( items, function( index, item ) {
-				if ( item.category != currentCategory ) {
-					ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
-					currentCategory = item.category;
-				}
-				self._renderItem( ul, item );
-			});
-		}
-	});
+
  EOF
 
 
