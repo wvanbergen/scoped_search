@@ -218,20 +218,21 @@ module ScopedSearch
       # for the SQL query.
       def to_sql(operator = nil, &block) # :yields: finder_option_type, value
         num = rand(1000000)
+        connection = klass.connection
         if key_relation
           yield(:joins, construct_join_sql(key_relation, num) )
-          klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
-          return "\"#{key_klass.table_name}_#{num}\".\"#{key_field.to_s}\" = ? AND " +
-                 "\"#{klass_table_name}\".\"#{field.to_s}\""
+          klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
+          return "#{key_klass.table_name}_#{num}.#{key_field.to_s} = ? AND " +
+                 "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
         elsif key_field
           yield(:joins, construct_simple_join_sql(num))
-          klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
-          return "\"#{key_klass.table_name}_#{num}\".\"#{key_field.to_s}\" = ? AND " +
-                 "\"#{klass_table_name}\".\"#{field.to_s}\""
+          klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
+          return "#{key_klass.table_name}_#{num}.#{key_field.to_s} = ? AND " +
+                 "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
         elsif relation
           yield(:include, relation)
         end
-        column_name = klass.connection.quote_table_name(klass.table_name.to_s) + "." + klass.connection.quote_column_name(field.to_s)
+        column_name = connection.quote_table_name(klass.table_name.to_s) + "." + connection.quote_column_name(field.to_s)
         column_name = "(#{column_name} >> #{offset*word_size} & #{2**word_size - 1})" if offset
         column_name
       end
