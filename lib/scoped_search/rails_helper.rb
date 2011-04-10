@@ -144,6 +144,9 @@ module ScopedSearch
       .bind( "catcompleteopen", function(event, ui) {
          $(".auto_complete_clear").show();
       })
+      .bind( "catcompleteselect", function(event, ui) {
+         $( this ).catcomplete( "search" );
+      })
       .bind( "keydown", function( event ) {
 				if ( event.keyCode === $.ui.keyCode.TAB &&
 						$( this ).data( "autocomplete" ).menu.active ) {
@@ -196,7 +199,7 @@ module ScopedSearch
     # In your controller, you'll need to define an action called
     # auto_complete_method to respond the JQuery calls,
     def auto_complete_field_tag_jquery(method, val,tag_options = {}, completion_options = {})
-      path = eval("#{controller_name}_path")
+      path = request.path
       options = tag_options.merge(:class => "auto_complete_input")
       text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
           auto_complete_field_jquery(method, "#{path}/auto_complete_#{method}", completion_options)
