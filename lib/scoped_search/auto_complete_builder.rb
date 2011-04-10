@@ -151,7 +151,7 @@ module ScopedSearch
         if (f[1].key_field)
           keywords += complete_key(f[0], f[1], tokens.last)
         else
-          keywords << f[0].to_s
+          keywords << f[0].to_s+' '
         end
       end
       keywords.sort
@@ -187,7 +187,7 @@ module ScopedSearch
 
       opts = value_conditions(field.field, val)
       opts.merge!(:limit => 20, :select => "DISTINCT #{field.field}")
-      return field.klass.all(opts).map(&field.field).compact
+      return field.klass.all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
     end
 
     # set value completer
@@ -238,10 +238,10 @@ module ScopedSearch
     def complete_operator(node)
       field = definition.field_by_name(node.value)
       return [] if field.nil?
-      return ['=', '!=']                      if field.set?
-      return ['=', '>', '<', '<=', '>=','!='] if field.numerical?
-      return ['=', '!=', '~', '!~']           if field.textual?
-      return ['=', '>', '<']                  if field.temporal?
+      return ['= ', '!= ']                      if field.set?
+      return ['= ', '> ', '< ', '<= ', '>= ','!= '] if field.numerical?
+      return ['= ', '!= ', '~ ', '!~ ']           if field.textual?
+      return ['= ', '> ', '< ']                  if field.temporal?
 
     end
 
