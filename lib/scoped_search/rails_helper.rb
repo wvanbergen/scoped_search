@@ -125,7 +125,11 @@ module ScopedSearch
               ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
               currentCategory = item.category;
             }
-            self._renderItem( ul, item );
+            if ( item.error != undefined ) {
+              ul.append( "<li class='ui-autocomplete-error'>" + item.error + "</li>" );
+            } else {
+              self._renderItem( ul, item );
+            }
           });
         }
       });
