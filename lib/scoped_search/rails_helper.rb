@@ -136,28 +136,13 @@ module ScopedSearch
 
       $("##{method}")
       .catcomplete({
-			source: function( request, response ) {
-					$.getJSON( "#{url}", { #{method}: request.term }, response );
-				},
+			source: function( request, response ) {	$.getJSON( "#{url}", { #{method}: request.term }, response );	},
 			minLength: #{options[:min_length] || 0},
-      delay: #{options[:delay] || 200}
-      })
-      .bind( "catcompletesearch", function(event, ui) {
-         $(".auto_complete_clear").hide();
-      })
-      .bind( "catcompleteopen", function(event, ui) {
-         $(".auto_complete_clear").show();
-      })
-      .bind( "catcompleteselect", function(event, ui) {
-         $( this ).catcomplete( "search" );
-      })
-      .bind( "keydown", function( event ) {
-				if ( event.keyCode === $.ui.keyCode.TAB &&
-						$( this ).data( "autocomplete" ).menu.active ) {
-					event.preventDefault();
-				}
-			});
-
+      delay: #{options[:delay] || 200},
+      select: function(event, ui) { $( this ).catcomplete( "search" , ui.item.value); },
+      search: function(event, ui) { $(".auto_complete_clear").hide(); },
+      open: function(event, ui) { $(".auto_complete_clear").show(); }
+      });
  EOF
 
 
