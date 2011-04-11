@@ -15,7 +15,8 @@ module ScopedSearch
     # class, so you should not create instances of this class yourself.
     class Field
 
-      attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :key_field, :complete_value, :offset, :word_size, :ext_method
+      attr_reader :definition, :field, :only_explicit, :relation, :key_relation,
+                  :key_field, :complete_value, :offset, :word_size, :ext_method, :operators
 
       # The ActiveRecord-based class that belongs to this field.
       def klass
@@ -113,6 +114,7 @@ module ScopedSearch
           @offset           = options[:offset]
           @word_size        = options[:word_size] || 1
           @ext_method       = options[:ext_method]
+          @operators        = options[:operators]
           @only_explicit    = !!options[:only_explicit]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         end
@@ -163,6 +165,18 @@ module ScopedSearch
       field = fields[name.to_sym]
       field ||= fields[name.to_s.split('.')[0].to_sym]
       field
+    end
+
+    # this method is used by the syntax auto completer to suggest operators.
+    def operator_by_field_name(name)
+      field = field_by_name(name)
+      return [] if field.nil?
+      return field.operators                        if field.operators
+      return ['= ', '!= ']                          if field.set?
+      return ['= ', '> ', '< ', '<= ', '>= ','!= '] if field.numerical?
+      return ['= ', '!= ', '~ ', '!~ ']             if field.textual?
+      return ['= ', '> ', '< ']                     if field.temporal?
+      raise ScopedSearch::QueryNotSupported, "could not verify '#{name}' type, this can be a result of a definition error"
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/

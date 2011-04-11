@@ -236,13 +236,7 @@ module ScopedSearch
 
     # This method complete infix operators by field type
     def complete_operator(node)
-      field = definition.field_by_name(node.value)
-      return [] if field.nil?
-      return ['= ', '!= ']                      if field.set?
-      return ['= ', '> ', '< ', '<= ', '>= ','!= '] if field.numerical?
-      return ['= ', '!= ', '~ ', '!~ ']           if field.textual?
-      return ['= ', '> ', '< ']                  if field.temporal?
-
+      definition.operator_by_field_name(node.value)
     end
 
   end
