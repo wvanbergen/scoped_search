@@ -188,10 +188,10 @@ module ScopedSearch
     # In your controller, you'll need to define an action called
     # auto_complete_method to respond the JQuery calls,
     def auto_complete_field_tag_jquery(method, val,tag_options = {}, completion_options = {})
-      path = request.path
+      url = url_for(:action => "auto_complete_#{method}")
       options = tag_options.merge(:class => "auto_complete_input")
       text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
-          auto_complete_field_jquery(method, "#{path}/auto_complete_#{method}", completion_options)
+          auto_complete_field_jquery(method, url, completion_options)
     end
 
   end
