@@ -38,23 +38,23 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'basic auto completer' do
       it "should complete the field name" do
-        Foo.complete_for('str').should eql([' string'])
+        Foo.complete_for('str').should =~ ([' string '])
       end
 
        it "should not complete the logical operators at the beginning" do
-        Foo.complete_for('a').should_not contain([' and'])
+        Foo.complete_for('a').should_not contain(['and'])
       end
 
       it "should complete the string comparators" do
-        Foo.complete_for('string ').should =~ (["string !=", "string !~", "string =", "string ~"])
+        Foo.complete_for('string ').should =~ (["string != ", "string !~ ", "string = ", "string ~ "])
       end
 
       it "should complete the numerical comparators" do
-        Foo.complete_for('int ').should =~ (["int !=", "int <", "int <=", "int =", "int >", "int >="])
+        Foo.complete_for('int ').should =~ (["int != ", "int < ", "int <= ", "int = ", "int > ", "int >= "])
       end
 
       it "should complete the temporal (date) comparators" do
-        Foo.complete_for('date ').should =~ (["date =", "date <", "date >"])
+        Foo.complete_for('date ').should =~ (["date = ", "date < ", "date > "])
       end
 
       it "should raise error for unindexed field" do
@@ -84,7 +84,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'using an aliased field' do
       it "should complete an explicit match using its alias" do
-        Foo.complete_for('al').should contain(' alias')
+        Foo.complete_for('al').should contain(' alias ')
       end
     end
 
@@ -100,38 +100,38 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'auto complete relations' do
       it "should complete related object name" do
-        Foo.complete_for('ba').should contain(' bars.related')
+        Foo.complete_for('ba').should contain(' bars.related ')
       end
 
       it "should complete related object name with field name" do
-        Foo.complete_for('bars.').should contain(' bars.related')
+        Foo.complete_for('bars.').should contain(' bars.related ')
       end
     end
 
     context 'using null prefix operators queries' do
 
       it "should complete has operator" do
-        Foo.complete_for('has strin').should eql(['has string'])
+        Foo.complete_for('has strin').should eql(['has string '])
       end
 
       it "should complete null? operator" do
-        Foo.complete_for('null? st').should eql(['null? string'])
+        Foo.complete_for('null? st').should eql(['null? string '])
       end
 
       it "should complete set? operator" do
-        Foo.complete_for('set? exp').should eql(['set? explicit'])
+        Foo.complete_for('set? exp').should eql(['set? explicit '])
       end
 
       it "should complete null? operator for explicit field" do
-        Foo.complete_for('null? explici').should eql(['null? explicit'])
+        Foo.complete_for('null? explici').should eql(['null? explicit '])
       end
 
       it "should not complete comparators after prefix statement" do
-        Foo.complete_for('has string ').should_not contain(['has string ='])
+        Foo.complete_for('has string ').should_not contain(['has string = '])
       end
 
       it "should not complete infix operator" do
-        Foo.complete_for('has string ').should_not contain('has string =')
+        Foo.complete_for('has string ').should_not contain('has string = ')
       end
     end
   end
