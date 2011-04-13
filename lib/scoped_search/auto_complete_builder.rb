@@ -187,7 +187,7 @@ module ScopedSearch
 
       opts = value_conditions(field.field, val)
       opts.merge!(:limit => 20, :select => "DISTINCT #{field.field}")
-      return eval(field.klass.to_s).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+      return field.klass.all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
     end
 
     # set value completer
