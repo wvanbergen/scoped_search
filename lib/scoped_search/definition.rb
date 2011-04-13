@@ -21,7 +21,9 @@ module ScopedSearch
       # The ActiveRecord-based class that belongs to this field.
       def klass
         if relation
-          definition.klass.reflections[relation].klass
+          related = definition.klass.reflections[relation]
+          raise ScopedSearch::QueryNotSupported, "relation '#{relation}' not one of #{definition.klass.reflections.keys.join(', ')} " if related.nil?
+          related.klass
         else
           definition.klass
         end
