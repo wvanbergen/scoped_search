@@ -119,7 +119,7 @@ module ScopedSearch
       $.widget( "custom.catcomplete", $.ui.autocomplete, {
         _renderMenu: function( ul, items ) {
           var self = this,
-            currentCategory = "";
+          currentCategory = "";
           $.each( items, function( index, item ) {
             if ( item.category != undefined && item.category != currentCategory ) {
               ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
@@ -127,6 +127,11 @@ module ScopedSearch
             }
             if ( item.error != undefined ) {
               ul.append( "<li class='ui-autocomplete-error'>" + item.error + "</li>" );
+            }
+            if( item.completed != undefined ) {
+              $( "<li></li>" ).data( "item.autocomplete", item )
+				      .append( "<a>" + "<strong class='ui-autocomplete-completed'>" + item.completed + "</strong>" + item.part + "</a>" )
+				      .appendTo( ul );
             } else {
               self._renderItem( ul, item );
             }
@@ -143,6 +148,13 @@ module ScopedSearch
       search: function(event, ui) { $(".auto_complete_clear").hide(); },
       open: function(event, ui) { $(".auto_complete_clear").show(); }
       });
+
+      $("##{method}").bind( "focus", function( event ) {
+        if( $( this )[0].value == "" ) {
+					$( this ).catcomplete( "search" );
+        }
+			});
+
  EOF
 
 
