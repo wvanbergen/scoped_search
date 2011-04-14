@@ -60,9 +60,12 @@ module ScopedSearch
 
       # left hand
       if is_left_hand(node)
-        options = [:keyword]
-        options += [:logical_op] unless (tokens.size == 1 || last_token_is(PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS))
-        options += [:prefix_op]  unless last_token_is(PREFIX_OPERATORS)
+        if (tokens.size == 1 || last_token_is(PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS))
+          options = [:keyword]
+          options += [:prefix_op]  unless last_token_is(PREFIX_OPERATORS)
+        else
+          options = [:logical_op]
+        end
         return options
       end
 
