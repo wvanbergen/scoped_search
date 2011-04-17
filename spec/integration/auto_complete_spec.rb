@@ -66,7 +66,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should complete logical comparators" do
-        Foo.complete_for('string ~ fo ').should contain("string ~ fo and", "string ~ fo or", "string ~ fo not")
+        Foo.complete_for('string ~ fo ').should contain("string ~ fo and", "string ~ fo or")
       end
 
       it "should complete prefix operators" do

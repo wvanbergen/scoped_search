@@ -60,7 +60,8 @@ module ScopedSearch
 
       # left hand
       if is_left_hand(node)
-        if (tokens.size == 1 || last_token_is(PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS))
+        if (tokens.size == 1 || last_token_is(PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS) ||
+            last_token_is(PREFIX_OPERATORS + LOGICAL_INFIX_OPERATORS, 2))
           options = [:keyword]
           options += [:prefix_op]  unless last_token_is(PREFIX_OPERATORS)
         else
@@ -168,7 +169,7 @@ module ScopedSearch
       field_name = field.key_field
       opts =  value_conditions(field.key_field, val).merge(:limit => 20, :select => field_name, :group => field_name )
 
-      field.key_klass.all(opts).map(&field_name).compact.map{ |f| "#{name}.#{f}"}
+      field.key_klass.all(opts).map(&field_name).compact.map{ |f| "#{name}.#{f} "}
     end
 
     # this method auto-completes values of fields that have a :complete_value marker 
