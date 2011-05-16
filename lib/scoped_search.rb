@@ -14,7 +14,7 @@ module ScopedSearch
 
   # The current scoped_search version. Do not change thisvalue by hand,
   # because it will be updated automatically by the gem release script.
-  VERSION = "2.2.1"
+  VERSION = "2.3.0"
 
   # The ClassMethods module will be included into the ActiveRecord::Base class
   # to add the <tt>ActiveRecord::Base.scoped_search</tt> method and the
