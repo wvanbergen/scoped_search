@@ -222,12 +222,12 @@ module ScopedSearch
         if key_relation
           yield(:joins, construct_join_sql(key_relation, num) )
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
-          return "#{key_klass.table_name}_#{num}.#{key_field.to_s} = ? AND " +
+          return "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ? AND " +
                  "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
         elsif key_field
           yield(:joins, construct_simple_join_sql(num))
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
-          return "#{key_klass.table_name}_#{num}.#{key_field.to_s} = ? AND " +
+          return "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ? AND " +
                  "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
         elsif relation
           yield(:include, relation)
@@ -248,6 +248,7 @@ module ScopedSearch
       # on different keys in the same query.
       def construct_join_sql(key_relation, num )
         join_sql = ""
+        connection = klass.connection
         key = key_relation.to_s.singularize.to_sym
         main = definition.klass.to_s.gsub(/.*::/,'').underscore.to_sym
 
@@ -262,10 +263,10 @@ module ScopedSearch
           main_table_pk = klass.reflections[main].klass.primary_key
           value_table_fk_main = klass.reflections[main].association_foreign_key
 
-          join_sql = "\n  INNER JOIN #{value_table} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})"
+          join_sql = "\n  INNER JOIN #{connection.quote_table_name(value_table)} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})"
           value_table = " #{value_table}_#{num}"
         end
-        join_sql += "\n INNER JOIN #{key_table} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}.#{value_table_fk_key}) "
+        join_sql += "\n INNER JOIN #{connection.quote_table_name(key_table)} #{key_table}_#{num} ON (#{key_table}_#{num}.#{key_table_pk} = #{value_table}.#{value_table_fk_key}) "
 
         return join_sql
       end
@@ -280,6 +281,7 @@ module ScopedSearch
       # uniq name for the joins are needed in case that there is more than one condition
       # on different keys in the same query.
       def construct_simple_join_sql( num )
+        connection = klass.connection
         main = definition.klass.to_s.gsub(/.*::/,'').underscore.to_sym
         key_value_table = klass.table_name
 
@@ -288,7 +290,7 @@ module ScopedSearch
         value_table_fk_main = klass.reflections[main].options[:foreign_key]
         value_table_fk_main ||= klass.reflections[main].association_foreign_key
 
-        join_sql = "\n  INNER JOIN #{key_value_table} #{key_value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{key_value_table}_#{num}.#{value_table_fk_main})"
+        join_sql = "\n  INNER JOIN #{connection.quote_table_name(key_value_table)} #{key_value_table}_#{num} ON (#{connection.quote_table_name(main_table)}.#{main_table_pk} = #{key_value_table}_#{num}.#{value_table_fk_main})"
         return join_sql
       end
 
