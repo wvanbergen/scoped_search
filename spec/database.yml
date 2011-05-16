@@ -7,11 +7,11 @@
 # to you.
 
 
-<% if Gem.available?('sqlite3-ruby') %>
-sqlite3:
-  adapter: "sqlite3"
-  database: ":memory:"
-<% end %>
+# <% if Gem.available?('sqlite3-ruby') %>
+# sqlite3:
+#   adapter: "sqlite3"
+#   database: ":memory:"
+# <% end %>
 
 <% if Gem.available?('mysql2') %>
 mysql2:
