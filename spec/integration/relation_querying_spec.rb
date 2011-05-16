@@ -112,6 +112,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       before do
 
         # The related class
+        ActiveRecord::Migration.drop_table(:cars) rescue nil
         ActiveRecord::Migration.create_table(:cars) { |t| t.string :related; t.integer :hoo_id }
         class Car < ActiveRecord::Base; belongs_to :hoo; end
 

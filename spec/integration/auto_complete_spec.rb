@@ -10,6 +10,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       ScopedSearch::RSpec::Database.establish_named_connection(db)
 
       ## The related class
+      ActiveRecord::Migration.drop_table(:bars) rescue nil
       ActiveRecord::Migration.create_table(:bars) { |t| t.string :related; t.integer :foo_id }
       class ::Bar < ActiveRecord::Base; belongs_to :foo; end
 
@@ -33,6 +34,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     after(:all) do
       ScopedSearch::RSpec::Database.drop_model(Foo)
+      ScopedSearch::RSpec::Database.drop_model(Bar)
       ScopedSearch::RSpec::Database.close_connection
     end
 
