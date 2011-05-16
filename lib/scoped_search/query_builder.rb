@@ -426,6 +426,19 @@ module ScopedSearch
       end
     end
 
+    class Mysql2Adapter < ScopedSearch::QueryBuilder
+       # Patches the default <tt>sql_operator</tt> method to add
+      # <tt>BINARY</tt> after the equals and not equals operator to force
+      # case-sensitive comparisons.
+      def sql_operator(operator, field)
+        if [:ne, :eq].include?(operator) && field.textual?
+          "#{SQL_OPERATORS[operator]} BINARY"
+        else
+          super(operator, field)
+        end
+      end
+    end
+
     # The PostgreSQLAdapter make sure that searches are case sensitive when
     # using the like/unlike operators, by using the PostrgeSQL-specific
     # <tt>ILIKE operator</tt> instead of <tt>LIKE</tt>.
