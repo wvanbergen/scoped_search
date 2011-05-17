@@ -222,7 +222,6 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       after(:all) do
         ScopedSearch::RSpec::Database.drop_model(@foo)
-        @record.destroy
       end
 
       it "should not find any record because first equal = 2" do

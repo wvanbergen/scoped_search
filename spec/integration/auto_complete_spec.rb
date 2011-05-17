@@ -34,7 +34,6 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     after(:all) do
       ScopedSearch::RSpec::Database.drop_model(Foo)
-      ScopedSearch::RSpec::Database.drop_model(Bar)
       ScopedSearch::RSpec::Database.close_connection
     end
 
