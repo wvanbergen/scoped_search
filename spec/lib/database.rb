@@ -17,7 +17,7 @@ module ScopedSearch::RSpec::Database
   end
   
   def self.test_databases
-    test_databases_configuration.keys
+    test_databases_configuration.keys.sort
   end
 
   def self.establish_named_connection(name)
