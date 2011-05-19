@@ -129,7 +129,8 @@ module ScopedSearch
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
       if field.datetime?
-        span = (timestamp.day_fraction == 0) ? 1.day :  1.hour
+        span = 1.minute if(value =~ /\A\s*\d+\s+\bminutes?\b\s+\bago\b\s*\z/i)
+        span ||= (timestamp.day_fraction == 0) ? 1.day :  1.hour
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
