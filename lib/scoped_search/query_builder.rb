@@ -188,12 +188,11 @@ module ScopedSearch
     # <tt>operator</tt>:: The operator used for comparison.
     # <tt>value</tt>:: The value to compare the field with.
     def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
-      if field.key_field
-        yield(:parameter, lhs.sub(/^.*\./,''))
-      end
-      if field.ext_method
-        return field.to_ext_method_sql(lhs, sql_operator(operator, field), value, &block)
-      elsif [:like, :unlike].include?(operator)
+      return field.to_ext_method_sql(lhs, sql_operator(operator, field), value, &block) if field.ext_method
+
+      yield(:parameter, lhs.sub(/^.*\./,'')) if field.key_field
+
+      if [:like, :unlike].include?(operator)
         yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       elsif field.temporal?
