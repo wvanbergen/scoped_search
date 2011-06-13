@@ -230,7 +230,7 @@ module ScopedSearch
       else
         opts.merge!(key_opts)
       end
-      return field.klass.all(opts.merge(:limit => 20)).map(&field.field)
+      return field.klass.all(opts.merge(:limit => 20)).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
     end
 
     #this method returns conditions for selecting completion from partial value
