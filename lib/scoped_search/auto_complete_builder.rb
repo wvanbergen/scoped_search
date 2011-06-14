@@ -144,7 +144,7 @@ module ScopedSearch
         }
       end
 
-      suggestions.uniq.map {|m| "#{q} #{m}".gsub(/\s+/," ")}
+      suggestions.uniq.map {|m| "#{q} #{m}"}
     end
 
     # suggest all searchable field names.
