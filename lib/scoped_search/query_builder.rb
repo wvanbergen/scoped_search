@@ -104,6 +104,7 @@ module ScopedSearch
     # By default, it will simply look up the correct SQL operator in the SQL_OPERATORS
     # hash, but this can be overridden by a database adapter.
     def sql_operator(operator, field)
+      raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if [:like, :unlike].include?(operator) and !field.textual?
       SQL_OPERATORS[operator]
     end
 
@@ -447,10 +448,11 @@ module ScopedSearch
       # Switches out the default LIKE operator for ILIKE in the default
       # <tt>sql_operator</tt> method.
       def sql_operator(operator, field)
+        raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if [:like, :unlike].include?(operator) and !field.textual?
         case operator
-        when :like   then 'ILIKE'
-        when :unlike then 'NOT ILIKE'
-        else super(operator, field)
+          when :like   then 'ILIKE'
+          when :unlike then 'NOT ILIKE'
+          else super(operator, field)
         end
       end
     end
