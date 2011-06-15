@@ -108,6 +108,11 @@ module ScopedSearch
       SQL_OPERATORS[operator]
     end
 
+    # Returns a NOT (...)  SQL fragment that negates the current AST node's children
+    def to_not_sql(rhs, definition, &block)
+      "NOT COALESCE(#{rhs.to_sql(self, definition, &block)}, 0)"
+    end
+
     # Perform a comparison between a field and a Date(Time) value.
     #
     # This function makes sure the date is valid and adjust the comparison in
@@ -340,11 +345,6 @@ module ScopedSearch
       # Defines the to_sql method for AST operator nodes
       module OperatorNode
 
-        # Returns a NOT (...)  SQL fragment that negates the current AST node's children
-        def to_not_sql(builder, definition, &block)
-          "NOT COALESCE(#{rhs.to_sql(builder, definition, &block)}, 0)"
-        end
-
         # Returns an IS (NOT) NULL SQL fragment
         def to_null_sql(builder, definition, &block)
           field = definition.field_by_name(rhs.value)
@@ -388,7 +388,7 @@ module ScopedSearch
         # Convert this AST node to an SQL fragment.
         def to_sql(builder, definition, &block)
           if operator == :not && children.length == 1
-            to_not_sql(builder, definition, &block)
+            builder.to_not_sql(rhs, definition, &block)
           elsif [:null, :notnull].include?(operator)
             to_null_sql(builder, definition, &block)
           elsif children.length == 1
@@ -454,6 +454,11 @@ module ScopedSearch
           when :unlike then 'NOT ILIKE'
           else super(operator, field)
         end
+      end
+
+      # Returns a NOT (...)  SQL fragment that negates the current AST node's children
+      def to_not_sql(rhs, definition, &block)
+        "NOT COALESCE(#{rhs.to_sql(self, definition, &block)}, false)"
       end
     end
 
