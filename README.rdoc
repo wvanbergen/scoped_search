@@ -10,6 +10,10 @@ and build a query based on the search string they enter. If you want to build a
 more complex search form with multiple fields, searchlogic (see
 http://github.com/binarylogic/searchlogic) may be a good choice for you.
 
+== Preview
+A demo application using the scoped search can be found here: http://github.com/abenari/scoped_search_demo_app
+A running version of the demo application can be found here: http://scope-search-demo.heroku.com
+
 == Installing
 
 The recommended method to enable scoped search in your project is adding the
