@@ -16,18 +16,19 @@ module ScopedSearch
 
     # This method will parse the query string and build  suggestion list using the
     # search query.
-    def self.auto_complete(definition, query)
+    def self.auto_complete(definition, query, options)
       return [] if (query.nil? or definition.nil? or !definition.respond_to?(:fields))
 
-      new(definition, query).build_autocomplete_options
+      new(definition, query, options).build_autocomplete_options
     end
 
     # Initializes the instance by setting the relevant parameters
-    def initialize(definition, query)
+    def initialize(definition, query, options)
       @definition = definition
       @ast        = ScopedSearch::QueryLanguage::Compiler.parse(query)
       @query      = query
       @tokens     = tokenize
+      @options    = options
     end
 
     # Test the validity of the current query and suggest possible completion
@@ -191,7 +192,13 @@ module ScopedSearch
 
       opts = value_conditions(field.field, val)
       opts.merge!(:limit => 20, :select => "DISTINCT #{field.field}")
-      return field.klass.all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+
+      return completer_scope(field.klass).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+    end
+
+    def completer_scope(klass)
+      return klass unless klass.respond_to?(:completer_scope)
+      klass.completer_scope(@options)
     end
 
     # set value completer
@@ -230,7 +237,7 @@ module ScopedSearch
       else
         opts.merge!(key_opts)
       end
-      return field.klass.all(opts.merge(:limit => 20)).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+      return completer_scope(field.klass).all(opts.merge(:limit => 20)).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
     end
 
     #this method returns conditions for selecting completion from partial value

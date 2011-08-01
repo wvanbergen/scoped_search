@@ -250,8 +250,8 @@ end
 # Registers the complete_for method within the class that is used for searching.
  def register_complete_for! # :nodoc
 @klass.class_eval do
-  def self.complete_for (query)
-    search_options = ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query)
+  def self.complete_for (query, options = {})
+    search_options = ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query, options)
     search_options
     end
   end
