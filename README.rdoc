@@ -15,20 +15,17 @@ A demo application using the scoped search can be found here: http://github.com/
 A running version of the demo application can be found here: http://scope-search-demo.heroku.com
 
 == Installing
+For a Rails 3 application add the following line in your Gemfile, and run <tt>bundle install</tt>:
 
-The recommended method to enable scoped search in your project is adding the
-scoped_search gem to your environment. Add the following code to your Rails
-configuration in <tt>config/environment.rb</tt>, and run <tt>rake
-gems:install</tt> to install the gem.:
+  gem "scoped_search"
+
+For Rails 2 Add the following code to your Rails configuration in <tt>config/environment.rb</tt>,
+and run <tt>rake gems:install</tt> to install the gem.:
 
   Rails::Initializer.run do |config|
     ...
     config.gem 'scoped_search'
   end
-
-Alternatively, install scoped search as a Rails plugin (*deprecated*):
-
-  script/plugin install git://github.com/wvanbergen/scoped_search.git
 
 == Usage
 
