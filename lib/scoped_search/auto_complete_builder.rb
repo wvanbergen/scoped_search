@@ -16,7 +16,7 @@ module ScopedSearch
 
     # This method will parse the query string and build  suggestion list using the
     # search query.
-    def self.auto_complete(definition, query, options)
+    def self.auto_complete(definition, query, options = {})
       return [] if (query.nil? or definition.nil? or !definition.respond_to?(:fields))
 
       new(definition, query, options).build_autocomplete_options

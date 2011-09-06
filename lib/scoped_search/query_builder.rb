@@ -206,7 +206,7 @@ module ScopedSearch
       elsif field.set?
         return set_test(field, operator, value, &block)
       else
-        value = value.to_i if field.numerical?
+        value = value.to_i if field.offset
         yield(:parameter, value)
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end

@@ -9,8 +9,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     before(:all) do
       ScopedSearch::RSpec::Database.establish_named_connection(db)
 
-      @class = ScopedSearch::RSpec::Database.create_model(:int => :integer, :timestamp => :datetime, :date => :date, :unindexed => :integer) do |klass|
-        klass.scoped_search :on => [:int, :timestamp]
+      @class = ScopedSearch::RSpec::Database.create_model(:int => :integer, :dec => :decimal ,:timestamp => :datetime, :date => :date, :unindexed => :integer) do |klass|
+        klass.scoped_search :on => [:int, :dec, :timestamp]
         klass.scoped_search :on => :date, :only_explicit => true
       end
     end
@@ -23,7 +23,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'querying numerical fields' do
 
       before(:all) do
-        @record = @class.create!(:int =>  9)
+        @record = @class.create!(:int =>  9, :dec => 1.23)
       end
 
       after(:all) do
@@ -32,6 +32,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find the record with an exact integer match" do
         @class.search_for('9').should have(1).item
+      end
+
+      it "should find the record with an exact decimal match" do
+        @class.search_for('1.23').should have(1).item
       end
 
       it "should find the record with an exact integer match with an explicit operator" do
