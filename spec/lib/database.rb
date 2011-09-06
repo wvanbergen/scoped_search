@@ -37,7 +37,8 @@ module ScopedSearch::RSpec::Database
     table_name = "model_#{rand}".gsub(/\./, '')
     ActiveRecord::Migration.create_table(table_name) do |t|
       fields.each do |name, field_type|
-        t.send(field_type.to_s.gsub(/^unindexed_/, '').to_sym, name)
+        options = (field_type == :decimal) ? { :scale => 2, :precision => 10 } : {}
+        t.send(field_type.to_s.gsub(/^unindexed_/, '').to_sym, name, options)
       end
     end
 
