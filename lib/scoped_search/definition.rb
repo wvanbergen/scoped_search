@@ -165,7 +165,10 @@ module ScopedSearch
     # this method return definitions::field object from string
     def field_by_name(name)
       field = fields[name.to_sym]
-      field ||= fields[name.to_s.split('.')[0].to_sym]
+      if field.nil?
+        dotted = name.to_s.split('.')[0]
+        field = fields[dotted.to_sym] unless dotted.nil?
+      end
       field
     end
 
