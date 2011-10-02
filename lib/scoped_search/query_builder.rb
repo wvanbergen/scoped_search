@@ -44,6 +44,8 @@ module ScopedSearch
     # Actually builds the find parameters hash that should be used in the search_for
     # named scope.
     def build_find_params(options)
+      keyconditions = []
+      keyparameters = []
       parameters = []
       includes   = []
       joins   = []
@@ -55,6 +57,8 @@ module ScopedSearch
         # Store the parameters, includes, etc so that they can be added to
         # the find-hash later on.
         case notification
+          when :keycondition then keyconditions << value
+          when :keyparameter then keyparameters << value
           when :parameter then parameters << value
           when :include   then includes   << value
           when :joins   then joins   << value
@@ -70,10 +74,10 @@ module ScopedSearch
           else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
-
+      sql = (keyconditions + (sql.nil? ? [] : [sql]) ).map {|c| "(#{c})"}.join(" AND ")
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
-      find_attributes[:conditions] = [sql] + parameters unless sql.nil?
+      find_attributes[:conditions] = [sql] + keyparameters + parameters unless sql.nil?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins.uniq         unless joins.empty?
       find_attributes[:order]      = order              unless order.nil?
@@ -196,7 +200,7 @@ module ScopedSearch
     def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
       return field.to_ext_method_sql(lhs, sql_operator(operator, field), value, &block) if field.ext_method
 
-      yield(:parameter, lhs.sub(/^.*\./,'')) if field.key_field
+      yield(:keyparameter, lhs.sub(/^.*\./,'')) if field.key_field
 
       if [:like, :unlike].include?(operator)
         yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
@@ -227,14 +231,14 @@ module ScopedSearch
         connection = klass.connection
         if key_relation
           yield(:joins, construct_join_sql(key_relation, num) )
+          yield(:keycondition, "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ?")
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
-          return "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ? AND " +
-                 "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
+          return "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
         elsif key_field
           yield(:joins, construct_simple_join_sql(num))
+          yield(:keycondition, "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ?")
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
-          return "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ? AND " +
-                 "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
+          return "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
         elsif relation
           yield(:include, relation)
         end
