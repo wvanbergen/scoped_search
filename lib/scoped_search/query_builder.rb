@@ -77,7 +77,7 @@ module ScopedSearch
       sql = (keyconditions + (sql.nil? ? [] : [sql]) ).map {|c| "(#{c})"}.join(" AND ")
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
-      find_attributes[:conditions] = [sql] + keyparameters + parameters unless sql.nil?
+      find_attributes[:conditions] = [sql] + keyparameters + parameters unless sql.blank?
       find_attributes[:include]    = includes.uniq      unless includes.empty?
       find_attributes[:joins]      = joins.uniq         unless joins.empty?
       find_attributes[:order]      = order              unless order.nil?
