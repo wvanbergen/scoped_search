@@ -56,12 +56,20 @@ require "#{File.dirname(__FILE__)}/../spec_helper"
           Bar.search_for('facts.color = green').should have(1).items
         end
 
+         it "should find all bars with a fact name color and fact value gold" do
+          Bar.search_for('facts.color = gold').first.name.should eql('barbary')
+        end
+
         it "should find all bars with a fact name size and fact value 5" do
             Bar.search_for('facts.size = 5').should have(1).items
         end
 
         it "should find all bars with a fact color green and fact size 5" do
           Bar.search_for('facts.color = green and facts.size = 5').should have(1).items
+        end
+
+        it "should find all bars with a fact color gold or green" do
+                  Bar.search_for('facts.color = gold or facts.color = green').should have(2).items
         end
 
         it "should find all bars that has size value" do
