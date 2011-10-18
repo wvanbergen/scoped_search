@@ -89,7 +89,7 @@ module ScopedSearch
     end
 
     def is_left_hand(node)
-      field = definition.field_by_name(node.value)
+      field = definition.field_by_name(node.value) if node.respond_to?(:value)
       lh = field.nil? || field.key_field && !(query.end_with?(' '))
       lh = lh || last_token_is(NULL_PREFIX_OPERATORS, 2)
       lh = lh && !is_right_hand
