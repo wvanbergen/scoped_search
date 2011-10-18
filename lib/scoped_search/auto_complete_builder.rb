@@ -167,10 +167,11 @@ module ScopedSearch
       return ["#{name}."] if !val || !val.is_a?(String) || !(val.include?('.'))
       val = val.sub(/.*\./,'')
 
-      field_name = field.key_field
-      opts =  value_conditions(field.key_field, val).merge(:limit => 20, :select => field_name, :group => field_name )
+      table = field.key_klass.connection.quote_table_name(field.key_klass.table_name)
+      field_name = "#{table}.#{field.key_field}"
+      opts =  value_conditions(field_name, val).merge(:limit => 20, :select => field_name, :group => field_name )
 
-      field.key_klass.all(opts).map(&field_name).compact.map{ |f| "#{name}.#{f} "}
+      field.key_klass.all(opts).map(&field.key_field).compact.map{ |f| "#{name}.#{f} "}
     end
 
     # this method auto-completes values of fields that have a :complete_value marker 
@@ -190,8 +191,8 @@ module ScopedSearch
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field
 
-      opts = value_conditions(field.field, val)
       table = field.klass.connection.quote_table_name(field.klass.table_name)
+      opts = value_conditions("#{table}.#{field.field}", val)
       opts.merge!(:limit => 20, :select => "DISTINCT #{table}.#{field.field}")
 
       return completer_scope(field.klass).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
