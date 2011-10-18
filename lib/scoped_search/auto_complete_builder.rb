@@ -132,8 +132,8 @@ module ScopedSearch
       q=query
       unless q =~ /(\s|\)|,)$/
         val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
-        suggestions = suggestions.map {|s| s if s.to_s =~ /^#{val}/i}.compact
-        q.chomp!(tokens.last.to_s)
+        suggestions = suggestions.map {|s| s if s.to_s =~ /^"?#{val}"?/i}.compact
+        q.chomp!(/("?#{Regexp.escape(tokens.last.to_s)}"?)$/.match(q)[1])
       end
 
       # for doted field names compact the suggestions list to be one suggestion
