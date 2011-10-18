@@ -135,5 +135,24 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         Foo.complete_for('has string ').should_not contain('has string = ')
       end
     end
+
+     context 'exceptional search strings' do
+
+      it "query that starts with 'or'" do
+        Foo.complete_for('or ').should have(9).items
+      end
+
+      it "value completion with quotes" do
+        Foo.complete_for('string = "').should eql([])
+      end
+
+      it "value completion with single quote" do
+        Foo.complete_for("string = this is a 'valid' query").should eql([])
+      end
+
+      it "value auto completer for related tables" do
+        Foo.complete_for('bars.related = ').should eql([])
+      end
+    end
   end
 end
