@@ -243,7 +243,7 @@ module ScopedSearch
 
     #this method returns conditions for selecting completion from partial value
     def value_conditions(field_name, val)
-      return val.blank? ? {} : {:conditions => "#{field_name} LIKE '#{val}%'".tr_s('%*', '%')}
+      return val.blank? ? {} : {:conditions => "#{field_name} LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')}
     end
 
     # This method complete infix operators by field type
