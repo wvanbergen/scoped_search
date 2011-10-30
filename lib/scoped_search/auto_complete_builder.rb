@@ -130,7 +130,7 @@ module ScopedSearch
       return [] if (suggestions.blank?)
 
       q=query
-      unless q =~ /(\s|\)|,)$/
+      unless q =~ /(\s|\)|,)$/ || last_token_is(COMPARISON_OPERATORS)
         val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
         suggestions = suggestions.map {|s| s if s.to_s =~ /^"?#{val}"?/i}.compact
         quoted = /("?#{Regexp.escape(tokens.last.to_s)}"?)$/.match(q)
