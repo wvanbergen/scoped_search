@@ -74,7 +74,7 @@ module ScopedSearch
           else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
-      sql = (keyconditions + (sql.nil? ? [] : [sql]) ).map {|c| "(#{c})"}.join(" AND ")
+      sql = (keyconditions + (sql.blank? ? [] : [sql]) ).map {|c| "(#{c})"}.join(" AND ")
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + keyparameters + parameters unless sql.blank?
