@@ -149,9 +149,9 @@ module ScopedSearch
       register_complete_for! unless klass.respond_to?(:complete_for)
 
     end
-   
+
     attr_accessor :profile, :default_order
-    
+
     def fields
       @profile ||= :default
       @profile_fields[@profile] ||= {}
@@ -176,11 +176,11 @@ module ScopedSearch
     def operator_by_field_name(name)
       field = field_by_name(name)
       return [] if field.nil?
-      return field.operators                        if field.operators
-      return ['= ', '!= ']                          if field.set?
-      return ['= ', '> ', '< ', '<= ', '>= ','!= '] if field.numerical?
-      return ['= ', '!= ', '~ ', '!~ ']             if field.textual?
-      return ['= ', '> ', '< ']                     if field.temporal?
+      return field.operators                                   if field.operators
+      return ['= ', '!= ']                                     if field.set?
+      return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ '] if field.numerical?
+      return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']             if field.textual?
+      return ['= ', '> ', '< ']                                if field.temporal?
       raise ScopedSearch::QueryNotSupported, "could not verify '#{name}' type, this can be a result of a definition error"
     end
 
@@ -230,8 +230,8 @@ module ScopedSearch
         when 2
           @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(self, args[0], args[1]) })
         when 3
-          @klass.scope(:search_for, lambda { |*args| 
-            find_options = ScopedSearch::QueryBuilder.build_query(self, args[0], args[1]) 
+          @klass.scope(:search_for, lambda { |*args|
+            find_options = ScopedSearch::QueryBuilder.build_query(self, args[0], args[1])
             search_scope = @klass.scoped
             search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
