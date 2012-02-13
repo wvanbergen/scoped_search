@@ -99,16 +99,22 @@ module ScopedSearch::QueryLanguage::Parser
     end
   end
 
-  # Parses a single value.
+  # Parse values in the format (val, val, val)
+  def parse_multiple_values
+    next_token if  peek_token == :lparen #skip :lparen
+    value = []
+    value << current_token if String === next_token until peek_token.nil? || peek_token == :rparen
+    next_token if peek_token == :rparen  # consume the :rparen
+    value.join(',')
+  end
+
   # This can either be a constant value or a field name.
   def parse_value
     if String === peek_token
       ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
-    elsif (:lparen == peek_token) && ([:in, :notin].include? current_token)
-      next_token #skip :lparen
-      in_value = []
-      in_value << next_token until peek_token.nil? || peek_token == :rparen
-      ScopedSearch::QueryLanguage::AST::LeafNode.new(in_value.join.gsub('comma',','))
+    elsif ([:in, :notin].include? current_token)
+      value = parse_multiple_values()
+      ScopedSearch::QueryLanguage::AST::LeafNode.new(value)
     else
       raise ScopedSearch::QueryNotSupported, "Value expected but found #{peek_token.inspect}"
     end
