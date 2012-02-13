@@ -11,7 +11,7 @@ module ScopedSearch::QueryLanguage::Parser
   LOGICAL_INFIX_OPERATORS  = [:and, :or]
   LOGICAL_PREFIX_OPERATORS = [:not]
   NULL_PREFIX_OPERATORS    = [:null, :notnull]
-  COMPARISON_OPERATORS = [:eq, :ne, :gt, :gte, :lt, :lte, :like, :unlike]
+  COMPARISON_OPERATORS = [:eq, :ne, :gt, :gte, :lt, :lte, :like, :unlike, :in, :notin]
   ALL_INFIX_OPERATORS = LOGICAL_INFIX_OPERATORS + COMPARISON_OPERATORS
   ALL_PREFIX_OPERATORS = LOGICAL_PREFIX_OPERATORS + COMPARISON_OPERATORS + NULL_PREFIX_OPERATORS
 
@@ -99,11 +99,25 @@ module ScopedSearch::QueryLanguage::Parser
     end
   end
 
-  # Parses a single value.
+  # Parse values in the format (val, val, val)
+  def parse_multiple_values
+    next_token if  peek_token == :lparen #skip :lparen
+    value = []
+    value << current_token if String === next_token until peek_token.nil? || peek_token == :rparen
+    next_token if peek_token == :rparen  # consume the :rparen
+    value.join(',')
+  end
+
   # This can either be a constant value or a field name.
   def parse_value
-    raise ScopedSearch::QueryNotSupported, "Value expected but found #{peek_token.inspect}" unless String === peek_token
-    ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
+    if String === peek_token
+      ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
+    elsif ([:in, :notin].include? current_token)
+      value = parse_multiple_values()
+      ScopedSearch::QueryLanguage::AST::LeafNode.new(value)
+    else
+      raise ScopedSearch::QueryNotSupported, "Value expected but found #{peek_token.inspect}"
+    end
   end
 
   protected

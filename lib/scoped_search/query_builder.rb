@@ -101,7 +101,8 @@ module ScopedSearch
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
     SQL_OPERATORS = { :eq =>'=',  :ne => '<>', :like => 'LIKE', :unlike => 'NOT LIKE',
-                      :gt => '>', :lt =>'<',   :lte => '<=',    :gte => '>=' }
+                      :gt => '>', :lt =>'<',   :lte => '<=',    :gte => '>=',
+                      :in => 'IN',:notin => 'NOT IN' }
 
     # Return the SQL operator to use given an operator symbol and field definition.
     #
@@ -170,9 +171,16 @@ module ScopedSearch
     end
 
     # Validate the key name is in the set and translate the value to the set value.
+    def translate_value(field, value)
+      translated_value = field.complete_value[value.to_sym]
+      raise ScopedSearch::QueryNotSupported, "'#{field.field}' should be one of '#{field.complete_value.keys.join(', ')}', but the query was '#{value}'" if translated_value.nil?
+      translated_value
+    end
+
+    # A 'set' is group of possible values, for example a status might be "on", "off" or "unknown" and the database representation
+    # could be for example a numeric value. This method will validate the input and translate it into the database representation.
     def set_test(field, operator,value, &block)
-      set_value = field.complete_value[value.to_sym]
-      raise ScopedSearch::QueryNotSupported, "'#{field.field}' should be one of '#{field.complete_value.keys.join(', ')}', but the query was '#{value}'" if set_value.nil?
+      set_value = translate_value(field, value)
       raise ScopedSearch::QueryNotSupported, "Operator '#{operator}' not supported for '#{field.field}'" unless [:eq,:ne].include?(operator)
       negate = ''
       if [true,false].include?(set_value)
@@ -205,6 +213,10 @@ module ScopedSearch
       if [:like, :unlike].include?(operator)
         yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
+      elsif [:in, :notin].include?(operator)
+        value.split(',').collect { |v| yield(:parameter, field.set? ? translate_value(field, v) : v.strip) }
+        value = value.split(',').collect { "?" }.join(",")
+        return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} (#{value})"
       elsif field.temporal?
         return datetime_test(field, operator, value, &block)
       elsif field.set?

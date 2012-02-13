@@ -7,7 +7,7 @@ module ScopedSearch::QueryLanguage::Tokenizer
 
   # Every operator the language supports.
   OPERATORS = { '&' => :and, '|' => :or, '&&' => :and, '||' => :or, '-'=> :not, '!' => :not, '~' => :like, '!~' => :unlike,
-      '=' => :eq, '==' => :eq, '!=' => :ne, '<>' => :ne, '>' => :gt, '<' => :lt, '>=' => :gte, '<=' => :lte }
+      '=' => :eq, '==' => :eq, '!=' => :ne, '<>' => :ne, '>' => :gt, '<' => :lt, '>=' => :gte, '<=' => :lte, '^' => :in, '!^' => :notin }
 
   # Tokenizes the string and returns the result as an array of tokens.
   def tokenize
@@ -41,7 +41,7 @@ module ScopedSearch::QueryLanguage::Tokenizer
       when '(';  yield(:lparen)
       when ')';  yield(:rparen)
       when ',';  yield(:comma)
-      when /\&|\||=|<|>|!|~|-/;  tokenize_operator(&block)
+      when /\&|\||=|<|>|\^|!|~|-/;  tokenize_operator(&block)
       when '"';                  tokenize_quoted_keyword(&block)
       else;                      tokenize_keyword(&block)
       end
