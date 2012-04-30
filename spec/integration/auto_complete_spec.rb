@@ -47,11 +47,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should complete the string comparators" do
-        Foo.complete_for('string ').should =~ (["string  != ", "string  !~ ", "string  = ", "string  ~ "])
+        Foo.complete_for('string ').should =~ (["string  != ", "string  !^ ", "string  !~ ", "string  = ", "string  ^ ", "string  ~ "])
       end
 
       it "should complete the numerical comparators" do
-        Foo.complete_for('int ').should =~ (["int  != ", "int  < ", "int  <= ", "int  = ", "int  > ", "int  >= "])
+        Foo.complete_for('int ').should =~ (["int  != ", "int  !^ ", "int  < ", "int  <= ", "int  = ", "int  > ", "int  >= ", "int  ^ "])
       end
 
       it "should complete the temporal (date) comparators" do
