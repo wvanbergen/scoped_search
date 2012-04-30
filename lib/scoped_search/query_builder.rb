@@ -420,7 +420,7 @@ module ScopedSearch
       # Defines the to_sql method for AST AND/OR operators
       module LogicalOperatorNode
         def to_sql(builder, definition, &block)
-          fragments = children.map { |c| c.to_sql(builder, definition, &block) }.compact.map { |sql| "(#{sql})" }
+          fragments = children.map { |c| c.to_sql(builder, definition, &block) }.map { |sql| "(#{sql})" unless sql.blank? }.compact
           fragments.empty? ? nil : "#{fragments.join(" #{operator.to_s.upcase} ")}"
         end
       end
