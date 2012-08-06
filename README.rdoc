@@ -124,6 +124,8 @@ For more info, see the the project wiki: http://github.com/wvanbergen/scoped_sea
 
 == License
 
-This plugin is released under the MIT license. Please contact weshays
-(http://github.com/weshays) or wvanbergen (http://github.com/wvanbergen) for any
-questions.
+This plugin is released under the MIT license (see LICENSE).
+
+This plugin was originally developed for Floorplanner.com by Willem van Bergen 
+(https://github.com/wvanbergen) with help from Wes Hays (https://github.com/weshays). 
+The current maintainer is Amos Benari (https://github.com/abenari).

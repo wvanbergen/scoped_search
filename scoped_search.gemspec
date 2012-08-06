@@ -20,8 +20,8 @@ Gem::Specification.new do |s|
     it may not be the best choice if it is going to be used on very large datasets or by a large user base.
   EOS
 
-  s.authors  = ['Willem van Bergen', 'Wes Hays']
-  s.email    = ['willem@railsdoctors.com', 'weshays@gbdev.com']
+  s.authors  = ['Amos Benari', 'Willem van Bergen', 'Wes Hays']
+  s.email    = ['abenari@redhat.com', 'willem@railsdoctors.com', 'weshays@gbdev.com']
   s.homepage = 'http://github.com/wvanbergen/scoped_search/wiki'
 
   s.add_runtime_dependency('activerecord', '>= 2.1.0')
