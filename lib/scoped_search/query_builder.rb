@@ -468,7 +468,8 @@ module ScopedSearch
         if [:like, :unlike].include?(operator) and field.full_text_search
           yield(:parameter, value)
           negation = (operator == :unlike) ? "NOT " : ""
-          return "#{negation}to_tsvector('english', #{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} to_tsquery('english', ?)"
+          locale = (field.full_text_search == true) ? 'english' : field.full_text_search
+          return "#{negation}to_tsvector('#{locale}', #{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} to_tsquery('#{locale}', ?)"
         else
           super
         end

@@ -118,7 +118,7 @@ module ScopedSearch
           @ext_method       = options[:ext_method]
           @operators        = options[:operators]
           @only_explicit    = !!options[:only_explicit]
-          @full_text_search    = !!options[:full_text_search]
+          @full_text_search  = options[:full_text_search]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
         end
 
