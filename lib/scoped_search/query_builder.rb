@@ -461,10 +461,25 @@ module ScopedSearch
     # <tt>ILIKE operator</tt> instead of <tt>LIKE</tt>.
     class PostgreSQLAdapter < ScopedSearch::QueryBuilder
 
-      # Switches out the default LIKE operator for ILIKE in the default
-      # <tt>sql_operator</tt> method.
+      # Switches out the default query generation of the <tt>sql_test</tt>
+      # method if full text searching is enabled and a text search is being
+      # performed.
+      def sql_test(field, operator, value, lhs, &block)
+        if [:like, :unlike].include?(operator) and field.full_text_search
+          yield(:parameter, value)
+          negation = (operator == :unlike) ? "NOT " : ""
+          locale = (field.full_text_search == true) ? 'english' : field.full_text_search
+          return "#{negation}to_tsvector('#{locale}', #{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} to_tsquery('#{locale}', ?)"
+        else
+          super
+        end
+      end
+
+      # Switches out the default LIKE operator in the default <tt>sql_operator</tt> 
+      # method for ILIKE or @@ if full text searching is enabled.
       def sql_operator(operator, field)
         raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if [:like, :unlike].include?(operator) and !field.textual?
+        return '@@' if [:like, :unlike].include?(operator) and field.full_text_search
         case operator
           when :like   then 'ILIKE'
           when :unlike then 'NOT ILIKE'
