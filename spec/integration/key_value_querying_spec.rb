@@ -24,15 +24,16 @@ require "spec_helper"
           class ::Fact < ActiveRecord::Base; belongs_to :key; belongs_to :key_value; end
 
           # The class that will run the queries
-          ::KeyValue = ScopedSearch::RSpec::Database.create_model(:name => :string) do |klass|
-            klass.has_many :facts
-            klass.has_many :keys, :through => :facts
-            klass.scoped_search :in => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
+          ActiveRecord::Migration.create_table(:key_values) { |t| t.string :name }
+          class ::KeyValue < ActiveRecord::Base
+            has_many :facts
+            has_many :keys, :through => :facts
+            
+            scoped_search :in => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
           end
 
           @key1 = Key.create!(:name => 'color')
           @key2 = Key.create!(:name => 'size')
-
 
           @kv1 = KeyValue.create!(:name => 'bar')
           @kv2 = KeyValue.create!(:name => 'barbary')
