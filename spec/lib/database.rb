@@ -12,8 +12,13 @@ module ScopedSearch::RSpec::Database
   end
 
   def self.test_databases_configuration
-    file = File.expand_path("../database.yml", File.dirname(__FILE__))
-    @database_connections ||= YAML.load(ERB.new(File.read(file)).result)
+    file = if RUBY_PLATFORM == 'java'
+      File.expand_path("../database.jruby.yml", File.dirname(__FILE__))
+    else
+      File.expand_path("../database.ruby.yml", File.dirname(__FILE__))
+    end
+
+    @database_connections ||= YAML.load(File.read(file))
   end
   
   def self.test_databases

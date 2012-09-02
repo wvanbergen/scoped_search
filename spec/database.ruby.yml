@@ -1,0 +1,15 @@
+sqlite:
+  adapter: "sqlite3"
+  database: ":memory:"
+
+mysql:
+  adapter: "mysql2"
+  host: "localhost"
+  username: "root"
+  database: "scoped_search_test"
+
+postgresql:
+  adapter: "postgresql"
+  host: "localhost"
+  username: "postgres"
+  database: "scoped_search_test"
