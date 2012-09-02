@@ -41,6 +41,7 @@ module ScopedSearch
 
       # Returns the ActiveRecord column definition that corresponds to this field.
       def column
+        p klass.columns_hash
         klass.columns_hash[field.to_s]
       end
 
