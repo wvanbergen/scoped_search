@@ -39,6 +39,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       ScopedSearch::RSpec::Database.close_connection
     end
 
+    before do 
+      Foo.reset_column_information
+      Bar.reset_column_information
+    end
+
     context 'basic auto completer' do
       it "should complete the field name" do
         Foo.complete_for('str').should =~ ([' string '])
