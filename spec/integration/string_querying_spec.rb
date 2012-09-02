@@ -206,7 +206,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
        it "group by explicit" do
-        @class.search_for('',:group => 'explicit').should have(2).items
+        @class.search_for('',:group => 'explicit').all.should have(2).items
       end
     end
   end
