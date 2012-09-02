@@ -43,7 +43,7 @@ module ScopedSearch::RSpec::Database
     end
 
     klass = Class.new(ActiveRecord::Base)
-    klass.set_table_name(table_name)
+    klass.table_name = table_name
     yield(klass) if block_given?
     return klass
   end
