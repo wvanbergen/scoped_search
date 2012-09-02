@@ -46,6 +46,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'basic auto completer' do
       it "should complete the field name" do
+        p Foo.column_names, Bar.column_names
         Foo.complete_for('str').should =~ ([' string '])
       end
 
