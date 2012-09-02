@@ -1,4 +1,4 @@
-require "#{File.dirname(__FILE__)}/../spec_helper"
+require "spec_helper"
 
 # These specs will run on all databases that are defined in the spec/database.yml file.
 # Comment out any databases that you do not have available for testing purposes if needed.
@@ -192,6 +192,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('null? explicit').should have(1).items
       end
     end
+
     context 'using order' do
       it "sort by string ASC" do
         @class.search_for('',:order => 'string ASC').first.string.should eql('bar')
