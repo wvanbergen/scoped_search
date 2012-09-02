@@ -19,3 +19,6 @@ matrix:
 gemfile:
  - Gemfile.activerecord2
  - Gemfile.activerecord3
+before_script:
+  - psql -c 'create database scoped_search_test;' -U postgres
+  - mysql -e 'create database scoped_search_test;'

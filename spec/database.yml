@@ -25,7 +25,6 @@ mysql:
   adapter: "mysql"
   host: "localhost"
   username: "root"
-  password:
   database: "scoped_search_test"
 <% end %>
 
@@ -33,8 +32,7 @@ mysql:
 postgresql:
   adapter: "postgresql"
   host: "localhost"
-  username: "scoped_search"
-  password: "scoped_search"
+  username: "postgres"
   database: "scoped_search_test"
 <% end %>
 
@@ -49,7 +47,6 @@ jdbcmysql:
   adapter: "jdbcmysql"
   host: "localhost"
   username: "root"
-  password:
   database: "scoped_search_test"
 <% end %>
 
@@ -57,7 +54,6 @@ jdbcmysql:
 jdbcpostgresql:
   adapter: "jdbcpostgresql"
   host: "localhost"
-  username: "scoped_search"
-  password: "scoped_search"
+  username: "postgres"
   database: "scoped_search_test"
 <% end %>
