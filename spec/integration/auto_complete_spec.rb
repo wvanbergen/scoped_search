@@ -9,19 +9,17 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     before(:all) do
       ScopedSearch::RSpec::Database.establish_named_connection(db)
 
-      ## The related class
-      ActiveRecord::Migration.drop_table(:bars) rescue nil
-      ActiveRecord::Migration.create_table(:bars) { |t| t.string :related; t.integer :foo_id }
-      class ::Bar < ActiveRecord::Base; belongs_to :foo; end
+      Bar = ScopedSearch::RSpec::Database.create_model(:related => :string, :foo_id => :integer) do |klass|
+        klass.belongs_to :foo
+      end
 
-      ::Foo = ScopedSearch::RSpec::Database.create_model(:string => :string, :another => :string, :explicit => :string, :int => :integer, :date => :date, :unindexed => :integer) do |klass|
+      Foo = ScopedSearch::RSpec::Database.create_model(:string => :string, :another => :string, :explicit => :string, :int => :integer, :date => :date, :unindexed => :integer) do |klass|
         klass.has_many :bars
         
         klass.scoped_search :on => [:string, :int, :date]
         klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
         klass.scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
         klass.scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
-        
       end
 
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 20011' , :unindexed => 10)
@@ -29,11 +27,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
 
       Bar.create!(:related => 'lala',         :foo => @foo_1)
-      Bar.create!(:related => 'another lala', :foo => @foo_1)
+      Bar.create!(:related => 'another lala', :foo => @foo_1)      
     end
 
     after(:all) do
       ScopedSearch::RSpec::Database.drop_model(Foo)
+      ScopedSearch::RSpec::Database.drop_model(Bar)
+      Object.send :remove_const, :Foo
+      Object.send :remove_const, :Bar
+
       ScopedSearch::RSpec::Database.close_connection
     end
 
@@ -136,7 +138,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
     end
 
-     context 'exceptional search strings' do
+    context 'exceptional search strings' do
 
       it "query that starts with 'or'" do
         Foo.complete_for('or ').should have(9).items
