@@ -22,7 +22,12 @@ module ScopedSearch::RSpec::Database
   end
   
   def self.test_databases
-    test_databases_configuration.keys.sort
+    database_names = test_databases_configuration.keys.sort
+    if ENV['EXCLUDE_DATABASE'].present?
+      exclude_databases = ENV['EXCLUDE_DATABASE'].split(',')
+      database_names -= exclude_databases
+    end
+    return database_names
   end
 
   def self.establish_named_connection(name)
