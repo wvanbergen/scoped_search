@@ -1,0 +1,13 @@
+source :rubygems
+gemspec
+
+gem 'active_record', '~> 2'
+
+gem 'mysql2'
+gem 'postgresql'
+
+if RUBY_PLATFORM == 'java'
+  gem 'activerecord-jdbcsqlite3-adapter'
+  gem 'activerecord-jdbcmysql-adapter'
+  gem 'activerecord-jdbcpostgresql-adapter'
+end
