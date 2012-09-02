@@ -9,17 +9,31 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     before(:all) do
       ScopedSearch::RSpec::Database.establish_named_connection(db)
 
-      Bar = ScopedSearch::RSpec::Database.create_model(:related => :string, :foo_id => :integer) do |klass|
-        klass.belongs_to :foo
+      ActiveRecord::Migration.create_table(:bars, :force => true) do |t| 
+        t.integer :foo_id
+        t.string :related
       end
 
-      Foo = ScopedSearch::RSpec::Database.create_model(:string => :string, :another => :string, :explicit => :string, :int => :integer, :date => :date, :unindexed => :integer) do |klass|
-        klass.has_many :bars
+      ActiveRecord::Migration.create_table(:foos, :force => true) do |t| 
+        t.string  :string
+        t.string  :another
+        t.string  :explicit
+        t.integer :int
+        t.date    :date 
+        t.integer :unindexed
+      end
+
+      class ::Bar < ActiveRecord::Base
+        belongs_to :foo
+      end
+      
+      class ::Foo < ActiveRecord::Base
+        has_many :bars
         
-        klass.scoped_search :on => [:string, :int, :date]
-        klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
-        klass.scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
-        klass.scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
+        scoped_search :on => [:string, :int, :date]
+        scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
+        scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
+        scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
       end
 
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 20011' , :unindexed => 10)
@@ -31,8 +45,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     end
 
     after(:all) do
-      ScopedSearch::RSpec::Database.drop_model(Foo)
-      ScopedSearch::RSpec::Database.drop_model(Bar)
+      ActiveRecord::Migration.drop_table(:foos)
+      ActiveRecord::Migration.drop_table(:bars)
+      
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
 
