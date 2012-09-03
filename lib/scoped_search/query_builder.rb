@@ -491,6 +491,12 @@ module ScopedSearch
       def to_not_sql(rhs, definition, &block)
         "NOT COALESCE(#{rhs.to_sql(self, definition, &block)}, false)"
       end
+
+      def order_by(order, &block)
+        sql = super(order, &block)
+        sql += sql.include?('DESC') ? ' NULLS LAST ' : ' NULLS FIRST ' if sql
+        sql
+      end
     end
 
     # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
