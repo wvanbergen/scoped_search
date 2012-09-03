@@ -36,8 +36,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
       end
 
-      @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 20011' , :unindexed => 10)
-      Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 9  , :date => 'February 10, 20011', :unindexed => 10)
+      @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10)
+      Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 9  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
 
       Bar.create!(:related => 'lala',         :foo => @foo_1)
