@@ -210,7 +210,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         distinct_search = if ActiveRecord::VERSION::MAJOR == 2
           @class.search_for('', :order => '').all(:select => 'DISTINCT(explicit)')
         else
-          @class.search_for('', :order => '').select('DISTINCT(explicit)')
+          @class.search_for('', :order => '').select(:explicit).uniq
         end
 
         Set.new(distinct_search.map(&:explicit)).should == Set['baz', nil]
