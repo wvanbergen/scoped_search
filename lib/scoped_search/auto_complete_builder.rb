@@ -168,9 +168,12 @@ module ScopedSearch
       return ["#{name}."] if !val || !val.is_a?(String) || !(val.include?('.'))
       val = val.sub(/.*\./,'')
 
-      table = field.key_klass.connection.quote_table_name(field.key_klass.table_name)
-      field_name = "#{table}.#{field.key_field}"
-      opts =  value_conditions(field_name, val).merge(:limit => 20, :select => field_name, :group => field_name )
+      connection    = definition.klass.connection
+      quoted_table  = field.key_klass.connection.quote_table_name(field.key_klass.table_name)
+      quoted_field  = field.key_klass.connection.quote_column_name(field.key_field)
+      field_name    = "#{quoted_table}.#{quoted_field}"
+      select_clause = "DISTINCT #{field_name}"
+      opts =  value_conditions(field_name, val).merge(:select => select_clause, :limit => 20)
 
       field.key_klass.all(opts).map(&field.key_field).compact.map{ |f| "#{name}.#{f} "}
     end

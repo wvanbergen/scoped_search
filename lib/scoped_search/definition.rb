@@ -240,7 +240,6 @@ module ScopedSearch
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
             search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
             search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
-            search_scope = search_scope.group(find_options[:group]) if find_options[:group]
             search_scope
           })
         else
