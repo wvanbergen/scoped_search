@@ -3,11 +3,13 @@ gemspec
 
 gem 'activerecord'
 
-if RUBY_PLATFORM == 'java'
+platforms :jruby do
   gem 'activerecord-jdbcsqlite3-adapter'
   gem 'activerecord-jdbcmysql-adapter'
   gem 'activerecord-jdbcpostgresql-adapter'
-else
+end
+
+platforms :ruby do
   gem 'sqlite3'
   gem 'mysql2'
   gem 'pg'
