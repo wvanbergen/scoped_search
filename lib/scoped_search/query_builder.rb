@@ -89,13 +89,13 @@ module ScopedSearch
 
     def order_by(order, &block)
       order ||= definition.default_order
-      if order
-        field = definition.field_by_name(order.to_s.split(' ')[0])
-        raise ScopedSearch::QueryNotSupported, "the field '#{order.to_s.split(' ')[0]}' in the order statement is not valid field for search" unless field
-        sql = field.to_sql(&block)
-        direction = (order.to_s.downcase.include?('desc')) ? " DESC" : " ASC"
-        order = sql + direction
-      end
+      return nil if order.blank?
+      field = definition.field_by_name(order.to_s.split(' ')[0])
+      raise ScopedSearch::QueryNotSupported, "the field '#{order.to_s.split(' ')[0]}' in the order statement is not valid field for search" unless field
+      sql = field.to_sql(&block)
+      direction = (order.to_s.downcase.include?('desc')) ? " DESC" : " ASC"
+      order = sql + direction
+
       return order
     end
 
