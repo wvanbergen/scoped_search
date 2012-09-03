@@ -186,13 +186,15 @@ module ScopedSearch
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
+    INTEGER_REGXP = /^\-?\d+$/
 
     # Returns a list of appropriate fields to search in given a search keyword and operator.
     def default_fields_for(value, operator = nil)
 
       column_types  = []
       column_types += [:string, :text]                      if [nil, :like, :unlike, :ne, :eq].include?(operator)
-      column_types += [:integer, :double, :float, :decimal] if value =~ NUMERICAL_REGXP
+      column_types += [:double, :float, :decimal] if value =~ NUMERICAL_REGXP
+      column_types += [:integer] if value =~ INTEGER_REGXP
       column_types += [:datetime, :date, :timestamp]        if (parse_temporal(value))
 
       default_fields.select { |field| column_types.include?(field.type) && !field.set? }
