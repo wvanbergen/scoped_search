@@ -206,7 +206,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('').first.string.should eql('bar')
       end
 
-       it "resetting order when selecting distinct values" do
+      it "resetting order when selecting distinct values" do
         distinct_search = if ActiveRecord::VERSION::MAJOR == 2
           @class.search_for('', :order => '').all(:select => 'DISTINCT(explicit)')
         else
