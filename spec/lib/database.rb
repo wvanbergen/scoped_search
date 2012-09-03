@@ -44,7 +44,7 @@ module ScopedSearch::RSpec::Database
   end
 
   def self.create_model(fields)
-    table_name = "model_#{rand}".gsub(/\./, '')
+    table_name = "model_#{rand}".gsub(/\W/, '')
     ActiveRecord::Migration.create_table(table_name) do |t|
       fields.each do |name, field_type|
         options = (field_type == :decimal) ? { :scale => 2, :precision => 10 } : {}
