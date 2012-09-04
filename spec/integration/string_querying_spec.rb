@@ -206,8 +206,14 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('').first.string.should eql('bar')
       end
 
-       it "group by explicit" do
-        @class.search_for('',:group => 'explicit', :order => '').all(:select => 'explicit').should have(2).items
+      it "resetting order when selecting distinct values" do
+        distinct_search = if ActiveRecord::VERSION::MAJOR == 2
+          @class.search_for('', :order => '').all(:select => 'DISTINCT(explicit)')
+        else
+          @class.search_for('', :order => '').select(:explicit).uniq
+        end
+
+        Set.new(distinct_search.map(&:explicit)).should == Set['baz', nil]
       end
     end
   end
