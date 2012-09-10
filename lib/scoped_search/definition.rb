@@ -18,9 +18,46 @@ module ScopedSearch
       attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :full_text_search,
                   :key_field, :complete_value, :offset, :word_size, :ext_method, :operators
 
+      # Initializes a Field instance given the definition passed to the
+      # scoped_search call on the ActiveRecord-based model class.
+      def initialize(definition, options = {})
+        @definition = definition
+        @definition.profile = options[:profile] if options[:profile]
+        @definition.default_order ||= default_order(options)
+
+        case options
+        when Symbol, String
+          @field = field.to_sym
+        when Hash
+          @field = options.delete(:on)
+
+          # Set attributes from options hash
+          @complete_value   = options[:complete_value]
+          @relation         = options[:in]
+          @key_relation     = options[:in_key]
+          @key_field        = options[:on_key]
+          @offset           = options[:offset]
+          @word_size        = options[:word_size] || 1
+          @ext_method       = options[:ext_method]
+          @operators        = options[:operators]
+          @only_explicit    = !!options[:only_explicit]
+          @full_text_search = options[:full_text_search]
+          @default_operator = options[:default_operator] if options.has_key?(:default_operator)
+        end
+
+        # Store this field is the field array
+        definition.fields[@field]                  ||= self unless options[:rename]
+        definition.fields[options[:rename].to_sym] ||= self if     options[:rename]
+        definition.unique_fields                   << self
+
+        # Store definition for alias / aliases as well
+        definition.fields[options[:alias].to_sym]                  ||= self   if options[:alias]
+        options[:aliases].each { |al| definition.fields[al.to_sym] ||= self } if options[:aliases]
+      end
+
       # The ActiveRecord-based class that belongs to this field.
       def klass
-        if relation
+        @klass ||= if relation
           related = definition.klass.reflections[relation]
           raise ScopedSearch::QueryNotSupported, "relation '#{relation}' not one of #{definition.klass.reflections.keys.join(', ')} " if related.nil?
           related.klass
@@ -28,9 +65,10 @@ module ScopedSearch
           definition.klass
         end
       end
+
       # The ActiveRecord-based class that belongs the key field in a key-value pair.
       def key_klass
-         if key_relation
+        @key_klass ||= if key_relation
           definition.klass.reflections[key_relation].klass
         elsif relation
           definition.klass.reflections[relation].klass
@@ -41,12 +79,18 @@ module ScopedSearch
 
       # Returns the ActiveRecord column definition that corresponds to this field.
       def column
-        klass.columns_hash[field.to_s]
+        @column ||= begin
+          if klass.columns_hash.has_key?(field.to_s)
+            klass.columns_hash[field.to_s]
+          else
+            raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
+          end
+        end
       end
 
       # Returns the column type of this field.
       def type
-        column.type
+        @type ||= column.type
       end
 
       # Returns true if this field is a datetime-like column
@@ -94,42 +138,6 @@ module ScopedSearch
         field_name = options[:rename] if options[:rename]
         order = (options[:default_order].to_s.downcase.include?('desc')) ? "DESC" : "ASC"
         return "#{field_name} #{order}"
-      end
-      # Initializes a Field instance given the definition passed to the
-      # scoped_search call on the ActiveRecord-based model class.
-      def initialize(definition, options = {})
-        @definition = definition
-        @definition.profile = options[:profile] if options[:profile]
-        @definition.default_order ||= default_order(options)
-
-        case options
-        when Symbol, String
-          @field = field.to_sym
-        when Hash
-          @field = options.delete(:on)
-
-          # Set attributes from options hash
-          @complete_value   = options[:complete_value]
-          @relation         = options[:in]
-          @key_relation     = options[:in_key]
-          @key_field        = options[:on_key]
-          @offset           = options[:offset]
-          @word_size        = options[:word_size] || 1
-          @ext_method       = options[:ext_method]
-          @operators        = options[:operators]
-          @only_explicit    = !!options[:only_explicit]
-          @full_text_search  = options[:full_text_search]
-          @default_operator = options[:default_operator] if options.has_key?(:default_operator)
-        end
-
-        # Store this field is the field array
-        definition.fields[@field]                  ||= self unless options[:rename]
-        definition.fields[options[:rename].to_sym] ||= self if     options[:rename]
-        definition.unique_fields                   << self
-
-        # Store definition for alias / aliases as well
-        definition.fields[options[:alias].to_sym]                  ||= self   if options[:alias]
-        options[:aliases].each { |al| definition.fields[al.to_sym] ||= self } if options[:aliases]
       end
     end
 
@@ -249,15 +257,14 @@ module ScopedSearch
         raise "Currently, only ActiveRecord 2.1 or higher is supported!"
       end
     end
-  end
-end
 
-# Registers the complete_for method within the class that is used for searching.
- def register_complete_for! # :nodoc
-@klass.class_eval do
-  def self.complete_for (query, options = {})
-    search_options = ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query, options)
-    search_options
+    # Registers the complete_for method within the class that is used for searching.
+    def register_complete_for! # :nodoc
+      @klass.class_eval do
+        def self.complete_for(query, options = {})
+          ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query, options)
+        end
+      end
     end
   end
- end
+end

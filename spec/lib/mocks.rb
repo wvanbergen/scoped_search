@@ -10,6 +10,7 @@ module ScopedSearch::RSpec::Mocks
     ar_mock.stub!(:scope).with(:search_for, anything)
     ar_mock.stub!(:connection).and_return(mock_database_connection)
     ar_mock.stub!(:ancestors).and_return([ActiveRecord::Base])
+    ar_mock.stub!(:columns_hash).and_return({'existing' => mock('column')})
     return ar_mock
   end
 
