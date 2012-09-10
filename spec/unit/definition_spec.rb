@@ -8,20 +8,23 @@ describe ScopedSearch::Definition do
     @definition.stub!(:setup_adapter)
   end
 
+  describe ScopedSearch::Definition::Field do
+    describe '#column' do
+      it "should raise an exception when using an unknown field" do
+        lambda {
+          @definition.define(:on => 'nonexisting').column
+        }.should raise_error(ActiveRecord::UnknownAttributeError)
+      end
+
+      it "should not raise an exception when using an unknown field" do
+        lambda {
+          @definition.define(:on => 'existing').column
+        }.should_not raise_error(ActiveRecord::UnknownAttributeError)
+      end
+    end
+  end
 
   describe '#initialize' do
-
-    it "should raise an exception when using an unknown field" do
-      lambda {
-        @definition.define(:on => 'nonexisting')
-      }.should raise_error(ActiveRecord::UnknownAttributeError)
-    end
-
-    it "should not raise an exception when using an ukniwn field" do
-      lambda {
-        @definition.define(:on => 'existing')
-      }.should_not raise_error(ActiveRecord::UnknownAttributeError)
-    end
 
     if ActiveRecord::VERSION::MAJOR == 2
       

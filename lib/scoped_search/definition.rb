@@ -53,10 +53,6 @@ module ScopedSearch
         # Store definition for alias / aliases as well
         definition.fields[options[:alias].to_sym]                  ||= self   if options[:alias]
         options[:aliases].each { |al| definition.fields[al.to_sym] ||= self } if options[:aliases]
-
-        if column.nil?
-          raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
-        end
       end
 
       # The ActiveRecord-based class that belongs to this field.
@@ -83,7 +79,13 @@ module ScopedSearch
 
       # Returns the ActiveRecord column definition that corresponds to this field.
       def column
-        @column ||= klass.columns_hash[field.to_s]
+        @column ||= begin
+          if klass.columns_hash.has_key?(field.to_s)
+            klass.columns_hash[field.to_s]
+          else
+            raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
+          end
+        end
       end
 
       # Returns the column type of this field.
