@@ -1,4 +1,4 @@
-= Scoped search
+= Scoped search {<img src="https://secure.travis-ci.org/wvanbergen/scoped_search.png" />}[http://travis-ci.org/wvanbergen/scoped_search]
 
 The <b>scoped_search</b> Rails plugin makes it easy to search your ActiveRecord
 models. Searching is performed using a query string, which should be passed to
