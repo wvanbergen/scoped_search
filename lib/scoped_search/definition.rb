@@ -176,7 +176,7 @@ module ScopedSearch
       field = fields[name.to_sym] unless name.blank?
       if field.nil?
         dotted = name.to_s.split('.')[0]
-        field = fields[dotted.to_sym] unless dotted.nil?
+        field = fields[dotted.to_sym] unless dotted.blank?
       end
       field
     end
