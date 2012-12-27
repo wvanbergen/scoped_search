@@ -19,6 +19,8 @@ matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
+    - rvm: jruby-18mode
+    - rvm: jruby-19mode
   exclude:
     - rvm: jruby-18mode
       gemfile: Gemfile.activerecord2
