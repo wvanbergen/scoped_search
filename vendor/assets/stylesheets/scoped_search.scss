@@ -1,0 +1,51 @@
+// Opacity
+@mixin opacity($opacity) {
+  opacity: $opacity / 100;
+  filter: alpha(opacity=$opacity);
+}
+
+.autocomplete-input {
+  width: 98%;
+  margin-right: -12px;
+}
+
+.autocomplete-clear {
+  font-size: 16px;
+  font-weight: bold;
+  color: black;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: -6px;
+  margin-bottom: -5px;
+  text-shadow: 0 1px 0 rgba(255,255,255,1);
+  @include opacity(20);
+  &:hover,
+  &:focus {
+    text-decoration: none;
+    cursor: pointer;
+    @include opacity(40);
+  }
+}
+.ui-autocomplete-loading {
+  background: white  url('/images/spinner.gif') 98% 50% no-repeat;
+}
+.ui-autocomplete-completed {
+  color: #aaa;
+  font-weight: lighter;
+  padding: .2em .4em;
+  margin: .3em 0 .2em;
+  line-height: 1.5;
+}
+.ui-autocomplete-category {
+  font-weight: bold;
+  padding: .2em .4em;
+  margin: .3em 0 .2em;
+  line-height: 1.5;
+}
+.ui-autocomplete-error {
+  color: red;
+  padding: .2em .4em;
+  margin: .3em 0 .2em;
+  line-height: 1.5;
+}
