@@ -3,8 +3,8 @@ Gem::Specification.new do |s|
   
   # Do not change the version and date fields by hand. This will be done
   # automatically by the gem release script.
-  s.version = "2.4.0"
-  s.date    = "2012-09-11"
+  s.version = "2.4.1"
+  s.date    = "2013-03-06"
 
   s.summary = "Easily search you ActiveRecord models with a simple query language using a named scope."
   s.description = <<-EOS
@@ -33,6 +33,6 @@ Gem::Specification.new do |s|
 
   # Do not change the files and test_files fields by hand. This will be done
   # automatically by the gem release script.
-  s.files      = %w(.gitignore .infinity_test .travis.yml Gemfile Gemfile.activerecord2 Gemfile.activerecord3 LICENSE README.rdoc Rakefile init.rb lib/scoped_search.rb lib/scoped_search/auto_complete_builder.rb lib/scoped_search/definition.rb lib/scoped_search/query_builder.rb lib/scoped_search/query_language.rb lib/scoped_search/query_language/ast.rb lib/scoped_search/query_language/parser.rb lib/scoped_search/query_language/tokenizer.rb lib/scoped_search/rails_helper.rb scoped_search.gemspec spec/database.jruby.yml spec/database.ruby.yml spec/integration/api_spec.rb spec/integration/auto_complete_spec.rb spec/integration/key_value_querying_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/profile_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/set_query_spec.rb spec/integration/string_querying_spec.rb spec/lib/database.rb spec/lib/matchers.rb spec/lib/mocks.rb spec/spec_helper.rb spec/unit/ast_spec.rb spec/unit/auto_complete_builder_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb tasks/github-gem.rake)
+  s.files      = %w(.gitignore .infinity_test .travis.yml Gemfile Gemfile.activerecord2 Gemfile.activerecord3 LICENSE README.rdoc Rakefile init.rb lib/scoped_search.rb lib/scoped_search/auto_complete_builder.rb lib/scoped_search/definition.rb lib/scoped_search/engine.rb lib/scoped_search/query_builder.rb lib/scoped_search/query_language.rb lib/scoped_search/query_language/ast.rb lib/scoped_search/query_language/parser.rb lib/scoped_search/query_language/tokenizer.rb lib/scoped_search/rails_helper.rb scoped_search.gemspec spec/database.jruby.yml spec/database.ruby.yml spec/integration/api_spec.rb spec/integration/auto_complete_spec.rb spec/integration/key_value_querying_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/profile_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/set_query_spec.rb spec/integration/string_querying_spec.rb spec/lib/database.rb spec/lib/matchers.rb spec/lib/mocks.rb spec/spec_helper.rb spec/unit/ast_spec.rb spec/unit/auto_complete_builder_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb tasks/github-gem.rake vendor/assets/images/spinner.gif vendor/assets/javascripts/scoped_search.js vendor/assets/stylesheets/scoped_search.scss)
   s.test_files = %w(spec/integration/api_spec.rb spec/integration/auto_complete_spec.rb spec/integration/key_value_querying_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/profile_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/set_query_spec.rb spec/integration/string_querying_spec.rb spec/unit/ast_spec.rb spec/unit/auto_complete_builder_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb)
 end
