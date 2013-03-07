@@ -13,6 +13,7 @@ to create a clean web UI with sorting and an ajax auto-completer.
 == Preview
 A demo application using the scoped search can be found here: http://github.com/abenari/scoped_search_demo_app
 A running version of the demo application can be found here: http://scope-search-demo.heroku.com
+A Rails 3.2 demo with assets pipeline and twitter bootstrap theame https://github.com/abenari/search-demo2
 
 == Installing
 For a Rails 3 application add the following line in your Gemfile, and run <tt>bundle install</tt>:
