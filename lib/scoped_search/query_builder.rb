@@ -313,7 +313,8 @@ module ScopedSearch
       def reflection_keys reflection
         pk = reflection.klass.primary_key
         fk = reflection.options[:foreign_key]
-        fk = fk || reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.association_foreign_key
+        # activerecord prior to 3.1 doesn't respond to foreign_key method and hold the key name in the reflection primary key
+        fk = fk || reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.primary_key_name
         [pk, fk]
       end
 
