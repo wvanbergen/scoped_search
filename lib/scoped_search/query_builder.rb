@@ -271,18 +271,16 @@ module ScopedSearch
         join_sql = ""
         connection = klass.connection
         key = key_relation.to_s.singularize.to_sym
-        main = definition.klass.to_s.gsub(/.*::/,'').underscore.to_sym
 
         key_table = klass.reflections[key].table_name
-        key_table_pk = klass.reflections[key].klass.primary_key
-
         value_table = klass.table_name.to_s
-        value_table_fk_key = klass.reflections[key].association_foreign_key
 
-        if klass.reflections[main]
+        key_table_pk, value_table_fk_key = reflection_keys(klass.reflections[key])
+
+        main_reflection = definition.klass.reflections[relation]
+        if main_reflection
           main_table = definition.klass.table_name
-          main_table_pk = klass.reflections[main].klass.primary_key
-          value_table_fk_main = klass.reflections[main].association_foreign_key
+          main_table_pk, value_table_fk_main = reflection_keys(definition.klass.reflections[relation])
 
           join_sql = "\n  INNER JOIN #{connection.quote_table_name(value_table)} #{value_table}_#{num} ON (#{main_table}.#{main_table_pk} = #{value_table}_#{num}.#{value_table_fk_main})"
           value_table = " #{value_table}_#{num}"
@@ -303,16 +301,20 @@ module ScopedSearch
       # on different keys in the same query.
       def construct_simple_join_sql( num )
         connection = klass.connection
-        main = definition.klass.to_s.gsub(/.*::/,'').underscore.to_sym
         key_value_table = klass.table_name
 
         main_table = definition.klass.table_name
-        main_table_pk = klass.reflections[main].klass.primary_key
-        value_table_fk_main = klass.reflections[main].options[:foreign_key]
-        value_table_fk_main ||= klass.reflections[main].association_foreign_key
+        main_table_pk, value_table_fk_main = reflection_keys(definition.klass.reflections[relation])
 
         join_sql = "\n  INNER JOIN #{connection.quote_table_name(key_value_table)} #{key_value_table}_#{num} ON (#{connection.quote_table_name(main_table)}.#{main_table_pk} = #{key_value_table}_#{num}.#{value_table_fk_main})"
         return join_sql
+      end
+
+      def reflection_keys reflection
+        pk = reflection.klass.primary_key
+        fk = reflection.options[:foreign_key]
+        fk = fk || reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.association_foreign_key
+        [pk, fk]
       end
 
       def to_ext_method_sql(key, operator, value, &block)
