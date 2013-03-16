@@ -81,6 +81,14 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         lambda { @class.search_for('unindexed = 10') }.should raise_error(ScopedSearch::Exception)
       end
 
+      # Before Ruby 2.0 if a string had forced encoding and a nil was extracted from it during 
+      # any implicit type conversions to a string (+ or << operators) a TypeError would be raised.
+      # https://github.com/wvanbergen/scoped_search/issues/33 for more details
+      it "encoded string should not raise TypeError when querying non-indexed column without a value" do
+        query = 'unindexed ='.force_encoding(Encoding::UTF_8).encode
+        lambda { @class.search_for(query) }.should_not raise_error(TypeError)
+      end
+
       it "should not return records for which the query matches unindex records" do
         @class.search_for('= 10').should have(0).item
       end
