@@ -49,9 +49,12 @@ module ScopedSearch::QueryLanguage::Tokenizer
   end
 
   # Tokenizes an operator that occurs in the OPERATORS hash
+  # The .to_s on [peek|next]_char is to prevent a ruby bug when nil 
+  # values are returned from strings which have forced encoding.
+  # https://github.com/wvanbergen/scoped_search/issues/33 for details
   def tokenize_operator(&block)
     operator = current_char
-    operator << next_char if OPERATORS.has_key?(operator + peek_char)
+    operator << next_char.to_s if OPERATORS.has_key?(operator + peek_char.to_s)
     yield(OPERATORS[operator])
   end
 
