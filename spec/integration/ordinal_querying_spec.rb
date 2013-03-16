@@ -161,7 +161,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
     end
-    context 'humenized date and time query' do
+
+    context 'humanized date and time query' do
 
       before(:all) do
         @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
@@ -213,7 +214,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     end
 
-       context 'querying bitwize fields' do
+    context 'querying bitwise fields' do
 
       before(:all) do
         @foo = ScopedSearch::RSpec::Database.create_model(:int => :integer) do |klass|
