@@ -250,6 +250,17 @@ module ScopedSearch
             search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
             search_scope
           })
+        when 4
+          @klass.scope(:search_for, lambda { |*args|
+            find_options = ScopedSearch::QueryBuilder.build_query(self, args[0], args[1])
+            search_scope = @klass.all
+            search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
+            search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
+            search_scope = search_scope.references(find_options[:include]) if find_options[:include]
+            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
+            search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
+            search_scope
+          })
         else
           raise "This ActiveRecord version is currently not supported!"
         end
