@@ -15,6 +15,7 @@ rvm:
 gemfile:
  - Gemfile.activerecord2
  - Gemfile.activerecord3
+ - Gemfile.activerecord4
 matrix:
   allow_failures:
     - rvm: ruby-head
