@@ -56,6 +56,12 @@ describe ScopedSearch, "API" do
         @class.search_for('query').class.should eql(ActiveRecord::Relation)
       end
       
+    elsif ActiveRecord::VERSION::MAJOR == 4
+      
+      it "should return a ActiveRecord::Relation instance" do
+        @class.search_for('query').class.superclass.should eql(ActiveRecord::Relation)
+      end
+      
     end
   end
 
@@ -83,7 +89,6 @@ describe ScopedSearch, "API" do
     it "should create a Field with a valid relation when using the underscore notation" do
       ScopedSearch::Definition::Field.should_receive(:new).with(
           instance_of(ScopedSearch::Definition), hash_including(:in => :bar, :on => :related_field))
-
       Foo.searchable_on(:bar_related_field)
     end
 

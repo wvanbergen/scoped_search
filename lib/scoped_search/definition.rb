@@ -153,10 +153,8 @@ module ScopedSearch
       @profile_fields        = {:default => {}}
       @profile_unique_fields = {:default => []}
 
-
       register_named_scope! unless klass.respond_to?(:search_for)
       register_complete_for! unless klass.respond_to?(:complete_for)
-
     end
 
     attr_accessor :profile, :default_order
@@ -185,11 +183,11 @@ module ScopedSearch
     def operator_by_field_name(name)
       field = field_by_name(name)
       return [] if field.nil?
-      return field.operators                                   if field.operators
-      return ['= ', '!= ']                                     if field.set?
-      return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ '] if field.numerical?
-      return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']             if field.textual?
-      return ['= ', '> ', '< ']                                if field.temporal?
+      return field.operators                                      if field.operators
+      return ['= ', '!= ']                                        if field.set?
+      return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ ']  if field.numerical?
+      return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']              if field.textual?
+      return ['= ', '> ', '< ']                                   if field.temporal?
       raise ScopedSearch::QueryNotSupported, "could not verify '#{name}' type, this can be a result of a definition error"
     end
 
@@ -200,10 +198,10 @@ module ScopedSearch
     def default_fields_for(value, operator = nil)
 
       column_types  = []
-      column_types += [:string, :text]                      if [nil, :like, :unlike, :ne, :eq].include?(operator)
-      column_types += [:double, :float, :decimal] if value =~ NUMERICAL_REGXP
-      column_types += [:integer] if value =~ INTEGER_REGXP
-      column_types += [:datetime, :date, :timestamp]        if (parse_temporal(value))
+      column_types += [:string, :text]                if [nil, :like, :unlike, :ne, :eq].include?(operator)
+      column_types += [:double, :float, :decimal]     if value =~ NUMERICAL_REGXP
+      column_types += [:integer]                      if value =~ INTEGER_REGXP
+      column_types += [:datetime, :date, :timestamp]  if (parse_temporal(value))
 
       default_fields.select { |field| column_types.include?(field.type) && !field.set? }
     end
