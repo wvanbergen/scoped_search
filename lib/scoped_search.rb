@@ -54,7 +54,7 @@ module ScopedSearch
 
       fields.each do |field|
         if relation = self.reflections.keys.detect { |relation| field.to_s =~ Regexp.new("^#{relation}_(\\w+)$") }
-          scoped_search(:in => relation, :on => $1.to_sym)
+          scoped_search(:in => relation.to_sym, :on => $1.to_sym)
         else
           scoped_search(:on => field)
         end
