@@ -122,8 +122,8 @@ module GithubGem
         task(:check_not_diverged => :fetch_origin) { check_not_diverged_task }
 
         checks = [:check_current_branch, :check_clean_status, :check_not_diverged, :check_version]
-        checks.unshift('spec:basic') if has_specs?
-        checks.unshift('test:basic') if has_tests?
+        checks.unshift('spec:basic') if has_specs? && !skip_tests?
+        checks.unshift('test:basic') if has_tests? && !skip_tests?
         # checks.push << [:check_rubyforge] if gemspec.rubyforge_project
 
         desc "Perform all checks that would occur before a release"
@@ -277,6 +277,10 @@ module GithubGem
     end
 
     private
+
+    def skip_tests?
+      !!ENV['SKIP_TESTS']
+    end
 
     # Checks whether this project has any RSpec files
     def has_specs?
