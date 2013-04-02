@@ -12,10 +12,6 @@ require 'active_record'
 # previous scoped_search versions (1.x).
 module ScopedSearch
 
-  # The current scoped_search version. Do not change thisvalue by hand,
-  # because it will be updated automatically by the gem release script.
-  VERSION = "2.5.0"
-
   # The ClassMethods module will be included into the ActiveRecord::Base class
   # to add the <tt>ActiveRecord::Base.scoped_search</tt> method and the
   # <tt>ActiveRecord::Base.search_for</tt> named scope.
@@ -84,6 +80,7 @@ module ScopedSearch
 end
 
 # Load all lib files
+require "scoped_search/version"
 require 'scoped_search/definition'
 require 'scoped_search/query_language'
 require 'scoped_search/query_builder'
