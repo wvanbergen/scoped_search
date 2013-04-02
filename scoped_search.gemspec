@@ -1,13 +1,16 @@
-Gem::Specification.new do |s|
-  s.name    = 'scoped_search'
-  
-  # Do not change the version and date fields by hand. This will be done
-  # automatically by the gem release script.
-  s.version = "2.5.0"
-  s.date    = "2013-03-29"
+# -*- encoding: utf-8 -*-
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'scoped_search/version'
 
-  s.summary = "Easily search you ActiveRecord models with a simple query language using a named scope."
-  s.description = <<-EOS
+Gem::Specification.new do |gem|
+  gem.name          = "scoped_search"
+  gem.version       = ScopedSearch::VERSION
+  gem.authors       = ['Amos Benari', 'Willem van Bergen', 'Wes Hays']
+  gem.email         = ['abenari@redhat.com', 'willem@railsdoctors.com', 'weshays@gbdev.com']
+  gem.homepage      = "https://github.com/wvanbergen/scoped_search/wiki"
+  gem.summary       = %q{Easily search you ActiveRecord models with a simple query language using a named scope}
+  gem.description   = <<-EOS
     Scoped search makes it easy to search your ActiveRecord-based models.
     
     It will create a named scope :search_for that can be called with a query string. It will build an SQL query using
@@ -19,20 +22,16 @@ Gem::Specification.new do |s|
     suitable to quickly add basic search functionality to your application with little hassle. On the other hand,
     it may not be the best choice if it is going to be used on very large datasets or by a large user base.
   EOS
+  
+  gem.files         = `git ls-files`.split($/)
+  gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+  gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
+  gem.require_paths = ["lib"]
 
-  s.authors  = ['Amos Benari', 'Willem van Bergen', 'Wes Hays']
-  s.email    = ['abenari@redhat.com', 'willem@railsdoctors.com', 'weshays@gbdev.com']
-  s.homepage = 'http://github.com/wvanbergen/scoped_search/wiki'
+  gem.add_runtime_dependency('activerecord', '>= 2.1.0')
+  gem.add_development_dependency('rspec', '~> 2.0')
+  gem.add_development_dependency('rake')  
 
-  s.add_runtime_dependency('activerecord', '>= 2.1.0')
-  s.add_development_dependency('rspec', '~> 2.0')
-  s.add_development_dependency('rake')
-
-  s.rdoc_options << '--title' << s.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
-  s.extra_rdoc_files = ['README.rdoc']
-
-  # Do not change the files and test_files fields by hand. This will be done
-  # automatically by the gem release script.
-  s.files      = %w(.gitignore .infinity_test .travis.yml Gemfile Gemfile.activerecord2 Gemfile.activerecord3 Gemfile.activerecord4 LICENSE README.rdoc Rakefile app/assets/images/spinner.gif app/assets/javascripts/scoped_search.js app/assets/stylesheets/scoped_search.scss init.rb lib/scoped_search.rb lib/scoped_search/auto_complete_builder.rb lib/scoped_search/definition.rb lib/scoped_search/engine.rb lib/scoped_search/query_builder.rb lib/scoped_search/query_language.rb lib/scoped_search/query_language/ast.rb lib/scoped_search/query_language/parser.rb lib/scoped_search/query_language/tokenizer.rb lib/scoped_search/rails_helper.rb scoped_search.gemspec spec/database.jruby.yml spec/database.ruby.yml spec/integration/api_spec.rb spec/integration/auto_complete_spec.rb spec/integration/key_value_querying_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/profile_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/set_query_spec.rb spec/integration/string_querying_spec.rb spec/lib/database.rb spec/lib/matchers.rb spec/lib/mocks.rb spec/spec_helper.rb spec/unit/ast_spec.rb spec/unit/auto_complete_builder_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb tasks/github-gem.rake)
-  s.test_files = %w(spec/integration/api_spec.rb spec/integration/auto_complete_spec.rb spec/integration/key_value_querying_spec.rb spec/integration/ordinal_querying_spec.rb spec/integration/profile_querying_spec.rb spec/integration/relation_querying_spec.rb spec/integration/set_query_spec.rb spec/integration/string_querying_spec.rb spec/unit/ast_spec.rb spec/unit/auto_complete_builder_spec.rb spec/unit/definition_spec.rb spec/unit/parser_spec.rb spec/unit/query_builder_spec.rb spec/unit/tokenizer_spec.rb)
+  gem.rdoc_options << '--title' << gem.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
+  gem.extra_rdoc_files = ['README.rdoc']
 end
