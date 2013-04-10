@@ -104,6 +104,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should find all records for which none related bar records exist" do
         ::Goo.search_for('null? related').should have(1).items
       end
+      
+      it "should find all records which has relation with both related values" do
+        ::Goo.search_for("related=bar AND related=another bar").should have(1).items
+      end
 
     end
 
