@@ -221,9 +221,25 @@ module ScopedSearch
       elsif field.set?
         return set_test(field, operator, value, &block)
       elsif field.definition.klass.reflections[field.relation].try(:macro) == :has_many
-        value = value.to_i if field.offset
-        yield(:parameter, value)
-        return "#{field.definition.klass.table_name}.id IN (SELECT #{field.reflection_keys(field.definition.klass.reflections[field.relation])[1]} FROM #{field.klass.table_name} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
+        if field.definition.klass.reflections[field.relation].options.has_key?(:through)
+          endpoint_table_name = field.klass.table_name
+          middle_table = field.definition.klass.reflections[field.relation].options[:through]
+          middle_table_name = field.definition.klass.reflections[middle_table].klass.table_name
+          value = value.to_i if field.offset
+          yield(:parameter, value)
+          join = <<-SQL
+          #{field.definition.klass.table_name}
+          INNER JOIN #{middle_table_name}
+          ON #{field.definition.klass.table_name}.id = #{middle_table_name}.#{field.reflection_keys(field.definition.klass.reflections[middle_table])[1]}
+          INNER JOIN #{endpoint_table_name}
+          ON #{middle_table_name}.#{field.reflection_keys(field.klass.reflections[middle_table])[1]} = #{endpoint_table_name}.id
+          SQL
+          return "#{field.definition.klass.table_name}.id IN (SELECT #{field.reflection_keys(field.definition.klass.reflections[middle_table])[1]} FROM #{join} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
+        else
+          value = value.to_i if field.offset
+          yield(:parameter, value)
+          return "#{field.definition.klass.table_name}.id IN (SELECT #{field.reflection_keys(field.definition.klass.reflections[field.relation])[1]} FROM #{field.klass.table_name} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
+        end
       else
         value = value.to_i if field.offset
         yield(:parameter, value)
