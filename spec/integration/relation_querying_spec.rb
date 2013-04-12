@@ -106,7 +106,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
       
       it "should find all records which has relation with both related values" do
-        ::Goo.search_for("related=bar AND related=another bar").should have(1).items
+        ::Goo.search_for("related=bar AND related=\"another bar\"").should have(1).items
       end
 
     end
