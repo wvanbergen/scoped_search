@@ -1,3 +1,4 @@
+
 module ScopedSearch
   module RailsHelper
     # Creates a link that alternates between ascending and descending.
