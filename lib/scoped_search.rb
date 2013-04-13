@@ -90,19 +90,6 @@ require 'scoped_search/auto_complete_builder'
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
 ActiveRecord::Base.send(:extend, ScopedSearch::BackwardsCompatibility)
 
-if defined?(ActionController)
-  require "scoped_search/rails_helper"
-  ActionController::Base.helper(ScopedSearch::RailsHelper)
-end
-
-#asset pipeline
-if defined?(::Sprockets)
-  require 'scoped_search/engine'
-end
-
-#Compass
-if  defined?(::Compass)
-  base = File.join(File.dirname(__FILE__), '..')
-  styles = File.join(base, 'vendor', 'assets', 'stylesheets')
-  ::Compass::Frameworks.register('scoped_search', :path => base, :stylesheets_directory => styles)
-end
+# Rails & Compass integration
+require 'scoped_search/railtie' if defined?(::Rails)
+require 'scoped_search/compass' if defined?(::Compass)
