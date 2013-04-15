@@ -11,5 +11,5 @@ mysql:
 postgresql:
   adapter: "postgresql"
   host: "localhost"
-  username: "pcasaretto"
+  username: "postgres"
   database: "scoped_search_test"
