@@ -72,7 +72,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ActiveRecord::Migration.create_table(:goos) { |t| t.string :foo }
         class Goo < ActiveRecord::Base
           has_many :jars
-          scoped_search on: :foo
+          scoped_search :on => :foo
           scoped_search :in => :jars, :on => :related
         end
 
