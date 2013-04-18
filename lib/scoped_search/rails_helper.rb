@@ -189,8 +189,8 @@ module ScopedSearch
     # auto_complete_method to respond the AJAX calls,
     def auto_complete_field_tag(method, val,tag_options = {}, completion_options = {})
       auto_completer_options = { :url => { :action => "auto_complete_#{method}" } }.update(completion_options)
-
-      text_field_tag(method, val,tag_options.merge(:class => "auto_complete_input")) +
+      options = tag_options.merge(:class => "auto_complete_input " << tag_options[:class].to_s)
+      text_field_tag(method, val,options) +
           auto_complete_clear_value_button(method) +
           content_tag("div", "", :id => "#{method}_auto_complete", :class => "auto_complete") +
           auto_complete_field(method, auto_completer_options)
@@ -202,7 +202,7 @@ module ScopedSearch
     # auto_complete_method to respond the JQuery calls,
     def auto_complete_field_tag_jquery(method, val,tag_options = {}, completion_options = {})
       url = url_for(:action => "auto_complete_#{method}", :filter => completion_options[:filter])
-      options = tag_options.merge(:class => "auto_complete_input")
+      options = tag_options.merge(:class => "auto_complete_input " << tag_options[:class].to_s)
       text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
           auto_complete_field_jquery(method, url, completion_options)
     end
