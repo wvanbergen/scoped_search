@@ -59,9 +59,9 @@ module ScopedSearch
         case notification
           when :keycondition then keyconditions << value
           when :keyparameter then keyparameters << value
-          when :parameter then parameters << value
-          when :include   then includes   << value
-          when :joins   then joins   << value
+          when :parameter    then parameters    << value
+          when :include      then includes      << value
+          when :joins        then joins         << value
           else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
@@ -70,7 +70,7 @@ module ScopedSearch
         case notification
           when :parameter then parameters << value
           when :include   then includes   << value
-          when :joins   then joins   << value
+          when :joins     then joins      << value
           else raise ScopedSearch::QueryNotSupported, "Cannot handle #{notification.inspect}: #{value.inspect}"
         end
       end
@@ -78,9 +78,9 @@ module ScopedSearch
       # Build hash for ActiveRecord::Base#find for the named scope
       find_attributes = {}
       find_attributes[:conditions] = [sql] + keyparameters + parameters unless sql.blank?
-      find_attributes[:include]    = includes.uniq      unless includes.empty?
-      find_attributes[:joins]      = joins.uniq         unless joins.empty?
-      find_attributes[:order]      = order              unless order.nil?
+      find_attributes[:include]    = includes.uniq                      unless includes.empty?
+      find_attributes[:joins]      = joins.uniq                         unless joins.empty?
+      find_attributes[:order]      = order                              unless order.nil?
 
       # p find_attributes # Uncomment for debugging
       return find_attributes
