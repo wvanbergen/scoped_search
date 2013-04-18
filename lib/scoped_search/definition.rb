@@ -134,8 +134,7 @@ module ScopedSearch
 
       def default_order(options)
         return nil if options[:default_order].nil?
-        field_name = options[:on] unless options[:rename]
-        field_name = options[:rename] if options[:rename]
+        field_name = options[:rename].nil? ? options[:on] : options[:rename]
         order = (options[:default_order].to_s.downcase.include?('desc')) ? "DESC" : "ASC"
         return "#{field_name} #{order}"
       end
