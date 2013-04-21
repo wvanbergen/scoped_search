@@ -220,6 +220,10 @@ module ScopedSearch
         return datetime_test(field, operator, value, &block)
       elsif field.set?
         return set_test(field, operator, value, &block)
+      elsif field.definition.klass.reflections[field.relation].try(:macro) == :has_many
+        value = value.to_i if field.offset
+        yield(:parameter, value)
+        return "#{field.definition.klass.table_name}.id IN (SELECT #{field.reflection_keys(field.definition.klass.reflections[field.relation])[1]} FROM #{field.klass.table_name} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
       else
         value = value.to_i if field.offset
         yield(:parameter, value)

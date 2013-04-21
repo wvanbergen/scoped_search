@@ -72,6 +72,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ActiveRecord::Migration.create_table(:goos) { |t| t.string :foo }
         class Goo < ActiveRecord::Base
           has_many :jars
+          scoped_search :on => :foo
           scoped_search :in => :jars, :on => :related
         end
 
@@ -103,6 +104,22 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find all records for which none related bar records exist" do
         ::Goo.search_for('null? related').should have(1).items
+      end
+      
+      it "should find all records which has relation with both related values" do
+        ::Goo.search_for('related=bar AND related="another bar"').should have(1).items
+      end
+
+      it "should find all records searching with both parent and child fields" do
+        ::Goo.search_for('foo bar').should have(2).items
+      end
+
+      it "should find the only record with two Jars" do
+        ::Goo.search_for('foo bar "another bar"').should have(1).item
+      end
+
+      it "shouldn't find any records as there isn't an intersect" do
+        ::Goo.search_for('too another').should have(0).items
       end
 
     end
