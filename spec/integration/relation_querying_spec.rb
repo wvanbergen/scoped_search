@@ -269,6 +269,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should find the two records that are related to a baz record" do
         Koo.search_for('baz').should have(2).items
       end
+
+      it "should find the two records that are related to a baz record" do
+        Koo.search_for('related=baz AND related="baz too!"').should have(1).items
+      end
     end
   end
 end
