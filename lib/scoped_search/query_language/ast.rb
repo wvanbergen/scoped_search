@@ -53,6 +53,10 @@ module ScopedSearch::QueryLanguage::AST
     def eql?(node) # :nodoc
       node.kind_of?(LeafNode) && node.value == value
     end
+
+    def empty?
+      false
+    end
   end
 
   # AST class for representing operators in the query. An operator node has an operator
@@ -64,9 +68,11 @@ module ScopedSearch::QueryLanguage::AST
     attr_reader :operator
     attr_reader :children
 
-    def initialize(operator, children) # :nodoc
+    def initialize(operator, children, root_node = false) # :nodoc
       @operator = operator
       @children = children
+
+      raise ScopedSearch::QueryNotSupported, "Empty list of operands" if @children.empty? && !root_node
     end
 
     # Tree simplicication: returns itself after simpifying its children
@@ -95,6 +101,10 @@ module ScopedSearch::QueryLanguage::AST
     def rhs
       raise ScopedSearch::Exception, "Operators with more than 2 children do not have LHS/RHS" if children.length > 2
       children.length == 1 ? children[0] : children[1]
+    end
+
+    def empty?
+      children.length == 0
     end
 
     # Returns true if this is an infix operator
