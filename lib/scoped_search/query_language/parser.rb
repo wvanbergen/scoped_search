@@ -25,12 +25,14 @@ module ScopedSearch::QueryLanguage::Parser
   end
 
   # Parses a sequence of expressions
-  def parse_expression_sequence(initial = false)
+  def parse_expression_sequence(root_node = false)
     expressions = []
-    next_token if !initial && peek_token == :lparen # skip staring :lparen
+
+    next_token if !root_node && peek_token == :lparen # skip starting :lparen
     expressions << parse_logical_expression until peek_token.nil? || peek_token == :rparen
-    next_token if !initial && peek_token == :rparen # skip final :rparen
-    return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions)
+    next_token if !root_node && peek_token == :rparen # skip final :rparen
+    
+    return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions, root_node)
   end
 
   # Parses a logical expression.
@@ -60,6 +62,8 @@ module ScopedSearch::QueryLanguage::Parser
       when :lparen; parse_expression_sequence
       else          parse_comparison
     end
+
+    raise ScopedSearch::QueryNotSupported, "No operands found" if negated_expression.empty?
     return ScopedSearch::QueryLanguage::AST::OperatorNode.new(:not, [negated_expression])
   end
 

@@ -101,4 +101,8 @@ describe ScopedSearch::QueryLanguage::Parser do
   it "should parse a null? keyword" do
     'set? a b null? c'.should parse_to([:and, [:notnull, 'a'], 'b', [:null, 'c']])
   end
+
+  it "should refuse to parse an empty not expression" do
+    lambda { ScopedSearch::QueryLanguage::Compiler.parse('!()|*') }.should raise_error(ScopedSearch::QueryNotSupported)
+  end  
 end
