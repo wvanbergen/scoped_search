@@ -5,7 +5,7 @@ describe ScopedSearch::Definition do
   before(:each) do
     @klass      = mock_activerecord_class
     @definition = ScopedSearch::Definition.new(@klass)
-    @definition.stub!(:setup_adapter)
+    @definition.stub(:setup_adapter)
   end
 
   describe ScopedSearch::Definition::Field do
@@ -19,7 +19,7 @@ describe ScopedSearch::Definition do
       it "should not raise an exception when using an unknown field" do
         lambda {
           @definition.define(:on => 'existing').column
-        }.should_not raise_error(ActiveRecord::UnknownAttributeError)
+        }.should_not raise_error
       end
     end
   end
@@ -34,7 +34,7 @@ describe ScopedSearch::Definition do
       end
 
       it "should not create the named scope if it already exists" do
-        @klass.stub!(:search_for)
+        @klass.stub(:search_for)
         @klass.should_not_receive(:named_scope)
         ScopedSearch::Definition.new(@klass)
       end
@@ -47,7 +47,7 @@ describe ScopedSearch::Definition do
       end
 
       it "should not create the named scope if it already exists" do
-        @klass.stub!(:search_for)
+        @klass.stub(:search_for)
         @klass.should_not_receive(:scope)
         ScopedSearch::Definition.new(@klass)
       end

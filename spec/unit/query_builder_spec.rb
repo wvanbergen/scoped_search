@@ -3,11 +3,11 @@ require "spec_helper"
 describe ScopedSearch::QueryBuilder do
 
   before(:each) do
-    @definition = mock('ScopedSearch::Definition')
-    @definition.stub!(:klass).and_return(Class.new(ActiveRecord::Base))
-    @definition.stub!(:profile).and_return(:default)
-    @definition.stub!(:default_order).and_return(nil)
-    @definition.stub!(:profile=).and_return(true)
+    @definition = double('ScopedSearch::Definition')
+    @definition.stub(:klass).and_return(Class.new(ActiveRecord::Base))
+    @definition.stub(:profile).and_return(:default)
+    @definition.stub(:default_order).and_return(nil)
+    @definition.stub(:profile=).and_return(true)
   end
 
   it "should return empty conditions if the search query is nil" do

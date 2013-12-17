@@ -87,7 +87,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "encoded string should not raise TypeError when querying non-indexed column without a value" do
         if defined? Encoding
           query = 'unindexed ='.force_encoding(Encoding::UTF_8).encode
-          lambda { @class.search_for(query) }.should_not raise_error(TypeError)
+          lambda { @class.search_for(query) }.should_not raise_error
         end
       end
 
