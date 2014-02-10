@@ -240,16 +240,25 @@ module ScopedSearch
     end
 
     def has_many_through_join(field)
+      many_class = field.definition.klass
+      through = many_class.reflections[field.relation].options[:through]
+      #table names
       endpoint_table_name = field.klass.table_name
-      middle_table = field.definition.klass.reflections[field.relation].options[:through]
-      middle_table_name = field.definition.klass.reflections[middle_table].klass.table_name
+      many_table_name = many_class.table_name
+      middle_table_name = many_class.reflections[through].klass.table_name
+      #primary and foreign keys + optional condition for the many to middle join
+      pk1, fk1 = field.reflection_keys(many_class.reflections[through])
+      condition1 = field.reflection_conditions(field.klass.reflections[many_table_name.to_sym])
+      #primary and foreign keys + optional condition for the endpoint to middle join
+      pk2, fk2 =    field.reflection_keys(field.klass.reflections[middle_table_name.to_sym])
+      condition2 = field.reflection_conditions(many_class.reflections[field.relation])
 
       <<-SQL
-        #{field.definition.klass.table_name}
+        #{many_table_name}
         INNER JOIN #{middle_table_name}
-        ON #{field.definition.klass.table_name}.id = #{middle_table_name}.#{field.reflection_keys(field.definition.klass.reflections[middle_table])[1]}
+        ON #{many_table_name}.#{pk1} = #{middle_table_name}.#{fk1} #{condition1}
         INNER JOIN #{endpoint_table_name}
-        ON #{middle_table_name}.#{field.reflection_keys(field.klass.reflections[middle_table])[1]} = #{endpoint_table_name}.id
+        ON #{middle_table_name}.#{fk2} = #{endpoint_table_name}.#{pk2} #{condition2}
       SQL
     end
 
@@ -336,12 +345,20 @@ module ScopedSearch
         return join_sql
       end
 
-      def reflection_keys reflection
+      def reflection_keys(reflection)
         pk = reflection.klass.primary_key
         fk = reflection.options[:foreign_key]
         # activerecord prior to 3.1 doesn't respond to foreign_key method and hold the key name in the reflection primary key
-        fk = fk || reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.primary_key_name
+        fk ||= reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.primary_key_name
         [pk, fk]
+      end
+
+      def reflection_conditions(reflection)
+        return unless reflection
+        conditions = reflection.options[:conditions]
+        conditions ||= "#{reflection.options[:source]}_type = '#{reflection.klass}'" if reflection.options[:source]
+        conditions ||= "#{reflection.try(:foreign_type)} = '#{reflection.klass}'" if  reflection.options[:polymorphic]
+        " AND #{conditions}" if conditions
       end
 
       def to_ext_method_sql(key, operator, value, &block)
