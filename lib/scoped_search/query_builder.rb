@@ -356,7 +356,7 @@ module ScopedSearch
       def reflection_conditions(reflection)
         return unless reflection
         conditions = reflection.options[:conditions]
-        conditions ||= "#{reflection.options[:source]}_type = '#{reflection.klass}'" if reflection.options[:source]
+        conditions ||= "#{reflection.options[:source]}_type = '#{reflection.options[:source_type]}'" if reflection.options[:source] && reflection.options[:source_type]
         conditions ||= "#{reflection.try(:foreign_type)} = '#{reflection.klass}'" if  reflection.options[:polymorphic]
         " AND #{conditions}" if conditions
       end

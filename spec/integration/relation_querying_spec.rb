@@ -240,7 +240,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         # The class on which to call search_for
         class Koo < ActiveRecord::Base
           has_many :mars
-          has_many :bazs, :through => :mars
+          # having the source option here is not needed for the statement correctness.
+          # It is here to fail the code introduced in 2.6.2 that wrongly detected source instead of source_type
+          # as an indication for a polymorphic relation.
+          has_many :bazs, :through => :mars, :source => :baz
 
           scoped_search :in => :bazs, :on => :related
         end
@@ -282,48 +285,72 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         # Create some tables
         ActiveRecord::Migration.create_table(:taggables) { |t| t.integer :taggable_id; t.string :taggable_type; t.integer :tag_id }
         ActiveRecord::Migration.create_table(:dogs) { |t| t.string :related }
+        ActiveRecord::Migration.create_table(:cats) { |t| t.string :related }
         ActiveRecord::Migration.create_table(:tags) { |t| t.string :foo }
 
         # The related classes
         class Taggable < ActiveRecord::Base; belongs_to :tag; belongs_to :taggable, :polymorphic => true; end
-        class Tag < ActiveRecord::Base; has_many :taggables; end
+
+        class Tag < ActiveRecord::Base
+          has_many :taggables
+          has_many :dogs, :through => :taggables, :source => :taggable, :source_type => 'Dog'
+
+          scoped_search :in => :dogs, :on => :related, :rename => :dog
+        end
 
         # The class on which to call search_for
         class Dog < ActiveRecord::Base
-          has_many :taggable, :as => :taggable
-          has_many :tags, :through => :taggable
+          has_many :taggables, :as => :taggable
+          has_many :tags, :through => :taggables
 
           scoped_search :in => :tags, :on => :foo
+        end
+
+        class Cat < ActiveRecord::Base
+          has_many :taggables, :as => :taggable
+          has_many :tags, :through => :taggables
         end
 
         @tag_1 = Tag.create!(:foo => 'foo')
         @tag_2 = Tag.create!(:foo => 'foo too')
         @tag_3 = Tag.create!(:foo => 'foo three')
 
-        @taggable_1 = Dog.create(:related => 'baz')
-        @taggable_2 = Dog.create(:related => 'baz too!')
+        @dog_1 = Dog.create(:related => 'baz')
+        @dog_2 = Dog.create(:related => 'baz too!')
+        @cat_1 = Cat.create(:related => 'mitzi')
 
-        @bar_1 = Taggable.create!(:tag => @tag_1, :taggable => @taggable_1, :taggable_type => 'Dog' )
-        @bar_2 = Taggable.create!(:tag => @tag_1)
-        @bar_3 = Taggable.create!(:tag => @tag_2, :taggable => @taggable_1 , :taggable_type => 'Dog')
-        @bar_3 = Taggable.create!(:tag => @tag_2, :taggable => @taggable_2 , :taggable_type => 'Dog')
-        @bar_3 = Taggable.create!(:tag => @tag_2, :taggable => @taggable_2 , :taggable_type => 'Dog')
-        @bar_4 = Taggable.create!(:tag => @tag_3)
+        Taggable.create!(:tag => @tag_1, :taggable => @dog_1, :taggable_type => 'Dog' )
+        Taggable.create!(:tag => @tag_1)
+        Taggable.create!(:tag => @tag_2, :taggable => @dog_1 , :taggable_type => 'Dog')
+        Taggable.create!(:tag => @tag_2, :taggable => @dog_2 , :taggable_type => 'Dog')
+        Taggable.create!(:tag => @tag_3, :taggable => @dog_2 , :taggable_type => 'Dog')
+        Taggable.create!(:tag => @tag_2, :taggable => @cat_1 , :taggable_type => 'Cat')
+        Taggable.create!(:tag => @tag_3)
       end
 
       after do
         ActiveRecord::Migration.drop_table(:dogs)
         ActiveRecord::Migration.drop_table(:taggables)
         ActiveRecord::Migration.drop_table(:tags)
+        ActiveRecord::Migration.drop_table(:cats)
       end
 
-      it "should find the two records that are related to a baz record" do
+      it "should find the two records that are related to a tag that contains foo record" do
         Dog.search_for('foo').should have(2).items
       end
 
-      it "should find the two records that are related to a baz record" do
+      it "should find one records that is related to both tags" do
         Dog.search_for('foo=foo AND foo="foo too"').should have(1).items
       end
+
+      it "should find the two tags that are related to a dog record" do
+        Tag.search_for('dog=baz').should have(2).items
+      end
+
+      it "should find the 3 tags that are related to dogs record" do
+        Tag.search_for('baz').should have(3).items
+      end
+
     end
   end
 end
