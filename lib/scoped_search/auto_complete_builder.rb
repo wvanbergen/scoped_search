@@ -154,6 +154,7 @@ module ScopedSearch
     def complete_keyword
       keywords = []
       definition.fields.each do|f|
+        next unless f[1].complete_enabled
         if (f[1].key_field)
           keywords += complete_key(f[0], f[1], tokens.last)
         else
@@ -178,7 +179,7 @@ module ScopedSearch
       field.key_klass.all(opts).map(&field.key_field).compact.map{ |f| "#{name}.#{f} "}
     end
 
-    # this method auto-completes values of fields that have a :complete_value marker 
+    # this method auto-completes values of fields that have a :complete_value marker
     def complete_value
       if last_token_is(COMPARISON_OPERATORS)
         token = tokens[tokens.size-2]

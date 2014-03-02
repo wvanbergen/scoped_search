@@ -16,7 +16,7 @@ module ScopedSearch
     class Field
 
       attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :full_text_search,
-                  :key_field, :complete_value, :offset, :word_size, :ext_method, :operators
+                  :key_field, :complete_value, :complete_enabled, :offset, :word_size, :ext_method, :operators
 
       # Initializes a Field instance given the definition passed to the
       # scoped_search call on the ActiveRecord-based model class.
@@ -43,6 +43,7 @@ module ScopedSearch
           @only_explicit    = !!options[:only_explicit]
           @full_text_search = options[:full_text_search]
           @default_operator = options[:default_operator] if options.has_key?(:default_operator)
+          @complete_enabled = options[:complete_enabled].nil? ? true : options[:complete_enabled]
         end
 
         # Store this field is the field array
