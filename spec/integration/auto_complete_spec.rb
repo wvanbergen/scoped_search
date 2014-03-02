@@ -9,30 +9,32 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     before(:all) do
       ScopedSearch::RSpec::Database.establish_named_connection(db)
 
-      ActiveRecord::Migration.create_table(:bars, :force => true) do |t| 
+      ActiveRecord::Migration.create_table(:bars, :force => true) do |t|
         t.integer :foo_id
         t.string :related
       end
 
-      ActiveRecord::Migration.create_table(:foos, :force => true) do |t| 
+      ActiveRecord::Migration.create_table(:foos, :force => true) do |t|
         t.string  :string
         t.string  :another
         t.string  :explicit
+        t.string  :deprecated
         t.integer :int
-        t.date    :date 
+        t.date    :date
         t.integer :unindexed
       end
 
       class ::Bar < ActiveRecord::Base
         belongs_to :foo
       end
-      
+
       class ::Foo < ActiveRecord::Base
         has_many :bars
-        
+
         scoped_search :on => [:string, :int, :date]
         scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
         scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
+        scoped_search :on => :deprecated, :complete_enabled => false
         scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
       end
 
@@ -41,13 +43,13 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
 
       Bar.create!(:related => 'lala',         :foo => @foo_1)
-      Bar.create!(:related => 'another lala', :foo => @foo_1)      
+      Bar.create!(:related => 'another lala', :foo => @foo_1)
     end
 
     after(:all) do
       ActiveRecord::Migration.drop_table(:foos)
       ActiveRecord::Migration.drop_table(:bars)
-      
+
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
 
@@ -98,6 +100,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should not repeat logical operators" do
         Foo.complete_for('string = foo and ').should_not contain("string = foo and and", "string = foo and or")
       end
+
+      it "should not contain deprecated field in autocompleter" do
+        Foo.complete_for(' ').should_not contain("  deprecated")
+      end
+
     end
 
     context 'using an aliased field' do
