@@ -134,7 +134,7 @@ module ScopedSearch
 				      .append( "<a>" + "<strong class='ui-autocomplete-completed'>" + item.completed + "</strong>" + item.part + "</a>" )
 				      .appendTo( ul );
             } else {
-              if(jQuery.ui.version>='1.9') {
+              if(typeof(self._renderItemData) === "function") {
                 self._renderItemData( ul, item );
               } else {
                 self._renderItem( ul, item );
