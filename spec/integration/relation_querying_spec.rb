@@ -278,6 +278,56 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
     end
 
+    context 'querying a :has_many => :through many relation' do
+
+      before do
+
+        # Create some tables
+        ActiveRecord::Migration.create_table(:zars) { |t| t.integer :baz_id }
+        ActiveRecord::Migration.create_table(:bazs) { |t| t.string :related }
+        ActiveRecord::Migration.create_table(:zoos) { |t| t.integer :zar_id; t.string :foo }
+
+        # The related classes
+        class Zar < ActiveRecord::Base; belongs_to :baz; has_many :zoos; end
+        class Baz < ActiveRecord::Base; has_many :zars; end
+
+        # The class on which to call search_for
+        class Zoo < ActiveRecord::Base
+          belongs_to :zar
+          has_many :bazs, :through => :zar
+
+          scoped_search :in => :bazs, :on => :related
+        end
+
+        baz_1 = Baz.create(:related => 'baz')
+        baz_2 = Baz.create(:related => 'baz too!')
+
+        zar_1 = Zar.create!( :baz => baz_1)
+        zar_2 = Zar.create!( :baz => baz_2)
+
+        Zoo.create!(:zar => zar_1, :foo => 'foo')
+        Zoo.create!(:zar => zar_1, :foo => 'foo too')
+        Zoo.create!(:zar => zar_2, :foo => 'foo three')
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table(:bazs)
+        ActiveRecord::Migration.drop_table(:zars)
+        ActiveRecord::Migration.drop_table(:zoos)
+      end
+
+      # This table schema is not supported in activerecord 2, skip the tests
+      if ActiveRecord::VERSION::MAJOR > 2
+        it "should find the three records that are related to a baz record" do
+          Zoo.search_for('baz').should have(3).items
+        end
+
+        it "should find no records that are related to a baz record" do
+          Zoo.search_for('related=baz AND related="baz too!"').should have(0).items
+        end
+      end
+    end
+
     context 'querying a :has_many => :through :polymorphic relation' do
 
       before do

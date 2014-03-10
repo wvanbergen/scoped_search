@@ -221,16 +221,15 @@ module ScopedSearch
       elsif field.set?
         return set_test(field, operator, value, &block)
       elsif field.definition.klass.reflections[field.relation].try(:macro) == :has_many
+        value = value.to_i if field.offset
+        yield(:parameter, value)
+        primary_key = "#{field.definition.klass.quoted_table_name}.#{field.definition.klass.primary_key}"
         if field.definition.klass.reflections[field.relation].options.has_key?(:through)
-          value = value.to_i if field.offset
-          yield(:parameter, value)
           join = has_many_through_join(field)
-          middle_table = field.definition.klass.reflections[field.relation].options[:through]
-          return "#{field.definition.klass.table_name}.id IN (SELECT #{field.reflection_keys(field.definition.klass.reflections[middle_table])[1]} FROM #{join} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
+          return "#{primary_key} IN (SELECT #{primary_key} FROM #{join} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
         else
-          value = value.to_i if field.offset
-          yield(:parameter, value)
-          return "#{field.definition.klass.table_name}.id IN (SELECT #{field.reflection_keys(field.definition.klass.reflections[field.relation])[1]} FROM #{field.klass.table_name} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
+          foreign_key = field.reflection_keys(field.definition.klass.reflections[field.relation])[1]
+          return "#{primary_key} IN (SELECT #{foreign_key} FROM #{field.klass.quoted_table_name} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
         end
       else
         value = value.to_i if field.offset
@@ -247,10 +246,10 @@ module ScopedSearch
       many_table_name = many_class.table_name
       middle_table_name = many_class.reflections[through].klass.table_name
       #primary and foreign keys + optional condition for the many to middle join
-      pk1, fk1 = field.reflection_keys(many_class.reflections[through])
+      pk1, fk1   = field.reflection_keys(many_class.reflections[through])
       condition1 = field.reflection_conditions(field.klass.reflections[many_table_name.to_sym])
       #primary and foreign keys + optional condition for the endpoint to middle join
-      pk2, fk2 =    field.reflection_keys(field.klass.reflections[middle_table_name.to_sym])
+      pk2, fk2   = field.reflection_keys(field.klass.reflections[middle_table_name.to_sym])
       condition2 = field.reflection_conditions(many_class.reflections[field.relation])
 
       <<-SQL
@@ -310,7 +309,7 @@ module ScopedSearch
         key_table = klass.reflections[key].table_name
         value_table = klass.table_name.to_s
 
-        key_table_pk, value_table_fk_key = reflection_keys(klass.reflections[key])
+        value_table_fk_key, key_table_pk = reflection_keys(klass.reflections[key])
 
         main_reflection = definition.klass.reflections[relation]
         if main_reflection
@@ -350,7 +349,7 @@ module ScopedSearch
         fk = reflection.options[:foreign_key]
         # activerecord prior to 3.1 doesn't respond to foreign_key method and hold the key name in the reflection primary key
         fk ||= reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.primary_key_name
-        [pk, fk]
+        reflection.macro == :belongs_to ? [fk, pk] : [pk, fk]
       end
 
       def reflection_conditions(reflection)
