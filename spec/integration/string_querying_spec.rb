@@ -9,15 +9,21 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     before(:all) do
       ScopedSearch::RSpec::Database.establish_named_connection(db)
     
-      @class = ScopedSearch::RSpec::Database.create_model(:string => :string, :another => :string, :explicit => :string) do |klass|
+      @class = ScopedSearch::RSpec::Database.create_model(
+          :string => :string,
+          :another => :string,
+          :explicit => :string,
+          :description => :string
+          ) do |klass|
         klass.scoped_search :on => :string
         klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias, :default_order => :desc
         klass.scoped_search :on => :explicit, :only_explicit => true
+        klass.scoped_search :on => :description
       end
 
-      @class.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz')
-      @class.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz')
-      @class.create!(:string => 'baz', :another => nil,      :explicit => nil)
+      @class.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :description => '1 - one')
+      @class.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :description => '2 - two')
+      @class.create!(:string => 'baz', :another => nil,      :explicit => nil,   :description => '3 - three')
     end
 
     after(:all) do
@@ -202,7 +208,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('',:order => 'string DESC').first.string.should eql('foo')
       end
 
-       it "default order by another DESC" do
+      it "sort by description ASC" do
+        @class.search_for('',:order => 'description ASC').first.description.should eql('1 - one')
+      end
+
+      it "sort by description DESC" do
+        @class.search_for('',:order => 'description DESC').first.description.should eql('3 - three')
+      end
+
+      it "default order by another DESC" do
         @class.search_for('').first.string.should eql('bar')
       end
 
