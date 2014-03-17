@@ -7,11 +7,13 @@ module ScopedSearch
     #
     #   sort @search, :by => :username
     #   sort @search, :by => :created_at, :as => "Created"
+    #   sort @search, :by => :created_at, :default => "DESC"
     #
     # This helper accepts the following options:
     #
     # * <tt>:by</tt> - the name of the named scope. This helper will prepend this value with "ascend_by_" and "descend_by_"
     # * <tt>:as</tt> - the text used in the link, defaults to whatever is passed to :by
+    # * <tt>:default</tt> - default sorting order, DESC or ASC
     def sort(field, options = {}, html_options = {})
 
       unless options[:as]
@@ -21,14 +23,20 @@ module ScopedSearch
 
       ascend  = "#{field} ASC"
       descend = "#{field} DESC"
-
-      ascending = params[:order] == ascend
-      new_sort = ascending ? descend : ascend
       selected = [ascend, descend].include?(params[:order])
+
+      case params[:order]
+        when ascend
+          new_sort = descend
+        when descend
+          new_sort = ascend
+        else
+          new_sort = ["ASC", "DESC"].include?(options[:default]) ? "#{field} #{options[:default]}" : ascend
+      end
 
       if selected
         css_classes = html_options[:class] ? html_options[:class].split(" ") : []
-        if ascending
+        if new_sort == ascend 
           options[:as] = "&#9650;&nbsp;#{options[:as]}"
           css_classes << "ascending"
         else
