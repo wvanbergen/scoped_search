@@ -3,7 +3,7 @@ require "scoped_search/rails_helper"
 
 module ActionViewHelperStubs
   def html_escape(str)
-    CGI.escape_html(str)
+    str
   end
 
   def tag_options(options)
