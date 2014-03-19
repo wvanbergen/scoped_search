@@ -27,6 +27,16 @@ describe ScopedSearch::RailsHelper do
     sort("field")
   end
 
+  it "should generate a link with order param set to alternative default sorting order" do
+    should_receive(:url_for).with(
+      "controller" => "resources",
+      "action" => "search",
+      "order" => "field DESC"
+    ).and_return("/example")
+
+    sort("field", :default => "DESC")
+  end
+
   it "should generate a link with the order param inverted" do
     should_receive(:url_for).with(
       "controller" => "resources",
