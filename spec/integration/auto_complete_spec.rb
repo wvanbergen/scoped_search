@@ -38,6 +38,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
       end
 
+      class ::Infoo < ::Foo
+      end
+
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10)
       Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 9  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
@@ -52,6 +55,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
+      Object.send :remove_const, :Infoo
 
       ScopedSearch::RSpec::Database.close_connection
     end
@@ -104,7 +108,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should not contain deprecated field in autocompleter" do
         Foo.complete_for(' ').should_not contain("  deprecated")
       end
+    end
 
+    context 'inherited auto completer' do
+      it "should complete the field name" do
+        Infoo.complete_for('str').should =~ ([' string '])
+      end
     end
 
     context 'using an aliased field' do
