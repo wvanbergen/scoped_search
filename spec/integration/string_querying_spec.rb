@@ -226,6 +226,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
         Set.new(distinct_search.map(&:explicit)).should == Set['baz', nil]
       end
+
+      it 'should order using symbol' do
+        @class.search_for('',:order => :string).first.string.should eql('bar')
+      end
     end
   end
 end
