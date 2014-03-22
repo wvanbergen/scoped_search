@@ -14,6 +14,26 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       ScopedSearch::RSpec::Database.close_connection
     end
 
+    context 'querying a subclass' do
+      before do
+        ActiveRecord::Migration.create_table(:supers) { |t| t.string :name }
+        class Super < ActiveRecord::Base
+          scoped_search :on => :name
+        end
+        class Sub < Super; end
+
+        @super_record = Super.create!(:name => 'test')
+      end
+
+      after do
+        ScopedSearch::RSpec::Database.drop_model(Super)
+      end
+
+      it "should find records when searching the subclass" do
+        Sub.search_for('test').should have(1).item
+      end
+    end
+
     context 'querying a :belongs_to relation' do
 
       before do

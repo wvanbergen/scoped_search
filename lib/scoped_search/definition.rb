@@ -234,13 +234,14 @@ module ScopedSearch
 
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
+      definition = self
       if @klass.ancestors.include?(ActiveRecord::Base)
         case ActiveRecord::VERSION::MAJOR
         when 2
-          @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(self, args[0], args[1]) })
+          @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1]) })
         when 3
           @klass.scope(:search_for, lambda { |*args|
-            find_options = ScopedSearch::QueryBuilder.build_query(self, args[0], args[1])
+            find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
             search_scope = @klass.scoped
             search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
@@ -250,7 +251,7 @@ module ScopedSearch
           })
         when 4
           @klass.scope(:search_for, lambda { |*args|
-            find_options = ScopedSearch::QueryBuilder.build_query(self, args[0], args[1])
+            find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
             search_scope = @klass.all
             search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
@@ -269,11 +270,13 @@ module ScopedSearch
 
     # Registers the complete_for method within the class that is used for searching.
     def register_complete_for! # :nodoc
-      @klass.class_eval do
-        def self.complete_for(query, options = {})
-          ScopedSearch::AutoCompleteBuilder.auto_complete(@scoped_search , query, options)
-        end
-      end
+      @klass.extend(ScopedSearch::AutoCompleteClassMethods)
+    end
+  end
+
+  module AutoCompleteClassMethods
+    def complete_for(query, options = {})
+      ScopedSearch::AutoCompleteBuilder.auto_complete(scoped_search_definition, query, options)
     end
   end
 end

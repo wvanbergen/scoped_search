@@ -17,19 +17,23 @@ module ScopedSearch
   # <tt>ActiveRecord::Base.search_for</tt> named scope.
   module ClassMethods
 
+    def self.extended(base)
+      base.class_attribute :scoped_search_definition
+    end
+
     # Export the scoped_search method fo defining the search options.
     # This method will create a definition instance for the class if it does not yet exist,
     # and use the object as block argument and retun value.
     def scoped_search(*definitions)
-      @scoped_search ||= ScopedSearch::Definition.new(self)
+      self.scoped_search_definition ||= ScopedSearch::Definition.new(self)
       definitions.each do |definition|
         if definition[:on].kind_of?(Array)
-          definition[:on].each { |field| @scoped_search.define(definition.merge(:on => field)) }
+          definition[:on].each { |field| self.scoped_search_definition.define(definition.merge(:on => field)) }
         else
-          @scoped_search.define(definition)
+          self.scoped_search_definition.define(definition)
         end
       end
-      return @scoped_search
+      return self.scoped_search_definition
     end
   end
 
