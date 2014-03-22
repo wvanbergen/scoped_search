@@ -137,13 +137,13 @@ module ScopedSearch
         q.chomp!(quoted[1]) if quoted
       end
 
-      # for doted field names compact the suggestions list to be one suggestion
+      # for dotted field names compact the suggestions list to be one suggestion
       # unless the user has typed the relation name entirely or the suggestion list
       # is short.
-      if (suggestions.size > 10 && (tokens.empty? || !(tokens.last.to_s.include?('.')) ) && !(is_value))
-        suggestions = suggestions.map {|s|
-          (s.to_s.split('.')[0].end_with?(tokens.last)) ? s.to_s : s.to_s.split('.')[0]
-        }
+      if (suggestions.size > 10 && (tokens.empty? || !tokens.last.to_s.include?('.')) && !is_value)
+        suggestions = suggestions.map  do |s|
+          s.to_s.split('.')[0].end_with?(tokens.last.to_s) ? s.to_s : s.to_s.split('.')[0]
+        end
       end
 
       suggestions.uniq.map {|m| "#{q} #{m}"}
@@ -158,7 +158,7 @@ module ScopedSearch
         if (f[1].key_field)
           keywords += complete_key(f[0], f[1], tokens.last)
         else
-          keywords << f[0].to_s+' '
+          keywords << f[0].to_s + ' '
         end
       end
       keywords.sort
@@ -182,11 +182,11 @@ module ScopedSearch
     # this method auto-completes values of fields that have a :complete_value marker
     def complete_value
       if last_token_is(COMPARISON_OPERATORS)
-        token = tokens[tokens.size-2]
+        token = tokens[tokens.size - 2]
         val = ''
       else
-        token = tokens[tokens.size-3]
-        val = tokens[tokens.size-1]
+        token = tokens[tokens.size - 3]
+        val = tokens[tokens.size - 1]
       end
 
       field = definition.field_by_name(token)
