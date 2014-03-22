@@ -1,15 +1,15 @@
 sqlite:
-  adapter: "jdbcsqlite3"
+  adapter: jdbcsqlite3
   database: ":memory:"
 
 mysql:
-  adapter: "jdbcmysql"
-  host: "localhost"
-  username: "root"
-  database: "scoped_search_test"
+  adapter: jdbcmysql
+  host: localhost
+  username: root
+  database: scoped_search_test
 
 postgresql:
-  adapter: "jdbcpostgresql"
-  host: "localhost"
-  username: "postgres"
-  database: "scoped_search_test"
+  adapter: jdbcpostgresql
+  host: localhost
+  username: postgres
+  database: scoped_search_test

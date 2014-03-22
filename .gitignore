@@ -8,5 +8,5 @@ scoped_search-*.gem
 /files
 /spec/database.yml
 .bundle/
-Gemfile.lock
+Gemfile*.lock
 .idea/
