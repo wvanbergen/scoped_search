@@ -1,16 +1,18 @@
 sqlite:
-  adapter: "sqlite3"
+  adapter: sqlite3
   database: ":memory:"
 
-# mysql:
-#   adapter: "mysql2"
-#   host: "127.0.0.1"
-#   port: 13306
-#   username: "root"
-#   database: "scoped_search_test"
+mysql:
+  adapter: mysql2
+  host: localhost
+  port: 3306
+  username: root
+  database: scoped_search_test
+  encoding: utf8
 
-# postgresql:
-#   adapter: "postgresql"
-#   host: "127.0.0.1"
-#   port: 5432
-#   database: "scoped_search_test"
+postgresql:
+  adapter: postgresql
+  host: localhost
+  username: postgres
+  port: 5432
+  database: scoped_search_test

@@ -100,9 +100,9 @@ module ScopedSearch
     end
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
-    SQL_OPERATORS = { :eq =>'=',  :ne => '<>', :like => 'LIKE', :unlike => 'NOT LIKE',
-                      :gt => '>', :lt =>'<',   :lte => '<=',    :gte => '>=',
-                      :in => 'IN',:notin => 'NOT IN' }
+    SQL_OPERATORS = { :eq => '=',  :ne => '<>', :like => 'LIKE', :unlike => 'NOT LIKE',
+                      :gt => '>',  :lt =>'<',   :lte => '<=',    :gte => '>=',
+                      :in => 'IN', :notin => 'NOT IN' }
 
     # Return the SQL operator to use given an operator symbol and field definition.
     #
@@ -224,13 +224,14 @@ module ScopedSearch
       elsif field.definition.klass.reflections[field.relation].try(:macro) == :has_many
         value = value.to_i if field.offset
         yield(:parameter, value)
-        primary_key = "#{field.definition.klass.quoted_table_name}.#{field.definition.klass.primary_key}"
+        connection = field.definition.klass.connection
+        primary_key = "#{connection.quote_table_name(field.definition.klass.table_name)}.#{connection.quote_column_name(field.definition.klass.primary_key)}"
         if field.definition.klass.reflections[field.relation].options.has_key?(:through)
           join = has_many_through_join(field)
           return "#{primary_key} IN (SELECT #{primary_key} FROM #{join} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
         else
-          foreign_key = field.reflection_keys(field.definition.klass.reflections[field.relation])[1]
-          return "#{primary_key} IN (SELECT #{foreign_key} FROM #{field.klass.quoted_table_name} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
+          foreign_key = connection.quote_column_name(field.reflection_keys(field.definition.klass.reflections[field.relation])[1])
+          return "#{primary_key} IN (SELECT #{foreign_key} FROM #{connection.quote_table_name(field.klass.table_name)} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
         end
       else
         value = value.to_i if field.offset
@@ -242,23 +243,27 @@ module ScopedSearch
     def has_many_through_join(field)
       many_class = field.definition.klass
       through = many_class.reflections[field.relation].options[:through]
-      #table names
+      connection = many_class.connection
+
+      # table names
       endpoint_table_name = field.klass.table_name
       many_table_name = many_class.table_name
       middle_table_name = many_class.reflections[through].klass.table_name
-      #primary and foreign keys + optional condition for the many to middle join
+
+      # primary and foreign keys + optional condition for the many to middle join
       pk1, fk1   = field.reflection_keys(many_class.reflections[through])
       condition1 = field.reflection_conditions(field.klass.reflections[many_table_name.to_sym])
-      #primary and foreign keys + optional condition for the endpoint to middle join
+
+      # primary and foreign keys + optional condition for the endpoint to middle join
       pk2, fk2   = field.reflection_keys(field.klass.reflections[middle_table_name.to_sym])
       condition2 = field.reflection_conditions(many_class.reflections[field.relation])
 
       <<-SQL
-        #{many_table_name}
-        INNER JOIN #{middle_table_name}
-        ON #{many_table_name}.#{pk1} = #{middle_table_name}.#{fk1} #{condition1}
-        INNER JOIN #{endpoint_table_name}
-        ON #{middle_table_name}.#{fk2} = #{endpoint_table_name}.#{pk2} #{condition2}
+        #{connection.quote_table_name(many_table_name)}
+        INNER JOIN #{connection.quote_table_name(middle_table_name)}
+        ON #{connection.quote_table_name(many_table_name)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk1)} #{condition1}
+        INNER JOIN #{connection.quote_table_name(endpoint_table_name)}
+        ON #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk2)} = #{connection.quote_table_name(endpoint_table_name)}.#{connection.quote_column_name(pk2)} #{condition2}
       SQL
     end
 
@@ -278,13 +283,13 @@ module ScopedSearch
         if key_relation
           yield(:joins, construct_join_sql(key_relation, num) )
           yield(:keycondition, "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ?")
-          klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
-          return "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
+          klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
+          return "#{connection.quote_table_name(klass_table_name)}.#{connection.quote_column_name(field.to_s)}"
         elsif key_field
           yield(:joins, construct_simple_join_sql(num))
           yield(:keycondition, "#{key_klass.table_name}_#{num}.#{connection.quote_column_name(key_field.to_s)} = ?")
-          klass_table_name = relation ? "#{klass.table_name}_#{num}" : connection.quote_table_name(klass.table_name)
-          return "#{klass_table_name}.#{connection.quote_column_name(field.to_s)}"
+          klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
+          return "#{connection.quote_table_name(klass_table_name)}.#{connection.quote_column_name(field.to_s)}"
         elsif relation
           yield(:include, relation)
         end
@@ -341,7 +346,7 @@ module ScopedSearch
         main_table = definition.klass.table_name
         main_table_pk, value_table_fk_main = reflection_keys(definition.klass.reflections[relation])
 
-        join_sql = "\n  INNER JOIN #{connection.quote_table_name(key_value_table)} #{key_value_table}_#{num} ON (#{connection.quote_table_name(main_table)}.#{main_table_pk} = #{key_value_table}_#{num}.#{value_table_fk_main})"
+        join_sql = "\n  INNER JOIN #{connection.quote_table_name(key_value_table)} #{key_value_table}_#{num} ON (#{connection.quote_table_name(main_table)}.#{connection.quote_column_name(main_table_pk)} = #{key_value_table}_#{num}.#{connection.quote_column_name(value_table_fk_main)})"
         return join_sql
       end
 

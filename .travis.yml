@@ -5,28 +5,26 @@ before_script:
   - mysql -e 'create database scoped_search_test;'
 rvm:
   - 1.8.7
-  - 1.9.2
   - 1.9.3
   - 2.0.0
+  - 2.1.1
   - ruby-head
-  - ree
   - jruby-18mode
   - jruby-19mode
   - jruby-head
 gemfile:
  - Gemfile.activerecord2
  - Gemfile.activerecord3
+ - Gemfile.activerecord4
 matrix:
   include:
-    - rvm: 1.9.3
-      gemfile: Gemfile.activerecord4
-    - rvm: 2.0.0
-      gemfile: Gemfile.activerecord4
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
-    - rvm: jruby-18mode
-    - rvm: jruby-19mode
+    - rvm: 2.0.0
+      gemfile: Gemfile.activerecord2
+    - rvm: 2.1.1
+      gemfile: Gemfile.activerecord2
   exclude:
     - rvm: jruby-18mode
       gemfile: Gemfile.activerecord2
@@ -34,6 +32,7 @@ matrix:
       gemfile: Gemfile.activerecord2
     - rvm: jruby-head
       gemfile: Gemfile.activerecord2
-    - rvm: jruby-head
-      gemfile: Gemfile.activerecord2
-    - rvm: ree
+    - rvm: 1.8.7
+      gemfile: Gemfile.activerecord4
+    - rvm: jruby-18mode
+      gemfile: Gemfile.activerecord4
