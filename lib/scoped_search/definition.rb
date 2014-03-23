@@ -139,6 +139,12 @@ module ScopedSearch
         order = (options[:default_order].to_s.downcase.include?('desc')) ? "DESC" : "ASC"
         return "#{field_name} #{order}"
       end
+
+      # Return 'table'.'column' with the correct database quotes
+      def quoted_field
+        c = klass.connection
+        "#{c.quote_table_name(klass.table_name)}.#{c.quote_column_name(field)}"
+      end
     end
 
     attr_reader :klass
