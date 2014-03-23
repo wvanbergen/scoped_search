@@ -33,6 +33,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       class ::Foo < ActiveRecord::Base
         has_many :bars
+        default_scope { order(:string) }
 
         scoped_search :on => [:string, :int, :date]
         scoped_search :on => :another,  :default_operator => :eq, :alias => :alias

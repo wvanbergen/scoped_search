@@ -197,16 +197,16 @@ module ScopedSearch
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field
 
-      table = field.klass.connection.quote_table_name(field.klass.table_name)
-      opts = value_conditions("#{table}.#{field.field}", val)
-      opts.merge!(:limit => 20, :select => "DISTINCT #{table}.#{field.field}")
+      opts = value_conditions(field.quoted_field, val)
+      opts.merge!(:limit => 20, :select => "DISTINCT #{field.quoted_field}")
 
-      return completer_scope(field.klass).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+      return completer_scope(field).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
     end
 
-    def completer_scope(klass)
-      return klass unless klass.respond_to?(:completer_scope)
-      klass.completer_scope(@options)
+    def completer_scope(field)
+      klass = field.klass
+      scope =  klass.respond_to?(:completer_scope) ? klass.completer_scope(@options) : klass
+      scope.respond_to?(:reorder) ? scope.reorder(field.quoted_field) : scope.scoped(:order => field.quoted_field)
     end
 
     # set value completer
@@ -233,11 +233,11 @@ module ScopedSearch
     # complete values in a key-value schema
     def complete_key_value(field, token, val)
       key_name = token.sub(/^.*\./,"")
-      key_opts = value_conditions(field.field,val).merge(:conditions => {field.key_field => key_name})
+      key_opts = value_conditions(field.quoted_field,val).merge(:conditions => {field.key_field => key_name})
       key_klass = field.key_klass.first(key_opts)
       raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" if key_klass.nil?
 
-      opts = {:select => "DISTINCT #{field.field}"}
+      opts = {:limit => 20, :select => "DISTINCT #{field.quoted_field}"}
       if(field.key_klass != field.klass)
         key  = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
         fk   = field.klass.reflections[key].association_foreign_key.to_sym
@@ -245,7 +245,7 @@ module ScopedSearch
       else
         opts.merge!(key_opts)
       end
-      return completer_scope(field.klass).all(opts.merge(:limit => 20)).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+      return completer_scope(field).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
     end
 
     #this method returns conditions for selecting completion from partial value
