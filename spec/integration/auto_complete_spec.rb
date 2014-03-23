@@ -12,6 +12,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       ActiveRecord::Migration.create_table(:bars, :force => true) do |t|
         t.integer :foo_id
         t.string :related
+        t.string :other_a
+        t.string :other_b
+        t.string :other_c
       end
 
       ActiveRecord::Migration.create_table(:foos, :force => true) do |t|
@@ -36,6 +39,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
         scoped_search :on => :deprecated, :complete_enabled => false
         scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
+        scoped_search :on => :other_a, :in => :bars, :rename => 'bars.other_a'.to_sym
+        scoped_search :on => :other_b, :in => :bars, :rename => 'bars.other_b'.to_sym
+        scoped_search :on => :other_c, :in => :bars, :rename => 'bars.other_c'.to_sym
       end
 
       class ::Infoo < ::Foo
@@ -186,6 +192,25 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "value auto completer for related tables" do
         Foo.complete_for('bars.related = ').should eql([])
       end
+    end
+
+    # When options list is long (>10) and some of the options are in the format 'common.detail'
+    # the list should be shorten to include only 'common', the details part should be unfolded
+    # when the 'common.' part is typed or the options list size is reduced by typing part of
+    # the string.
+    context 'dotted options in the completion list' do
+      it "query that starts with space should not include the dotted options" do
+        Foo.complete_for(' ').should have(9).items
+      end
+
+      it "query that starts with the dotted string should include the dotted options" do
+        Foo.complete_for('bars.').should have(4).items
+      end
+
+      it "query that starts with part of the dotted string should include the dotted options" do
+        Foo.complete_for('b').should have(4).items
+      end
+
     end
   end
 end
