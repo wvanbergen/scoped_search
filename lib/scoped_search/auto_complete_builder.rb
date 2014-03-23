@@ -140,9 +140,10 @@ module ScopedSearch
       # for dotted field names compact the suggestions list to be one suggestion
       # unless the user has typed the relation name entirely or the suggestion list
       # is short.
-      if (suggestions.size > 10 && (tokens.empty? || !tokens.last.to_s.include?('.')) && !is_value)
+      last_token = tokens.last.to_s
+      if (suggestions.size > 10 && (tokens.empty? || !last_token.include?('.')) && !is_value)
         suggestions = suggestions.map  do |s|
-          s.to_s.split('.')[0].end_with?(tokens.last.to_s) ? s.to_s : s.to_s.split('.')[0]
+          !last_token.empty? && s.to_s.split('.')[0].end_with?(last_token) ? s.to_s : s.to_s.split('.')[0]
         end
       end
 
