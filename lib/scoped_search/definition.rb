@@ -258,7 +258,7 @@ module ScopedSearch
         when 4
           @klass.scope(:search_for, lambda { |*args|
             find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
-            search_scope = @klass.all
+            search_scope = @klass
             search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
             search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
             search_scope = search_scope.references(find_options[:include]) if find_options[:include]

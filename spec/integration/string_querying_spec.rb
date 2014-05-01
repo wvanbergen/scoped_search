@@ -221,10 +221,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "resetting order when selecting distinct values" do
-        distinct_search =
-          @class.search_for('', :order => '').all(:select => 'DISTINCT(explicit)')
-
-        Set.new(distinct_search.map(&:explicit)).should == Set['baz', nil]
+        distinct_search = @class.search_for('', :order => '').distinct(:explicit)
+        Set.new(distinct_search.pluck(:explicit)).should == Set['baz', nil]
       end
 
       it 'should order using symbol' do
