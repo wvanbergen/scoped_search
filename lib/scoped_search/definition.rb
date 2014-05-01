@@ -243,8 +243,6 @@ module ScopedSearch
       definition = self
       if @klass.ancestors.include?(ActiveRecord::Base)
         case ActiveRecord::VERSION::MAJOR
-        when 2
-          @klass.named_scope(:search_for, lambda { |*args| ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1]) })
         when 3
           @klass.scope(:search_for, lambda { |*args|
             find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
@@ -270,7 +268,7 @@ module ScopedSearch
           raise "This ActiveRecord version is currently not supported!"
         end
       else
-        raise "Currently, only ActiveRecord 2.1 or higher is supported!"
+        raise "Currently, only ActiveRecord 3 or newer is supported!"
       end
     end
 

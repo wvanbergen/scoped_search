@@ -176,7 +176,7 @@ module ScopedSearch
 
       field.key_klass
         .where(value_conditions(field_name, val))
-        .distinct(field_name)
+        .select("DISTINCT #{field_name}")
         .limit(20)
         .map(&field.key_field)
         .compact
@@ -202,7 +202,7 @@ module ScopedSearch
 
       completer_scope(field)
         .where(value_conditions(field.quoted_field, val))
-        .distinct(field.quoted_field)
+        .select("DISTINCT #{field.quoted_field}")
         .limit(20)
         .map(&field.field)
         .compact
@@ -252,7 +252,7 @@ module ScopedSearch
       
       query
         .where(value_conditions(field, val))
-        .distinct(field.quoted_field)
+        .select("DISTINCT #{field.quoted_field}")
         .limit(20)
         .map(&field.field)
         .compact
@@ -268,6 +268,5 @@ module ScopedSearch
     def complete_operator(node)
       definition.operator_by_field_name(node.value)
     end
-
   end
 end
