@@ -1,17 +1,16 @@
 module ScopedSearch
 
-
-  LOGICAL_INFIX_OPERATORS  = ScopedSearch::QueryLanguage::Parser::LOGICAL_INFIX_OPERATORS
-  LOGICAL_PREFIX_OPERATORS = ScopedSearch::QueryLanguage::Parser::LOGICAL_PREFIX_OPERATORS
-  NULL_PREFIX_OPERATORS    = ScopedSearch::QueryLanguage::Parser::NULL_PREFIX_OPERATORS
-  NULL_PREFIX_COMPLETER    = ['has']
-  COMPARISON_OPERATORS     = ScopedSearch::QueryLanguage::Parser::COMPARISON_OPERATORS
-  PREFIX_OPERATORS         = LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_OPERATORS
-
   # The AutoCompleteBuilder class builds suggestions to complete query based on
   # the query language syntax.
   class AutoCompleteBuilder
 
+    LOGICAL_INFIX_OPERATORS  = ScopedSearch::QueryLanguage::Parser::LOGICAL_INFIX_OPERATORS
+    LOGICAL_PREFIX_OPERATORS = ScopedSearch::QueryLanguage::Parser::LOGICAL_PREFIX_OPERATORS
+    NULL_PREFIX_OPERATORS    = ScopedSearch::QueryLanguage::Parser::NULL_PREFIX_OPERATORS
+    NULL_PREFIX_COMPLETER    = ['has']
+    COMPARISON_OPERATORS     = ScopedSearch::QueryLanguage::Parser::COMPARISON_OPERATORS
+    PREFIX_OPERATORS         = LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_OPERATORS
+    
     attr_reader :ast, :definition, :query, :tokens
 
     # This method will parse the query string and build  suggestion list using the
@@ -174,10 +173,14 @@ module ScopedSearch
       quoted_table  = field.key_klass.connection.quote_table_name(field.key_klass.table_name)
       quoted_field  = field.key_klass.connection.quote_column_name(field.key_field)
       field_name    = "#{quoted_table}.#{quoted_field}"
-      select_clause = "DISTINCT #{field_name}"
-      opts =  value_conditions(field_name, val).merge(:select => select_clause, :limit => 20)
 
-      field.key_klass.all(opts).map(&field.key_field).compact.map{ |f| "#{name}.#{f} "}
+      field.key_klass
+        .where(value_conditions(field_name, val))
+        .select("DISTINCT #{field_name}")
+        .limit(20)
+        .map(&field.key_field)
+        .compact
+        .map { |f| "#{name}.#{f} " }
     end
 
     # this method auto-completes values of fields that have a :complete_value marker
@@ -197,10 +200,13 @@ module ScopedSearch
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field
 
-      opts = value_conditions(field.quoted_field, val)
-      opts.merge!(:limit => 20, :select => "DISTINCT #{field.quoted_field}")
-
-      return completer_scope(field).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+      completer_scope(field)
+        .where(value_conditions(field.quoted_field, val))
+        .select("DISTINCT #{field.quoted_field}")
+        .limit(20)
+        .map(&field.field)
+        .compact
+        .map { |v| v.to_s =~ /\s/ ? "\"#{v}\"" : v }
     end
 
     def completer_scope(field)
@@ -215,7 +221,7 @@ module ScopedSearch
     end
     # date value completer
     def complete_date_value
-      options =[]
+      options = []
       options << '"30 minutes ago"'
       options << '"1 hour ago"'
       options << '"2 hours ago"'
@@ -233,34 +239,34 @@ module ScopedSearch
     # complete values in a key-value schema
     def complete_key_value(field, token, val)
       key_name = token.sub(/^.*\./,"")
-      key_opts = value_conditions(field.quoted_field,val).merge(:conditions => {field.key_field => key_name})
-      key_klass = field.key_klass.first(key_opts)
+      key_klass = field.key_klass.where(field.key_field => key_name).first
       raise ScopedSearch::QueryNotSupported, "Field '#{key_name}' not recognized for searching!" if key_klass.nil?
 
-      opts = {:limit => 20, :select => "DISTINCT #{field.quoted_field}"}
-      if(field.key_klass != field.klass)
-        key  = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
-        fk   = field.klass.reflections[key].association_foreign_key.to_sym
-        opts.merge!(:conditions => {fk => key_klass.id})
-      else
-        opts.merge!(key_opts)
+      query = completer_scope(field)
+
+      if field.key_klass != field.klass
+        key   = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
+        fk    = field.klass.reflections[key].association_foreign_key.to_sym
+        query = query.where(fk => key_klass.id)
       end
-      return completer_scope(field).all(opts).map(&field.field).compact.map{|v| v.to_s =~ /\s+/ ? "\"#{v}\"" : v}
+      
+      query
+        .where(value_conditions(field, val))
+        .select("DISTINCT #{field.quoted_field}")
+        .limit(20)
+        .map(&field.field)
+        .compact
+        .map { |v| v.to_s =~ /\s/ ? "\"#{v}\"" : v }
     end
 
-    #this method returns conditions for selecting completion from partial value
-    def value_conditions(field_name, val)
-      return val.blank? ? {} : {:conditions => "#{field_name} LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')}
+    # This method returns conditions for selecting completion from partial value
+    def value_conditions(field, val)
+      val.blank? ? nil : "#{field.quoted_field} LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')
     end
 
     # This method complete infix operators by field type
     def complete_operator(node)
       definition.operator_by_field_name(node.value)
     end
-
   end
-
 end
-
-# Load lib files
-require 'scoped_search/query_builder'

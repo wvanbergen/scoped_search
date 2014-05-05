@@ -201,19 +201,19 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'using order' do
       it "sort by string ASC" do
-        @class.search_for('',:order => 'string ASC').first.string.should eql('bar')
+        @class.search_for('', :order => 'string ASC').first.string.should eql('bar')
       end
 
       it "sort by string DESC" do
-        @class.search_for('',:order => 'string DESC').first.string.should eql('foo')
+        @class.search_for('', :order => 'string DESC').first.string.should eql('foo')
       end
 
       it "sort by description ASC" do
-        @class.search_for('',:order => 'description ASC').first.description.should eql('1 - one')
+        @class.search_for('', :order => 'description ASC').first.description.should eql('1 - one')
       end
 
       it "sort by description DESC" do
-        @class.search_for('',:order => 'description DESC').first.description.should eql('3 - three')
+        @class.search_for('', :order => 'description DESC').first.description.should eql('3 - three')
       end
 
       it "default order by another DESC" do
@@ -221,14 +221,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "resetting order when selecting distinct values" do
-        distinct_search =
-          @class.search_for('', :order => '').all(:select => 'DISTINCT(explicit)')
-
-        Set.new(distinct_search.map(&:explicit)).should == Set['baz', nil]
+        distinct_search = @class.search_for('', :order => '').select('DISTINCT(explicit)')
+        Set.new(distinct_search.to_a.map(&:explicit)).should == Set['baz', nil]
       end
 
       it 'should order using symbol' do
-        @class.search_for('',:order => :string).first.string.should eql('bar')
+        @class.search_for('', :order => :string).first.string.should eql('bar')
       end
     end
   end
