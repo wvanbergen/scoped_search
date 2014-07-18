@@ -80,6 +80,48 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     end
 
+    context 'querying multiple :belongs_to relation using alias' do
+
+      before do
+        # The related class
+        ActiveRecord::Migration.create_table(:hams) { |t| t.string :related }
+        class Ham < ActiveRecord::Base; has_many :moos; end
+
+        # The class on which to call search_for
+        ActiveRecord::Migration.create_table(:moos) { |t| t.string :foo; t.integer :primary_ham_id; t.integer :secondary_ham_id; }
+        class Moo < ActiveRecord::Base
+          belongs_to :primary_ham, class_name: Ham
+          belongs_to :secondary_ham, class_name: Ham
+          scoped_search :in => :primary_ham, :on => :related, alias: :primary_related
+          scoped_search :in => :secondary_ham, :on => :related, alias: :secondary_related
+        end
+
+        @ham1 = Ham.create!(:related => 'bar')
+        @ham2 = Ham.create!(:related => 'another bar')
+
+        Moo.create!(:foo => 'foo',       :primary_ham => @ham1)
+        Moo.create!(:foo => 'foo too',   :primary_ham => @ham1)
+        Moo.create!(:foo => 'foo three', :primary_ham => @ham2)
+        Moo.create!(:foo => 'foo four',  :secondary_ham => @ham2)
+        Moo.create!(:foo => 'foo four',  :primary_ham => @ham1, :secondary_ham => @ham2)
+        Moo.create!(:foo => 'foo five')
+      end
+
+      after do
+        ScopedSearch::RSpec::Database.drop_model(Ham)
+        ScopedSearch::RSpec::Database.drop_model(Moo)
+      end
+
+      it "should find all records which have bar" do
+        Moo.search_for('bar').should have(4).items
+      end
+
+      it "should only find records related by secondary" do
+        Moo.search_for('secondary_related = bar').should have(2).items
+      end
+
+    end
+
     context 'querying a :has_many relation' do
 
       before do
