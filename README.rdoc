@@ -13,7 +13,7 @@ to create a clean web UI with sorting and an ajax auto-completer.
 == Preview
 A demo application using the scoped search can be found here: http://github.com/abenari/scoped_search_demo_app
 A running version of the demo application can be found here: http://scope-search-demo.heroku.com
-A Rails 3.2 demo with assets pipeline and twitter bootstrap theame https://github.com/abenari/search-demo2
+A Rails 3.2 demo with assets pipeline and twitter bootstrap theme https://github.com/abenari/search-demo2
 
 == Installing
 For a Rails 3 application add the following line in your Gemfile, and run <tt>bundle install</tt>:
@@ -59,7 +59,7 @@ actually chain the call with other scopes, or with will_paginate. An example:
 
 === Search profiles
 
-If you include a :profile option to the scoped_searchcall, the fields specified will only
+If you include a :profile option to the scoped_search call, the fields specified will only
 be searched when you include this :profile into the search_for command as well:
 
   class User < ActiveRecord::Base
