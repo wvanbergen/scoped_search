@@ -84,7 +84,11 @@ module ScopedSearch
           if klass.columns_hash.has_key?(field.to_s)
             klass.columns_hash[field.to_s]
           else
-            raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
+            if "#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}".to_f < 4.1
+              raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
+            else
+              raise ActiveRecord::UnknownAttributeError.new( klass, field )
+            end
           end
         end
       end
