@@ -13,4 +13,12 @@ require "#{File.dirname(__FILE__)}/lib/mocks"
 
 RSpec.configure do |config|
   config.include ScopedSearch::RSpec::Mocks
+
+  config.expect_with :rspec do |c|
+    c.syntax = :should
+  end
+
+  config.mock_with :rspec do |mocks|
+    mocks.syntax = :should
+  end
 end

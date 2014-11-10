@@ -131,7 +131,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'value auto complete' do
       it "should complete values list of values " do
-        Foo.complete_for('explicit = ').should have(1).item
+        Foo.complete_for('explicit = ').length.should == 1
       end
 
       it "should complete values should contain baz" do
@@ -179,7 +179,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'exceptional search strings' do
 
       it "query that starts with 'or'" do
-        Foo.complete_for('or ').should have(9).items
+        Foo.complete_for('or ').length.should == 9
       end
 
       it "value completion with quotes" do
@@ -201,15 +201,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     # the string.
     context 'dotted options in the completion list' do
       it "query that starts with space should not include the dotted options" do
-        Foo.complete_for(' ').should have(9).items
+        Foo.complete_for(' ').length.should == 9
       end
 
       it "query that starts with the dotted string should include the dotted options" do
-        Foo.complete_for('bars.').should have(4).items
+        Foo.complete_for('bars.').length.should == 4
       end
 
       it "query that starts with part of the dotted string should include the dotted options" do
-        Foo.complete_for('b').should have(4).items
+        Foo.complete_for('b').length.should == 4
       end
 
     end

@@ -23,11 +23,11 @@ RSpec::Matchers.define :parse_to do |tree|
 end
 
 RSpec::Matchers.define :contain do |*expected|
-  match_for_should do |actual|
+  match do |actual|
     expected.all? { |e| actual.include?(e) }
   end
 
-  match_for_should_not do |actual|
+  match_when_negated do |actual|
     expected.none? { |e| actual.include?(e) }
   end
 end

@@ -30,14 +30,14 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find records when searching the subclass" do
-        Sub.search_for('test').should have(1).item
+        Sub.search_for('test').length.should == 1
       end
     end
 
     context 'querying a :belongs_to relation' do
 
       before do
-        
+
         # The related class
         ActiveRecord::Migration.create_table(:hars) { |t| t.string :related }
         class Har < ActiveRecord::Base; has_many :loos; end
@@ -63,15 +63,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find all records with a related bar record containing bar" do
-        Loo.search_for('bar').should have(3).items
+        Loo.search_for('bar').length.should == 3
       end
 
       it "should find all records with a related bar record having an exact value of bar with an explicit field" do
-        Loo.search_for('related = bar').should have(2).items
+        Loo.search_for('related = bar').length.should == 2
       end
 
       it "should find records for which the bar relation is not set using null?" do
-        Loo.search_for('null? related').should have(1).items
+        Loo.search_for('null? related').length.should == 1
       end
 
       it "should find records for which the bar relation is not set using null?" do
@@ -111,35 +111,35 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find all records with at least one bar record containing 'bar'" do
-        ::Goo.search_for('bar').should have(2).items
+        ::Goo.search_for('bar').length.should == 2
       end
 
       it "should find the only record with at least one bar record having the exact value 'bar'" do
-        ::Goo.search_for('= bar').should have(1).item
+        ::Goo.search_for('= bar').length.should == 1
       end
 
       it "should find all records for which at least one related bar record exists" do
-        ::Goo.search_for('set? related').should have(2).items
+        ::Goo.search_for('set? related').length.should == 2
       end
 
       it "should find all records for which none related bar records exist" do
-        ::Goo.search_for('null? related').should have(1).items
+        ::Goo.search_for('null? related').length.should == 1
       end
-      
+
       it "should find all records which has relation with both related values" do
-        ::Goo.search_for('related=bar AND related="another bar"').should have(1).items
+        ::Goo.search_for('related=bar AND related="another bar"').length.should == 1
       end
 
       it "should find all records searching with both parent and child fields" do
-        ::Goo.search_for('foo bar').should have(2).items
+        ::Goo.search_for('foo bar').length.should == 2
       end
 
       it "should find the only record with two Jars" do
-        ::Goo.search_for('foo bar "another bar"').should have(1).item
+        ::Goo.search_for('foo bar "another bar"').length.should == 1
       end
 
       it "shouldn't find any records as there isn't an intersect" do
-        ::Goo.search_for('too another').should have(0).items
+        ::Goo.search_for('too another').length.should == 0
       end
 
     end
@@ -175,19 +175,19 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find all records with a car record containing 'bar" do
-        Hoo.search_for('bar').should have(2).items
+        Hoo.search_for('bar').length.should == 2
       end
 
       it "should find the only record with the bar record has the exact value 'bar" do
-        Hoo.search_for('= bar').should have(1).item
+        Hoo.search_for('= bar').length.should == 1
       end
 
       it "should find all records for which the related bar record exists" do
-        Hoo.search_for('set? related').should have(2).items
+        Hoo.search_for('set? related').length.should == 2
       end
 
       it "should find all records for which the related bar record does not exist" do
-        Hoo.search_for('null? related').should have(1).items
+        Hoo.search_for('null? related').length.should == 1
       end
     end
 
@@ -228,19 +228,19 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find all records with at least one associated bar record containing 'bar'" do
-        Joo.search_for('bar').should have(2).items
+        Joo.search_for('bar').length.should == 2
       end
 
       it "should find record which is related to @bar_1" do
-        Joo.search_for('= bar').should have(1).items
+        Joo.search_for('= bar').length.should == 1
       end
 
       it "should find the only record related to @bar_3" do
-        Joo.search_for('last').should have(1).items
+        Joo.search_for('last').length.should == 1
       end
 
       it "should find all records that are related to @bar_2" do
-        Joo.search_for('other').should have(2).items
+        Joo.search_for('other').length.should == 2
       end
     end
 
@@ -290,11 +290,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find the two records that are related to a baz record" do
-        Koo.search_for('baz').should have(2).items
+        Koo.search_for('baz').length.should == 2
       end
 
       it "should find the two records that are related to a baz record" do
-        Koo.search_for('related=baz AND related="baz too!"').should have(1).items
+        Koo.search_for('related=baz AND related="baz too!"').length.should == 1
       end
     end
 
@@ -339,11 +339,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       # This table schema is not supported in activerecord 2, skip the tests
       if ActiveRecord::VERSION::MAJOR > 2
         it "should find the three records that are related to a baz record" do
-          Zoo.search_for('baz').should have(3).items
+          Zoo.search_for('baz').length.should == 3
         end
 
         it "should find no records that are related to a baz record" do
-          Zoo.search_for('related=baz AND related="baz too!"').should have(0).items
+          Zoo.search_for('related=baz AND related="baz too!"').length.should == 0
         end
       end
     end
@@ -406,19 +406,19 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find the two records that are related to a tag that contains foo record" do
-        Dog.search_for('foo').should have(2).items
+        Dog.search_for('foo').length.should == 2
       end
 
       it "should find one records that is related to both tags" do
-        Dog.search_for('foo=foo AND foo="foo too"').should have(1).items
+        Dog.search_for('foo=foo AND foo="foo too"').length.should == 1
       end
 
       it "should find the two tags that are related to a dog record" do
-        Tag.search_for('dog=baz').should have(2).items
+        Tag.search_for('dog=baz').length.should == 2
       end
 
       it "should find the 3 tags that are related to dogs record" do
-        Tag.search_for('baz').should have(3).items
+        Tag.search_for('baz').length.should == 3
       end
 
     end
