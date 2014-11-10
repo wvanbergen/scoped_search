@@ -34,5 +34,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency('rake')
 
   gem.rdoc_options << '--title' << gem.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
-  gem.extra_rdoc_files = ['README.rdoc']
+  gem.extra_rdoc_files = ['README.rdoc', 'CHANGELOG.rdoc', 'CONTRIBUTING.rdoc', 'LICENSE']
 end
