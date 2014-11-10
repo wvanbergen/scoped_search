@@ -479,20 +479,6 @@ module ScopedSearch
     # The MysqlAdapter makes sure that case sensitive comparisons are used
     # when using the (not) equals operator, regardless of the field's
     # collation setting.
-    class MysqlAdapter < ScopedSearch::QueryBuilder
-
-      # Patches the default <tt>sql_operator</tt> method to add
-      # <tt>BINARY</tt> after the equals and not equals operator to force
-      # case-sensitive comparisons.
-      def sql_operator(operator, field)
-        if [:ne, :eq].include?(operator) && field.textual?
-          "#{SQL_OPERATORS[operator]} BINARY"
-        else
-          super(operator, field)
-        end
-      end
-    end
-
     class Mysql2Adapter < ScopedSearch::QueryBuilder
        # Patches the default <tt>sql_operator</tt> method to add
       # <tt>BINARY</tt> after the equals and not equals operator to force
@@ -505,6 +491,8 @@ module ScopedSearch
         end
       end
     end
+
+    MysqlAdapter = Mysql2Adapter
 
     # The PostgreSQLAdapter make sure that searches are case sensitive when
     # using the like/unlike operators, by using the PostrgeSQL-specific
@@ -525,7 +513,7 @@ module ScopedSearch
         end
       end
 
-      # Switches out the default LIKE operator in the default <tt>sql_operator</tt> 
+      # Switches out the default LIKE operator in the default <tt>sql_operator</tt>
       # method for ILIKE or @@ if full text searching is enabled.
       def sql_operator(operator, field)
         raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if [:like, :unlike].include?(operator) and !field.textual?
@@ -546,25 +534,6 @@ module ScopedSearch
         sql = super(order, &block)
         sql += sql.include?('DESC') ? ' NULLS LAST ' : ' NULLS FIRST ' if sql
         sql
-      end
-    end
-
-    # The Oracle adapter also requires some tweaks to make the case insensitive LIKE work.
-    class OracleEnhancedAdapter < ScopedSearch::QueryBuilder
-
-      def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
-        if field.key_field
-          yield(:parameter, lhs.sub(/^.*\./,''))
-        end
-        if field.textual? && [:like, :unlike].include?(operator)
-          yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.to_s.tr_s('%*', '%'))
-          return "LOWER(#{field.to_sql(operator, &block)}) #{self.sql_operator(operator, field)} LOWER(?)"
-        elsif field.temporal?
-          return datetime_test(field, operator, value, &block)
-        else
-          yield(:parameter, value)
-          return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
-        end
       end
     end
   end
