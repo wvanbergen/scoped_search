@@ -11,6 +11,8 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 - Add support for ActiveRecord 4.1
 - Drop support for Ruby 1.8
 - Drop support for ActiveRecord 2
+- Extract Oracle query builder enhancements to plugin gem: https://github.com/wvanbergen/scoped_search-oracle_enhanced
+- Extract H2 query builder enhancements to plugin gem: https://github.com/wvanbergen/scoped_search-h2
 
 === Version 2.7.1
 
