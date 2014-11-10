@@ -31,7 +31,7 @@ require "spec_helper"
           class ::Item < ActiveRecord::Base
             has_many :facts
             has_many :keys, :through => :facts
-            
+
             scoped_search :in => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
           end
           class ::MyItem < ::Item
@@ -60,7 +60,7 @@ require "spec_helper"
         end
 
         it "should find all bars with a fact name color and fact value green" do
-          Item.search_for('facts.color = green').should have(1).items
+          Item.search_for('facts.color = green').length.should == 1
         end
 
         it "should find all bars with a fact name color and fact value gold" do
@@ -68,31 +68,31 @@ require "spec_helper"
         end
 
         it "should find all bars with a fact name size and fact value 5" do
-          Item.search_for('facts.size = 5').should have(1).items
+          Item.search_for('facts.size = 5').length.should == 1
         end
 
         it "should find all bars with a fact color green and fact size 5" do
-          Item.search_for('facts.color = green and facts.size = 5').should have(1).items
+          Item.search_for('facts.color = green and facts.size = 5').length.should == 1
         end
 
         it "should find all bars with a fact color gold or green" do
-          Item.search_for('facts.color = gold or facts.color = green').should have(2).items
+          Item.search_for('facts.color = gold or facts.color = green').length.should == 2
         end
 
         it "should find all bars that has size value" do
-          Item.search_for('has facts.size').should have(1).items
+          Item.search_for('has facts.size').length.should == 1
         end
 
         it "should find all bars that has color value" do
-          Item.search_for('has facts.color').should have(2).items
+          Item.search_for('has facts.color').length.should == 2
         end
 
         it "should complete facts names" do
-          Item.complete_for('facts.').should have(2).items
+          Item.complete_for('facts.').length.should == 2
         end
 
         it "should complete values for fact name = color" do
-          Item.complete_for('facts.color = ').should have(2).items
+          Item.complete_for('facts.color = ').length.should == 2
         end
 
         it "should find all bars with a fact name color and fact value gold of descendant class" do

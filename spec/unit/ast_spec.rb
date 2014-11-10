@@ -24,7 +24,7 @@ describe ScopedSearch::QueryLanguage::AST do
       end
 
       it "should create a child node for every subsequent array item" do
-        @ast.should have(1).children
+        @ast.children.length.should == 1
       end
 
       it "should create set the RHS the the first child value" do
@@ -42,7 +42,7 @@ describe ScopedSearch::QueryLanguage::AST do
       end
 
       it "should create a child node for every subsequent array item" do
-        @ast.should have(2).children
+        @ast.children.length.should == 2
       end
 
       it "should create set the LHS the the first child value" do
@@ -64,7 +64,7 @@ describe ScopedSearch::QueryLanguage::AST do
       end
 
       it "should create a child node for every subsequent array item" do
-        @ast.should have(2).children
+        @ast.children.length.should == 2
       end
 
       it "should create a nested OR structure for a nested array" do

@@ -35,15 +35,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find the record status = 1" do
-        @class.search_for('status = up').should have(1).item
+        @class.search_for('status = up').length.should == 1
       end
 
       it "should find the record with status = 0" do
-        @class.search_for('status = unknown').should have(1).item
+        @class.search_for('status = unknown').length.should == 1
       end
 
       it "should find two record with status != 1" do
-        @class.search_for('status != up').should have(2).item
+        @class.search_for('status != up').length.should == 2
       end
     end
     context 'querying boolean fields' do
@@ -61,15 +61,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find the record bool = true" do
-        @class.search_for('bool = yes').should have(1).item
+        @class.search_for('bool = yes').length.should == 1
       end
 
       it "should find two record with bool = false" do
-        @class.search_for('bool = no').should have(2).item
+        @class.search_for('bool = no').length.should == 2
       end
 
       it "should find two record with bool = false" do
-        @class.search_for('bool != yes').should have(2).item
+        @class.search_for('bool != yes').length.should == 2
       end
     end
   end
