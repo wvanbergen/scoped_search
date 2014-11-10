@@ -219,5 +219,7 @@ module ScopedSearch
           auto_complete_field_jquery(method, url, completion_options)
     end
 
+    deprecate :auto_complete_field_tag_jquery, :auto_complete_field_tag, :auto_complete_result
+
   end
 end
