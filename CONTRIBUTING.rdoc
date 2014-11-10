@@ -25,6 +25,8 @@ Please test your problem with the latest released version first. It's the only v
 
 We will gladly accept contributions to this library. Just fork it, make your changes and open a pull request. In order to keep the quality of this library high, and maintain it in the long run, we will code review your changes before merging. We sometimes do not accept changes if we feel it is outside the scope of the project. Feel free to contact if you are unsure.
 
+To get started understanding the structure of the library, read https://github.com/wvanbergen/scoped_search/wiki/Design-and-internals. It has a short overview of the different components and how they work together.
+
 To get your code accepted as quickly as possible, keep the following in mind:
 
 - Don't break backwards compatibility. If for some reason you really have to, please contact us first.
