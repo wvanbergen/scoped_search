@@ -11,22 +11,16 @@ auto-completer and a value auto-completer. It also comes with a set of helpers t
 to create a clean web UI with sorting and an ajax auto-completer.
 
 == Preview
+
 A demo application using the scoped search can be found here: http://github.com/abenari/scoped_search_demo_app
 A running version of the demo application can be found here: http://scope-search-demo.heroku.com
-A Rails 3.2 demo with assets pipeline and twitter bootstrap theme https://github.com/abenari/search-demo2
+A Rails 3.2 demo with assets pipeline and twitter bootstrap: theme https://github.com/abenari/search-demo2
 
 == Installing
-For a Rails 3 application add the following line in your Gemfile, and run <tt>bundle install</tt>:
+
+Add the following line in your Gemfile, and run <tt>bundle install</tt>:
 
   gem "scoped_search"
-
-For Rails 2 Add the following code to your Rails configuration in <tt>config/environment.rb</tt>,
-and run <tt>rake gems:install</tt> to install the gem.:
-
-  Rails::Initializer.run do |config|
-    ...
-    config.gem 'scoped_search'
-  end
 
 == Usage
 
@@ -70,7 +64,7 @@ be searched when you include this :profile into the search_for command as well:
 This will only search the :public_information column:
 
   User.search_for('blah blah blah')
-  
+
 And this will only search the :private_information column:
 
   User.search_for('blah blah blah', :profile => :members)
@@ -116,17 +110,18 @@ For more info, see the the project wiki: http://github.com/wvanbergen/scoped_sea
 
 == Additional resources
 
-* Source code: http://github.com/wvanbergen/scoped_search/tree
-* Project wiki: http://github.com/wvanbergen/scoped_search/wiki
-* Issue tracker: http://github.com/wvanbergen/scoped_search/issues
-* RDoc documentation: http://rdoc.info/projects/wvanbergen/scoped_search
-* wvanbergen's blog posts: http://techblog.floorplanner.com/tag/scoped_search
-* abenari's blog: http://scopedsearch.wordpress.com/
+* Project wiki: https://github.com/wvanbergen/scoped_search/wiki
+* Issue tracker: https://github.com/wvanbergen/scoped_search/issues
+* RDoc documentations: http://www.rubydoc.info/gems/scoped_search
+* Source code: https://github.com/wvanbergen/scoped_search
+
+- See CHANGELOG.rdoc for the changes to this library over time.
+- See CONTRIBUTING.rdoc if you want to report bugs, or help out on this project.
 
 == License
 
 This plugin is released under the MIT license (see LICENSE).
 
-This plugin was originally developed for Floorplanner.com by Willem van Bergen 
-(https://github.com/wvanbergen) with help from Wes Hays (https://github.com/weshays). 
+This plugin was originally developed for Floorplanner.com by Willem van Bergen
+(https://github.com/wvanbergen) with help from Wes Hays (https://github.com/weshays).
 The current maintainer is Amos Benari (https://github.com/abenari).

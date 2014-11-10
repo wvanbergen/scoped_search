@@ -1,0 +1,185 @@
+= Changelog
+
+This page describes the changes that have been made to *scoped_search* over its history.
+
+Please add an entry to the "Unreleased changes" section in your pull requests.
+
+=== Unreleased changes
+
+- No longer require jQuery UI automatically; you have to do this yourself now.
+- Upgraded to RSpec 3.
+- Add support for ActiveRecord 4.1
+- Drop support for Ruby 1.8
+- Drop support for ActiveRecord 2
+
+=== Version 2.7.1
+
+- Fix order SQL generation issue on PostgreSQL for the autocompleter.
+
+=== Version 2.7.0
+
+- Allow setting a default sort order
+- Fix a sorting bug for field names starting with `desc`.
+- SQL generation fixes.
+- Improve test coverage
+
+=== Version 2.6.5
+
+- Allow disabling certain fields for autocompletion.
+
+=== Version 2.6.4
+
+- jQuery 1.9 support for automplete helpers.
+
+=== Version 2.6.3
+
+- Bugfixes in querying plymorphic has many through relations.
+
+=== Version 2.6.2
+
+- Add support for querying plymorphic has many through relations.
+
+=== Version 2.6.1
+
+- Fix a SQL generation bug.
+
+=== Version 2.6.0
+
+- Improve logic for querying one to many relations.
+- Add a Railtie for better Rails integration.
+- Project infrastructure changes: remove infinity test, update LICENSE
+
+=== Version 2.5.1
+
+- Fixes to asset pipeline for auto completer UI helpers.
+- Use bundler for gem release management
+
+=== Version 2.5.0
+
+- Add support for ActiveRecord 4.0
+- Add support for Ruby 2.0
+- Fix encoding bug
+
+=== Version 2.4.1
+
+- Add asset pipeline support for autocompleter UI helpers
+- Fix query parser bug.
+
+=== Version 2.4.0
+
+- Raise an appropriate exception when referring to a database field that does not exists.
+- Drop support for GROUP BY; just use DISTINCT for these use cases
+- Add support for PostgreSQL full text search.
+- Many bugfixes.
+- Improved specs.
+- Add Travis CI testing for all supported databases.
+
+=== Version 2.3.7
+
+- Add support for IN and NOT IN queries.
+- Bug fix in SQL generation.
+
+=== Version 2.3.6
+
+- Minor bugfixes in auto completer.
+
+=== Version 2.3.5
+
+- Small bugfixes in auto completer.
+
+=== Version 2.3.4
+
+- Small bugfixes.
+
+=== Version 2.3.3
+
+- Add filtering and limiting support to autocompleter.
+- Documentation updates
+
+=== Version 2.3.2
+
+<i>Retracted</i>
+
+=== Version 2.3.1
+
+- Raise exception when trying to run an invalid query.
+- Several bug fixes in SQL generation
+- Several other minor bugfixes.
+
+=== Version 2.3.0
+
+- Added support for querying key-value relations.
+- Improved querying of relations.
+- Add support for syntax and value autocompletion of queries.
+- Add Rails UI helpers for autocompletion
+- Localized handling of dates
+- Fixed some Ruby 1.9 compatibility issues
+- Test coverage enhancements
+- Improved project infrastructure with infinity test and bundler.
+
+=== Version 2.2.1
+
+- Fix a parsing bug that would cause exceptions to be raised on certain queries.
+- Upgrade to RSpec 2
+- Fixed some Ruby 1.9 compatibility issues
+
+=== Version 2.2.0
+
+- Improved gem release management rake tasks.
+
+=== Version 2.1.1
+
+- Better handling of <tt>NULL</tt> values when evaluating queries.
+- Improved support for ActiveRecord 3.0.
+- Added an incomplete Oracle adapter.
+
+=== Version 2.1.0
+
+- Support for multiple search profiles.
+- Documentation improvements.
+
+=== Version 2.0.1
+
+- Improved project infrastructure and documentation
+
+=== Version 2.0
+
+- Complete rewrite, to support a more complex query language. It now supports operators, logical constructs including parentheses, NULL checks, searching in a single field only.
+- More fine-grained control over in what fields should be searched by using a new definition syntax. (The old syntax is still available for backwards compatibility.
+- Migrated testsuite from Test::Unit to RSpec.
+
+=== Version 1.2
+
+- Ruby 1.9 compatibility
+
+=== Version 1.1
+
+- Support for integer fields
+- RCov integrated in testuite
+
+=== Version 1.0
+
+- RDoc documentation
+- Improved testsuite
+
+=== Version 0.7
+
+- Use the <tt>ILIKE</tt> operator in PostgreSQL for case insensitive search.
+- Tests can be run on different DBMSs.
+
+=== Version 0.6
+
+- Search in associated models as well using <tt>ActiveRecord</tt> associations.
+
+=== Version 0.3
+
+- Detection of column types so they can be handled properly
+- Date based queries supported on date and time fields
+
+=== Version 0.2
+
+- <tt>OR</tt> keyword supported in query language
+
+=== Version 0.1.0
+
+- Initial version

@@ -1,0 +1,38 @@
+= Contributing
+
+Scoped search is an open source project, and hence we are open for contributions from anybody.
+
+== Reporting issues
+
+When reporting an issue, make sure to include the following information so we can pinpoint the problem faster:
+
+- What query did you use?
+- What is the search definition used on your models?
+- What do the tables involved in your search definition look like? Please include the type of the fields.
+- A sample of records. Which one did you expect to be included in the result
+
+Finally, please include the following information about your environment.
+
+- What version of scoped search you are using (e.g. 2.0).
+- What database, including version you are using. (e.g. PostgreSQL 9.3)
+- What version of ActiveRecord you are using (e.g. 4.1).
+- What version of Ruby you are using (e.g. MRI 2.1.1)
+
+Please test your problem with the latest released version first. It's the only version that we support.
+
+
+== Submitting pull requests
+
+We will gladly accept contributions to this library. Just fork it, make your changes and open a pull request. In order to keep the quality of this library high, and maintain it in the long run, we will code review your changes before merging. We sometimes do not accept changes if we feel it is outside the scope of the project. Feel free to contact if you are unsure.
+
+To get started understanding the structure of the library, read https://github.com/wvanbergen/scoped_search/wiki/Design-and-internals. It has a short overview of the different components and how they work together.
+
+To get your code accepted as quickly as possible, keep the following in mind:
+
+- Don't break backwards compatibility. If for some reason you really have to, please contact us first.
+- Follow code conventions. They are not written down, so try to follow the style of the surrounding code.
+- Make sure RDoc comments for the methods you add or change are up to date. You can use Yardoc extensions.
+- Add or update specs for the functionality you add or change.
+- Make sure that the specs pass for every version of ActiveRecord, every version of Ruby, and every database we support. Feel free to rely on Travis CI to do this (https://travis-ci.org/wvanbergen/scoped_search/).
+- Do <b>not</b> update <tt>ScopedSearch::VERSION</tt>.
+- Add an short entry describing your changes to the "Unreleased changes" section of <tt>CHANGELOG.rdoc</tt>.
