@@ -31,8 +31,5 @@ module ScopedSearch::QueryLanguage
       compiler = self.new(str)
       compiler.tokenize
     end
-
   end
 end
-
-

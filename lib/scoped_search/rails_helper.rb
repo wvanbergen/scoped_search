@@ -1,4 +1,3 @@
-
 module ScopedSearch
   module RailsHelper
     # Creates a link that alternates between ascending and descending.
@@ -36,7 +35,7 @@ module ScopedSearch
 
       if selected
         css_classes = html_options[:class] ? html_options[:class].split(" ") : []
-        if new_sort == ascend 
+        if new_sort == ascend
           options[:as] = "&#9650;&nbsp;#{options[:as]}"
           css_classes << "ascending"
         else
@@ -124,52 +123,51 @@ module ScopedSearch
     end
 
     def auto_complete_field_jquery(method, url, options = {})
-      function = <<-EOF
-      $.widget( "custom.catcomplete", $.ui.autocomplete, {
-        _renderMenu: function( ul, items ) {
-          var self = this,
-          currentCategory = "";
-          $.each( items, function( index, item ) {
-            if ( item.category != undefined && item.category != currentCategory ) {
-              ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
-              currentCategory = item.category;
-            }
-            if ( item.error != undefined ) {
-              ul.append( "<li class='ui-autocomplete-error'>" + item.error + "</li>" );
-            }
-            if( item.completed != undefined ) {
-              $( "<li></li>" ).data( "item.autocomplete", item )
-				      .append( "<a>" + "<strong class='ui-autocomplete-completed'>" + item.completed + "</strong>" + item.part + "</a>" )
-				      .appendTo( ul );
-            } else {
-              if(typeof(self._renderItemData) === "function") {
-                self._renderItemData( ul, item );
-              } else {
-                self._renderItem( ul, item );
+      function = <<-JAVASCRIPT
+        $.widget( "custom.catcomplete", $.ui.autocomplete, {
+          _renderMenu: function( ul, items ) {
+            var self = this,
+            currentCategory = "";
+            $.each( items, function( index, item ) {
+              if ( item.category != undefined && item.category != currentCategory ) {
+                ul.append( "<li class='ui-autocomplete-category'>" + item.category + "</li>" );
+                currentCategory = item.category;
               }
-            }
-          });
-        }
-      });
+              if ( item.error != undefined ) {
+                ul.append( "<li class='ui-autocomplete-error'>" + item.error + "</li>" );
+              }
+              if( item.completed != undefined ) {
+                $( "<li></li>" ).data( "item.autocomplete", item )
+  				      .append( "<a>" + "<strong class='ui-autocomplete-completed'>" + item.completed + "</strong>" + item.part + "</a>" )
+  				      .appendTo( ul );
+              } else {
+                if(typeof(self._renderItemData) === "function") {
+                  self._renderItemData( ul, item );
+                } else {
+                  self._renderItem( ul, item );
+                }
+              }
+            });
+          }
+        });
 
-      $("##{method}")
-      .catcomplete({
-			source: function( request, response ) {	$.getJSON( "#{url}", { #{method}: request.term }, response );	},
-			minLength: #{options[:min_length] || 0},
-      delay: #{options[:delay] || 200},
-      select: function(event, ui) { $( this ).catcomplete( "search" , ui.item.value); },
-      search: function(event, ui) { $(".auto_complete_clear").hide(); },
-      open: function(event, ui) { $(".auto_complete_clear").show(); }
-      });
+        $("##{method}")
+        .catcomplete({
+  			source: function( request, response ) {	$.getJSON( "#{url}", { #{method}: request.term }, response );	},
+  			minLength: #{options[:min_length] || 0},
+        delay: #{options[:delay] || 200},
+        select: function(event, ui) { $( this ).catcomplete( "search" , ui.item.value); },
+        search: function(event, ui) { $(".auto_complete_clear").hide(); },
+        open: function(event, ui) { $(".auto_complete_clear").show(); }
+        });
 
-      $("##{method}").bind( "focus", function( event ) {
-        if( $( this )[0].value == "" ) {
-					$( this ).catcomplete( "search" );
-        }
-			});
+        $("##{method}").bind( "focus", function( event ) {
+          if( $( this )[0].value == "" ) {
+  					$( this ).catcomplete( "search" );
+          }
+  			});
 
- EOF
-
+      JAVASCRIPT
 
       javascript_tag(function)
     end
@@ -218,7 +216,6 @@ module ScopedSearch
       text_field_tag(method, val, options) + auto_complete_clear_value_button(method) +
           auto_complete_field_jquery(method, url, completion_options)
     end
-
     deprecate :auto_complete_field_tag_jquery, :auto_complete_field_tag, :auto_complete_result
 
   end

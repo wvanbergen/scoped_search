@@ -18,6 +18,7 @@ module ScopedSearch
   module ClassMethods
 
     def self.extended(base)
+      super
       base.class_attribute :scoped_search_definition
     end
 

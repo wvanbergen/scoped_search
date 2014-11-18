@@ -10,7 +10,7 @@ module ScopedSearch
     NULL_PREFIX_COMPLETER    = ['has']
     COMPARISON_OPERATORS     = ScopedSearch::QueryLanguage::Parser::COMPARISON_OPERATORS
     PREFIX_OPERATORS         = LOGICAL_PREFIX_OPERATORS + NULL_PREFIX_OPERATORS
-    
+
     attr_reader :ast, :definition, :query, :tokens
 
     # This method will parse the query string and build  suggestion list using the
@@ -249,7 +249,7 @@ module ScopedSearch
         fk    = field.klass.reflections[key].association_foreign_key.to_sym
         query = query.where(fk => key_klass.id)
       end
-      
+
       query
         .where(value_conditions(field, val))
         .select("DISTINCT #{field.quoted_field}")
