@@ -1,8 +1,8 @@
+
 language: ruby
-script: bundle exec rake
-before_script:
-  - psql -c 'create database scoped_search_test;' -U postgres
-  - mysql -e 'create database scoped_search_test;'
+
+sudo: false
+
 rvm:
   - 1.9.3
   - 2.0.0
@@ -10,10 +10,18 @@ rvm:
   - ruby-head
   - jruby-19mode
   - jruby-head
+
 gemfile:
  - Gemfile.activerecord3
  - Gemfile.activerecord40
  - Gemfile.activerecord41
+
+before_script:
+  - psql -c 'create database scoped_search_test;' -U postgres
+  - mysql -e 'create database scoped_search_test;'
+
+script: bundle exec rake
+
 matrix:
   include:
   allow_failures:
