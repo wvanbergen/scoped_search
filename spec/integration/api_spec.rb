@@ -44,54 +44,15 @@ describe ScopedSearch, "API" do
       @class.should respond_to(:search_for)
     end
 
-    if ActiveRecord::VERSION::MAJOR == 2
-      
-      it "should return a ActiveRecord::NamedScope::Scope instance" do
-        @class.search_for('query').class.should eql(ActiveRecord::NamedScope::Scope)
-      end
-      
-    elsif ActiveRecord::VERSION::MAJOR == 3
-      
+    if ActiveRecord::VERSION::MAJOR == 3
       it "should return a ActiveRecord::Relation instance" do
         @class.search_for('query').class.should eql(ActiveRecord::Relation)
       end
-      
+
     elsif ActiveRecord::VERSION::MAJOR == 4
-      
       it "should return a ActiveRecord::Relation instance" do
         @class.search_for('query').class.superclass.should eql(ActiveRecord::Relation)
       end
-      
     end
   end
-
-  context 'having backwards compatibility' do
-
-    before(:each) do
-      class ::Foo < ActiveRecord::Base
-        belongs_to :bar
-      end
-    end
-
-    after(:each) do
-      Object.send :remove_const, :Foo
-    end
-
-    it "should respond to :searchable_on" do
-      Foo.should respond_to(:searchable_on)
-    end
-
-    it "should create a Field instance for every argument" do
-      ScopedSearch::Definition::Field.should_receive(:new).exactly(3).times
-      Foo.searchable_on(:field_1, :field_2, :field_3)
-    end
-
-    it "should create a Field with a valid relation when using the underscore notation" do
-      ScopedSearch::Definition::Field.should_receive(:new).with(
-          instance_of(ScopedSearch::Definition), hash_including(:in => :bar, :on => :related_field))
-      Foo.searchable_on(:bar_related_field)
-    end
-
-  end
-
 end

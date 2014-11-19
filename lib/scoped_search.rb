@@ -18,6 +18,7 @@ module ScopedSearch
   module ClassMethods
 
     def self.extended(base)
+      super
       base.class_attribute :scoped_search_definition
     end
 
@@ -34,31 +35,6 @@ module ScopedSearch
         end
       end
       return self.scoped_search_definition
-    end
-  end
-
-  # The <tt>BackwardsCompatibility</tt> module can be included into
-  # <tt>ActiveRecord::Base</tt> to provide the <tt>searchable_on</tt> search
-  # field definition syntax that is compatible with scoped_seach 1.x
-  #
-  # Currently, it is included into <tt>ActiveRecord::Base</tt> by default, but
-  # this may change in the future. So, please uodate to the newer syntax as
-  # soon as possible.
-  module BackwardsCompatibility
-
-    # Defines fields to search on using a syntax compatible with scoped_search 1.x
-    def searchable_on(*fields)
-
-      options = fields.last.kind_of?(Hash) ? fields.pop : {}
-      # TODO: handle options?
-
-      fields.each do |field|
-        if relation = self.reflections.keys.detect { |relation| field.to_s =~ Regexp.new("^#{relation}_(\\w+)$") }
-          scoped_search(:in => relation.to_sym, :on => $1.to_sym)
-        else
-          scoped_search(:on => field)
-        end
-      end
     end
   end
 
@@ -92,7 +68,6 @@ require 'scoped_search/auto_complete_builder'
 
 # Import the search_on method in the ActiveReocrd::Base class
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
-ActiveRecord::Base.send(:extend, ScopedSearch::BackwardsCompatibility)
 
 # Rails & Compass integration
 require 'scoped_search/railtie' if defined?(::Rails)
