@@ -27,7 +27,7 @@ Add the following line in your Gemfile, and run <tt>bundle install</tt>:
 Scoped search requires you to define the fields you want to search in:
 
   class User < ActiveRecord::Base
-    scoped_search :on => [:first_name, :last_name]
+    scoped_search on: [:first_name, :last_name]
   end
 
 For more information about options and using fields from relations, see the
@@ -44,12 +44,12 @@ The result is returned as <tt>named_scope</tt>. Because of this, you can
 actually chain the call with other scopes, or with will_paginate. An example:
 
   class Project < ActiveRecord::Base
-    searchable_on :name, :description
-    named_scope :public, :conditions => {:public => true }
+    scoped_search on: [:name, :description]
+    named_scope :public, conditions: { public: true }
   end
 
   # using chained named_scopes and will_paginate in your controller
-  Project.public.search_for(params[:q]).paginate(:page => params[:page], :include => :tasks)
+  Project.public.search_for(params[:q]).paginate(page: params[:page], include: :tasks)
 
 === Search profiles
 
@@ -57,8 +57,8 @@ If you include a :profile option to the scoped_search call, the fields specified
 be searched when you include this :profile into the search_for command as well:
 
   class User < ActiveRecord::Base
-    scoped_search :on => :public_information
-    scoped_search :on => :private_information, :profile => :members
+    scoped_search on: :public_information
+    scoped_search on: :private_information, profile: :members
   end
 
 This will only search the :public_information column:
@@ -67,7 +67,7 @@ This will only search the :public_information column:
 
 And this will only search the :private_information column:
 
-  User.search_for('blah blah blah', :profile => :members)
+  User.search_for('blah blah blah', profile: :members)
 
 === More information
 
