@@ -478,24 +478,6 @@ module ScopedSearch
       end
     end
 
-    # The MysqlAdapter makes sure that case sensitive comparisons are used
-    # when using the (not) equals operator, regardless of the field's
-    # collation setting.
-    class Mysql2Adapter < ScopedSearch::QueryBuilder
-       # Patches the default <tt>sql_operator</tt> method to add
-      # <tt>BINARY</tt> after the equals and not equals operator to force
-      # case-sensitive comparisons.
-      def sql_operator(operator, field)
-        if [:ne, :eq].include?(operator) && field.textual?
-          "#{SQL_OPERATORS[operator]} BINARY"
-        else
-          super(operator, field)
-        end
-      end
-    end
-
-    MysqlAdapter = Mysql2Adapter
-
     # The PostgreSQLAdapter make sure that searches are case sensitive when
     # using the like/unlike operators, by using the PostrgeSQL-specific
     # <tt>ILIKE operator</tt> instead of <tt>LIKE</tt>.
@@ -505,7 +487,7 @@ module ScopedSearch
       # method if full text searching is enabled and a text search is being
       # performed.
       def sql_test(field, operator, value, lhs, &block)
-        if [:like, :unlike].include?(operator) and field.full_text_search
+        if [:like, :unlike].include?(operator) && field.full_text_search
           yield(:parameter, value)
           negation = (operator == :unlike) ? "NOT " : ""
           locale = (field.full_text_search == true) ? 'english' : field.full_text_search
@@ -519,7 +501,7 @@ module ScopedSearch
       # method for ILIKE or @@ if full text searching is enabled.
       def sql_operator(operator, field)
         raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if [:like, :unlike].include?(operator) and !field.textual?
-        return '@@' if [:like, :unlike].include?(operator) and field.full_text_search
+        return '@@' if [:like, :unlike].include?(operator) && field.full_text_search
         case operator
           when :like   then 'ILIKE'
           when :unlike then 'NOT ILIKE'
