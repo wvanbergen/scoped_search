@@ -336,15 +336,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ActiveRecord::Migration.drop_table(:zoos)
       end
 
-      # This table schema is not supported in activerecord 2, skip the tests
-      if ActiveRecord::VERSION::MAJOR > 2
-        it "should find the three records that are related to a baz record" do
-          Zoo.search_for('baz').length.should == 3
-        end
+      it "should find the three records that are related to a baz record" do
+        Zoo.search_for('baz').length.should == 3
+      end
 
-        it "should find no records that are related to a baz record" do
-          Zoo.search_for('related=baz AND related="baz too!"').length.should == 0
-        end
+      it "should find no records that are related to a baz record" do
+        Zoo.search_for('related=baz AND related="baz too!"').length.should == 0
       end
     end
 

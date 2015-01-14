@@ -14,17 +14,14 @@ module ScopedSearch
     # This method will parse the query string and build an SQL query using the search
     # query. It will return an empty hash if the search query is empty, in which case
     # the scope call will simply return all records.
-    def self.build_query(definition, *args)
-      query = args[0] ||=''
-      options = args[1] || {}
-
+    def self.build_query(definition, query, options = {})
       query_builder_class = self.class_for(definition)
       if query.kind_of?(ScopedSearch::QueryLanguage::AST::Node)
         return query_builder_class.new(definition, query, options[:profile]).build_find_params(options)
       elsif query.kind_of?(String)
         return query_builder_class.new(definition, ScopedSearch::QueryLanguage::Compiler.parse(query), options[:profile]).build_find_params(options)
       else
-        raise "Unsupported query object: #{query.inspect}!"
+        raise ArgumentError, "Unsupported query object: #{query.inspect}!"
       end
     end
 

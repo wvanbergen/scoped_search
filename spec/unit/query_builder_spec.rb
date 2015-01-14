@@ -10,8 +10,8 @@ describe ScopedSearch::QueryBuilder do
     @definition.stub(:profile=).and_return(true)
   end
 
-  it "should return empty conditions if the search query is nil" do
-    ScopedSearch::QueryBuilder.build_query(@definition, nil).should == { }
+  it "should raise an ArgumentError if the query is not set" do
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, nil) }.should raise_error(ArgumentError)
   end
 
   it "should return empty conditions if the query is blank" do

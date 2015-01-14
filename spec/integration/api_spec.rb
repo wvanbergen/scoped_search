@@ -44,15 +44,8 @@ describe ScopedSearch, "API" do
       @class.should respond_to(:search_for)
     end
 
-    if ActiveRecord::VERSION::MAJOR == 3
-      it "should return a ActiveRecord::Relation instance" do
-        @class.search_for('query').class.should eql(ActiveRecord::Relation)
-      end
-
-    elsif ActiveRecord::VERSION::MAJOR == 4
-      it "should return a ActiveRecord::Relation instance" do
-        @class.search_for('query').class.superclass.should eql(ActiveRecord::Relation)
-      end
+    it "should return a ActiveRecord::Relation instance" do
+      @class.search_for('query').should be_a(ActiveRecord::Relation)
     end
   end
 end

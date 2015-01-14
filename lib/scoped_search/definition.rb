@@ -249,35 +249,18 @@ module ScopedSearch
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
       definition = self
-      if @klass.ancestors.include?(ActiveRecord::Base)
-        case ActiveRecord::VERSION::MAJOR
-        when 3
-          @klass.scope(:search_for, lambda { |*args|
-            find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
-            search_scope = @klass.scoped
-            search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
-            search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
-            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
-            search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
-            search_scope
-          })
-        when 4
-          @klass.scope(:search_for, lambda { |*args|
-            find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
-            search_scope = @klass
-            search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
-            search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
-            search_scope = search_scope.references(find_options[:include]) if find_options[:include]
-            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
-            search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
-            search_scope
-          })
-        else
-          raise "This ActiveRecord version is currently not supported!"
-        end
-      else
-        raise "Currently, only ActiveRecord 3 or newer is supported!"
-      end
+      @klass.scope(:search_for, proc { |query, options|
+        search_scope = ActiveRecord::VERSION::MAJOR == 3 ? @klass.scoped : @klass
+
+        find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options || {})
+        search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]
+        search_scope = search_scope.includes(find_options[:include])   if find_options[:include]
+        search_scope = search_scope.joins(find_options[:joins])        if find_options[:joins]
+        search_scope = search_scope.reorder(find_options[:order])      if find_options[:order]
+        search_scope = search_scope.references(find_options[:include]) if find_options[:include] && ActiveRecord::VERSION::MAJOR >= 4
+
+        search_scope
+      })
     end
 
     # Registers the complete_for method within the class that is used for searching.
