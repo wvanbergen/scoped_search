@@ -59,9 +59,7 @@ module ScopedSearch
       # The ActiveRecord-based class that belongs to this field.
       def klass
         @klass ||= if relation
-          related = definition.klass.reflections[relation]
-          raise ScopedSearch::QueryNotSupported, "relation '#{relation}' not one of #{definition.klass.reflections.keys.join(', ')} " if related.nil?
-          related.klass
+          definition.reflection_by_name(definition.klass, relation).klass
         else
           definition.klass
         end
@@ -70,9 +68,9 @@ module ScopedSearch
       # The ActiveRecord-based class that belongs the key field in a key-value pair.
       def key_klass
         @key_klass ||= if key_relation
-          definition.klass.reflections[key_relation].klass
+          definition.reflection_by_name(definition.klass, key_relation).klass
         elsif relation
-          definition.klass.reflections[relation].klass
+          definition.reflection_by_name(definition.klass, relation).klass
         else
           definition.klass
         end
@@ -238,6 +236,12 @@ module ScopedSearch
     # Defines a new search field for this search definition.
     def define(options)
       Field.new(self, options)
+    end
+
+    # Returns a reflection for a given klass and name
+    def reflection_by_name(klass, name)
+      return if name.nil?
+      klass.reflections[name.to_sym] || klass.reflections[name.to_s]
     end
 
     protected
