@@ -222,9 +222,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       after do
-        ActiveRecord::Migration.drop_table(:dars_joos)
-        ActiveRecord::Migration.drop_table(:dars)
-        ActiveRecord::Migration.drop_table(:joos)
+        ScopedSearch::RSpec::Database.drop_model(Joo)
+        ScopedSearch::RSpec::Database.drop_model(Dar)
+        ActiveRecord::Migration.drop_table(:dars_joos) if ActiveRecord::Migration.table_exists?(:dars_joos)
       end
 
       it "should find all records with at least one associated bar record containing 'bar'" do

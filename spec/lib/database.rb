@@ -20,7 +20,7 @@ module ScopedSearch::RSpec::Database
 
     @database_connections ||= YAML.load(File.read(file))
   end
-  
+
   def self.test_databases
     database_names = test_databases_configuration.keys.sort
     if ENV['EXCLUDE_DATABASE'].present?
@@ -59,6 +59,10 @@ module ScopedSearch::RSpec::Database
   end
 
   def self.drop_model(klass)
+    klass.constants.grep(/\AHABTM_/).each do |habtm_class|
+      ActiveRecord::Migration.drop_table(klass.const_get(habtm_class).table_name)
+      klass.send(:remove_const, habtm_class)
+    end
     ActiveRecord::Migration.drop_table(klass.table_name)
   end
 end
