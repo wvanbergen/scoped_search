@@ -20,7 +20,7 @@ rvm:
 - jruby-head
 
 gemfile:
-- Gemfile.activerecord3
+- Gemfile.activerecord32
 - Gemfile.activerecord40
 - Gemfile.activerecord41
 - Gemfile.activerecord42
