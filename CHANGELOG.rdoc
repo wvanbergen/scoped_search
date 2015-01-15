@@ -8,7 +8,16 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 *Nothing yet*
 
-=== Version 3.0
+=== Version 3.1.0
+
+- Add support for ActiveRecord 4.2.
+- Bump AtiveRecord requirement to 3.2.
+
+===  Version 3.0.1
+
+- Security fix in parsing dates.
+
+=== Version 3.0.0
 
 - Add support for ActiveRecord 4.1
 - Drop support for Ruby 1.8
