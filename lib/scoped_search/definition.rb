@@ -85,7 +85,7 @@ module ScopedSearch
             if "#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}".to_f < 4.1
               raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
             else
-              raise ActiveRecord::UnknownAttributeError.new( klass, field )
+              raise ActiveRecord::UnknownAttributeError.new(klass, field)
             end
           end
         end
@@ -196,7 +196,7 @@ module ScopedSearch
       return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ ']  if field.numerical?
       return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']              if field.textual?
       return ['= ', '> ', '< ']                                   if field.temporal?
-      raise ScopedSearch::QueryNotSupported, "could not verify '#{name}' type, this can be a result of a definition error"
+      raise ScopedSearch::QueryNotSupported, "Unsupported type '#{field.type.inspect}')' for field '#{name}'. This can be a result of a search definition problem."
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
