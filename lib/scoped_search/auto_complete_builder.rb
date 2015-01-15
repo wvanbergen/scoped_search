@@ -246,7 +246,7 @@ module ScopedSearch
 
       if field.key_klass != field.klass
         key   = field.key_klass.to_s.gsub(/.*::/,'').underscore.to_sym
-        fk    = field.klass.reflections[key].association_foreign_key.to_sym
+        fk    = definition.reflection_by_name(field.klass, key).association_foreign_key.to_sym
         query = query.where(fk => key_klass.id)
       end
 

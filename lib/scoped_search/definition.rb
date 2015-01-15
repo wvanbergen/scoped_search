@@ -59,9 +59,7 @@ module ScopedSearch
       # The ActiveRecord-based class that belongs to this field.
       def klass
         @klass ||= if relation
-          related = definition.klass.reflections[relation]
-          raise ScopedSearch::QueryNotSupported, "relation '#{relation}' not one of #{definition.klass.reflections.keys.join(', ')} " if related.nil?
-          related.klass
+          definition.reflection_by_name(definition.klass, relation).klass
         else
           definition.klass
         end
@@ -70,9 +68,9 @@ module ScopedSearch
       # The ActiveRecord-based class that belongs the key field in a key-value pair.
       def key_klass
         @key_klass ||= if key_relation
-          definition.klass.reflections[key_relation].klass
+          definition.reflection_by_name(definition.klass, key_relation).klass
         elsif relation
-          definition.klass.reflections[relation].klass
+          definition.reflection_by_name(definition.klass, relation).klass
         else
           definition.klass
         end
@@ -87,7 +85,7 @@ module ScopedSearch
             if "#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}".to_f < 4.1
               raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
             else
-              raise ActiveRecord::UnknownAttributeError.new( klass, field )
+              raise ActiveRecord::UnknownAttributeError.new(klass, field)
             end
           end
         end
@@ -198,7 +196,7 @@ module ScopedSearch
       return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ ']  if field.numerical?
       return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']              if field.textual?
       return ['= ', '> ', '< ']                                   if field.temporal?
-      raise ScopedSearch::QueryNotSupported, "could not verify '#{name}' type, this can be a result of a definition error"
+      raise ScopedSearch::QueryNotSupported, "Unsupported type '#{field.type.inspect}')' for field '#{name}'. This can be a result of a search definition problem."
     end
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
@@ -240,40 +238,29 @@ module ScopedSearch
       Field.new(self, options)
     end
 
+    # Returns a reflection for a given klass and name
+    def reflection_by_name(klass, name)
+      return if name.nil?
+      klass.reflections[name.to_sym] || klass.reflections[name.to_s]
+    end
+
     protected
 
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
       definition = self
-      if @klass.ancestors.include?(ActiveRecord::Base)
-        case ActiveRecord::VERSION::MAJOR
-        when 3
-          @klass.scope(:search_for, lambda { |*args|
-            find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
-            search_scope = @klass.scoped
-            search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
-            search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
-            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
-            search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
-            search_scope
-          })
-        when 4
-          @klass.scope(:search_for, lambda { |*args|
-            find_options = ScopedSearch::QueryBuilder.build_query(definition, args[0], args[1])
-            search_scope = @klass
-            search_scope = search_scope.where(find_options[:conditions]) if find_options[:conditions]
-            search_scope = search_scope.includes(find_options[:include]) if find_options[:include]
-            search_scope = search_scope.references(find_options[:include]) if find_options[:include]
-            search_scope = search_scope.joins(find_options[:joins]) if find_options[:joins]
-            search_scope = search_scope.reorder(find_options[:order]) if find_options[:order]
-            search_scope
-          })
-        else
-          raise "This ActiveRecord version is currently not supported!"
-        end
-      else
-        raise "Currently, only ActiveRecord 3 or newer is supported!"
-      end
+      @klass.scope(:search_for, proc { |query, options|
+        search_scope = ActiveRecord::VERSION::MAJOR == 3 ? @klass.scoped : @klass
+
+        find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options || {})
+        search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]
+        search_scope = search_scope.includes(find_options[:include])   if find_options[:include]
+        search_scope = search_scope.joins(find_options[:joins])        if find_options[:joins]
+        search_scope = search_scope.reorder(find_options[:order])      if find_options[:order]
+        search_scope = search_scope.references(find_options[:include]) if find_options[:include] && ActiveRecord::VERSION::MAJOR >= 4
+
+        search_scope
+      })
     end
 
     # Registers the complete_for method within the class that is used for searching.

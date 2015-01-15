@@ -96,13 +96,8 @@ require "spec_helper"
         end
 
         it "should find all bars with a fact name color and fact value gold of descendant class" do
-          if ActiveRecord::VERSION::MAJOR == 3
-            MyItem.search_for('facts.color = gold').first.name.should eql('barbary')
-          end
+          MyItem.search_for('facts.color = gold').first.name.should eql('barbary')
         end
-
       end
-
     end
   end
-
