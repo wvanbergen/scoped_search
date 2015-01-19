@@ -88,14 +88,6 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('string ~ FOO').length.should == 1
       end
 
-      it "should not find records without case sensitivity when using the = operator" do
-        @class.search_for('string = FOO').length.should == 0
-      end
-
-      it "should find records without case sensitivity when using the != operator" do
-        @class.search_for('string != FOO').length.should == 3
-      end
-
       it "should find records without case sensitivity when using the NOT LIKE operator" do
         @class.search_for('string !~ FOO').length.should == 2
       end
