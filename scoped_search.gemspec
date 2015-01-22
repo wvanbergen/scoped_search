@@ -9,6 +9,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ['Amos Benari', 'Willem van Bergen', 'Wes Hays']
   gem.email         = ['abenari@redhat.com', 'willem@railsdoctors.com', 'weshays@gbdev.com']
   gem.homepage      = "https://github.com/wvanbergen/scoped_search/wiki"
+  gem.license       = "MIT"
   gem.summary       = %q{Easily search you ActiveRecord models with a simple query language using a named scope}
   gem.description   = <<-EOS
     Scoped search makes it easy to search your ActiveRecord-based models.
