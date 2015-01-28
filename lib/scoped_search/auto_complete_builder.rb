@@ -128,7 +128,7 @@ module ScopedSearch
     def build_suggestions(suggestions, is_value)
       return [] if (suggestions.blank?)
 
-      q=query
+      q = query
       unless q =~ /(\s|\)|,)$/ || last_token_is(COMPARISON_OPERATORS)
         val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
         suggestions = suggestions.map {|s| s if s.to_s =~ /^"?#{val}"?/i}.compact
@@ -196,6 +196,7 @@ module ScopedSearch
       field = definition.field_by_name(token)
       return [] unless field && field.complete_value
 
+      return [] if field.numerical?
       return complete_set(field) if field.set?
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field

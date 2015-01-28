@@ -217,8 +217,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     end
 
     context 'autocompleting integer comparisons' do
-      it 'should auto complete integers as strings' do
-        Foo.complete_for('int > 2').should == ["int >  22"]
+      it 'should not autocomplete numerical fields' do
+        Foo.complete_for('int > 2').should == []
       end
     end
   end
