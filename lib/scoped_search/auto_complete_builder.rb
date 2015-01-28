@@ -201,7 +201,7 @@ module ScopedSearch
       return complete_key_value(field, token, val) if field.key_field
 
       completer_scope(field)
-        .where(value_conditions(field.quoted_field, val))
+        .where(value_conditions(field, val))
         .select("DISTINCT #{field.quoted_field}")
         .limit(20)
         .map(&field.field)
