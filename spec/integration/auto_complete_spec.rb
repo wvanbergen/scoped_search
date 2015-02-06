@@ -35,7 +35,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         has_many :bars
         default_scope { order(:string) }
 
-        scoped_search :on => [:string, :int, :date]
+        scoped_search :on => [:string, :date]
+        scoped_search :on => [:int], :complete_value => true
         scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
         scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
         scoped_search :on => :deprecated, :complete_enabled => false
@@ -49,7 +50,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10)
-      Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 9  , :date => 'February 10, 2011', :unindexed => 10)
+      Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
 
       Bar.create!(:related => 'lala',         :foo => @foo_1)
@@ -176,6 +177,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
     end
 
+
     context 'exceptional search strings' do
 
       it "query that starts with 'or'" do
@@ -212,6 +214,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         Foo.complete_for('b').length.should == 4
       end
 
+    end
+
+    context 'autocompleting integer comparisons' do
+      it 'should autocomplete numerical fields' do
+        Foo.complete_for('int > 2').first.should match(/22/)
+      end
     end
   end
 end
