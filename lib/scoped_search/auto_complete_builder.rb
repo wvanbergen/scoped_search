@@ -128,7 +128,7 @@ module ScopedSearch
     def build_suggestions(suggestions, is_value)
       return [] if (suggestions.blank?)
 
-      q=query
+      q = query
       unless q =~ /(\s|\)|,)$/ || last_token_is(COMPARISON_OPERATORS)
         val = Regexp.escape(tokens.last.to_s).gsub('\*', '.*')
         suggestions = suggestions.map {|s| s if s.to_s =~ /^"?#{val}"?/i}.compact
@@ -201,7 +201,7 @@ module ScopedSearch
       return complete_key_value(field, token, val) if field.key_field
 
       completer_scope(field)
-        .where(value_conditions(field.quoted_field, val))
+        .where(value_conditions(field, val))
         .select("DISTINCT #{field.quoted_field}")
         .limit(20)
         .map(&field.field)
@@ -261,7 +261,7 @@ module ScopedSearch
 
     # This method returns conditions for selecting completion from partial value
     def value_conditions(field, val)
-      val.blank? ? nil : "#{field.quoted_field} LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')
+      val.blank? ? nil : "CAST(#{field.quoted_field} as CHAR(50)) LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')
     end
 
     # This method complete infix operators by field type
