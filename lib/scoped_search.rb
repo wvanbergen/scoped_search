@@ -25,7 +25,7 @@ module ScopedSearch
     # Export the scoped_search method fo defining the search options.
     # This method will create a definition instance for the class if it does not yet exist,
     # and use the object as block argument and retun value.
-    def scoped_search(*definitions)
+    def scoped_search(*definitions, &block)
       self.scoped_search_definition ||= ScopedSearch::Definition.new(self)
       definitions.each do |definition|
         if definition[:on].kind_of?(Array)
@@ -34,6 +34,7 @@ module ScopedSearch
           self.scoped_search_definition.define(definition)
         end
       end
+      yield(self.scoped_search_definition) if block_given?
       return self.scoped_search_definition
     end
   end
@@ -59,7 +60,6 @@ module ScopedSearch
 
 end
 
-# Load all lib files
 require 'scoped_search/version'
 require 'scoped_search/definition'
 require 'scoped_search/query_language'

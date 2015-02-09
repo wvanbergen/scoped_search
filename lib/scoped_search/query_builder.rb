@@ -129,7 +129,7 @@ module ScopedSearch
     def datetime_test(field, operator, value, &block) # :yields: finder_option_type, value
 
       # Parse the value as a date/time and ignore invalid timestamps
-      timestamp = definition.parse_temporal(value)
+      timestamp = definition.date_parser.call(value)
       return nil unless timestamp
 
       timestamp = timestamp.to_date if field.date?
