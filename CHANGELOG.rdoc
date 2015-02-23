@@ -8,6 +8,13 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 *Nothing yet*
 
+=== Version 3.2.0
+
+- In MySQL, case sensitivity is now determined by the collation of the column, and
+  is no longer enforced in the SQL query. This allows MySQL to use indices for
+  queries.
+- Fix auto-completer for numeric fields.
+
 === Version 3.1.0
 
 - Add support for ActiveRecord 4.2.
