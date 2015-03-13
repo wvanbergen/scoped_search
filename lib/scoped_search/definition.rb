@@ -250,7 +250,7 @@ module ScopedSearch
     def register_named_scope! # :nodoc
       definition = self
       @klass.scope(:search_for, proc { |query, options|
-        search_scope = ActiveRecord::VERSION::MAJOR == 3 ? @klass.scoped : @klass
+        search_scope = ActiveRecord::VERSION::MAJOR == 3 ? @klass.scoped : (ActiveRecord::VERSION::MINOR < 1 ? @klass.where(nil) : @klass.all)
 
         find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options || {})
         search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]

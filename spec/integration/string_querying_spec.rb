@@ -31,6 +31,51 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       ScopedSearch::RSpec::Database.close_connection
     end
 
+    context 'with no scoped_search defaults' do
+
+      before(:all) do
+        @class2 = ScopedSearch::RSpec::Database.create_model(
+            :string => :string,
+            :another => :string,
+            ) do |klass|
+          klass.scoped_search :on => :string
+          klass.scoped_search :on => :another
+        end
+
+        @class2.create!(:string => 'foo', :another => 'foo')
+        @class2.create!(:string => 'bar', :another => 'foo')
+        @class2.create!(:string => 'baz', :another => 'bar')
+      end
+
+      after(:all) do
+        ScopedSearch::RSpec::Database.drop_model(@class2)
+      end
+
+      context '#search_for with an empty string' do
+
+        it 'should not remove previous scope' do
+          @class2.where(another: 'foo').search_for('').count.should == 2
+        end
+
+        it 'should return an ActiveRecord::Relation' do
+          @class2.search_for('').should be_a(ActiveRecord::Relation)
+        end
+
+      end
+
+      context '#search_for with nil' do
+        it 'should not remove previous scope' do
+          @class2.where(another: 'foo').search_for(nil).count.should == 2
+        end
+
+        it 'should return an ActiveRecord::Relation' do
+          @class2.search_for(nil).should be_a(ActiveRecord::Relation)
+        end
+
+      end
+
+    end
+
     context 'in an implicit string field' do
       it "should find the record with an exact string match" do
         @class.search_for('foo').length.should == 1
