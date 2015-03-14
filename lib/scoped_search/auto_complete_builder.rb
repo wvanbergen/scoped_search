@@ -176,11 +176,12 @@ module ScopedSearch
 
       field.key_klass
         .where(value_conditions(field_name, val))
-        .select("DISTINCT #{field_name}")
+        .select("#{field_name}")
         .limit(20)
         .map(&field.key_field)
         .compact
         .map { |f| "#{name}.#{f} " }
+        .uniq
     end
 
     # this method auto-completes values of fields that have a :complete_value marker
@@ -202,11 +203,12 @@ module ScopedSearch
 
       completer_scope(field)
         .where(value_conditions(field, val))
-        .select("DISTINCT #{field.quoted_field}")
+        .select("#{field.quoted_field}")
         .limit(20)
         .map(&field.field)
         .compact
         .map { |v| v.to_s =~ /\s/ ? "\"#{v}\"" : v }
+        .uniq
     end
 
     def completer_scope(field)

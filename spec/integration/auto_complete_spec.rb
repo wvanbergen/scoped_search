@@ -89,6 +89,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         Foo.complete_for('date ').should =~ (["date  = ", "date  < ", "date  > "])
       end
 
+      it "should complete when query is already distinct" do
+        Foo.uniq.complete_for('int =').length.should > 0
+      end
+
       it "should raise error for unindexed field" do
         lambda { Foo.complete_for('unindexed = 10 ')}.should raise_error(ScopedSearch::QueryNotSupported)
       end
