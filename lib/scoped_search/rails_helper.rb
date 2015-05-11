@@ -22,7 +22,7 @@ module ScopedSearch
 
       ascend  = "#{field} ASC"
       descend = "#{field} DESC"
-      selected = [ascend, descend].include?(params[:order])
+      selected_sort = [ascend, descend].find { |o| o == params[:order] }
 
       case params[:order]
         when ascend
@@ -33,9 +33,9 @@ module ScopedSearch
           new_sort = ["ASC", "DESC"].include?(options[:default]) ? "#{field} #{options[:default]}" : ascend
       end
 
-      if selected
+      unless selected_sort.nil?
         css_classes = html_options[:class] ? html_options[:class].split(" ") : []
-        if new_sort == ascend
+        if selected_sort == ascend
           options[:as] = "&#9650;&nbsp;#{options[:as]}"
           css_classes << "ascending"
         else
