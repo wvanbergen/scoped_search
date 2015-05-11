@@ -70,4 +70,26 @@ describe ScopedSearch::RailsHelper do
     params[:order] = "field ASC"
     sort("other")
   end
+
+  it "should add no styling by default" do
+    should_receive(:url_for)
+    should_receive(:a_link).with('Field', anything, hash_excluding(:class))
+    sort("field")
+  end
+
+  it "should add ascending style for current ascending sort order " do
+    should_receive(:url_for)
+    should_receive(:a_link).with('&#9650;&nbsp;Field', anything, hash_including(:class => 'ascending'))
+
+    params[:order] = "field ASC"
+    sort("field")
+  end
+
+  it "should add descending style for current descending sort order " do
+    should_receive(:url_for)
+    should_receive(:a_link).with('&#9660;&nbsp;Field', anything, hash_including(:class => 'descending'))
+
+    params[:order] = "field DESC"
+    sort("field")
+  end
 end
