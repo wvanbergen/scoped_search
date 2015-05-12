@@ -91,6 +91,10 @@ require "spec_helper"
           Item.complete_for('facts.').length.should == 2
         end
 
+        it "should complete facts names with partial name" do
+          Item.complete_for('facts.c').length.should == 1
+        end
+
         it "should complete values for fact name = color" do
           Item.complete_for('facts.color = ').length.should == 2
         end

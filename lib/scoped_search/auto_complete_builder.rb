@@ -176,7 +176,7 @@ module ScopedSearch
 
       field.key_klass
         .where(value_conditions(field_name, val))
-        .select("#{field_name}")
+        .select(field_name)
         .limit(20)
         .map(&field.key_field)
         .compact
@@ -202,8 +202,8 @@ module ScopedSearch
       return complete_key_value(field, token, val) if field.key_field
 
       completer_scope(field)
-        .where(value_conditions(field, val))
-        .select("#{field.quoted_field}")
+        .where(value_conditions(field.quoted_field, val))
+        .select(field.quoted_field)
         .limit(20)
         .map(&field.field)
         .compact
@@ -253,7 +253,7 @@ module ScopedSearch
       end
 
       query
-        .where(value_conditions(field, val))
+        .where(value_conditions(field.quoted_field, val))
         .select("DISTINCT #{field.quoted_field}")
         .limit(20)
         .map(&field.field)
@@ -262,8 +262,8 @@ module ScopedSearch
     end
 
     # This method returns conditions for selecting completion from partial value
-    def value_conditions(field, val)
-      val.blank? ? nil : "CAST(#{field.quoted_field} as CHAR(50)) LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')
+    def value_conditions(field_name, val)
+      val.blank? ? nil : "CAST(#{field_name} as CHAR(50)) LIKE '#{val.gsub("'","''")}%'".tr_s('%*', '%')
     end
 
     # This method complete infix operators by field type
