@@ -176,7 +176,7 @@ module ScopedSearch
 
       field.key_klass
         .where(value_conditions(field_name, val))
-        .select("#{field_name}")
+        .select(field_name)
         .limit(20)
         .map(&field.key_field)
         .compact
@@ -203,7 +203,7 @@ module ScopedSearch
 
       completer_scope(field)
         .where(value_conditions(field.quoted_field, val))
-        .select("#{field.quoted_field}")
+        .select(field.quoted_field)
         .limit(20)
         .map(&field.field)
         .compact
