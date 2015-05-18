@@ -136,8 +136,16 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('>= 2009-01-02').length.should == 1
       end
 
+      it "should find the records with LTE with a timestamp set on the provided date" do
+        @class.search_for('<= 2009-01-02').length.should == 1
+      end
+
       it "should support full timestamps" do
         @class.search_for('> "2009-01-02 02:02:02"').length.should == 1
+      end
+
+      it "should support full timestamp shortly before the record" do
+        @class.search_for('> "2009-01-02 14:51:02"').length.should == 1
       end
 
       it "should find no record with a timestamp in the past" do
@@ -173,7 +181,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'humanized date and time query' do
 
       before(:all) do
-        @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
+        @current_record = @class.create!(:timestamp => Time.current, :date => Date.current)
+        @min_ago_record = @class.create!(:timestamp => Time.current - 1.minute, :date => Date.current)
         @hour_ago_record = @class.create!(:timestamp => Time.current - 1.hour, :date => Date.current)
         @day_ago_record = @class.create!(:timestamp => Time.current - 1.day, :date => Date.current - 1.day)
         @month_ago_record = @class.create!(:timestamp => Time.current - 1.month, :date => Date.current - 1.month)
@@ -181,7 +190,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       after(:all) do
-        @curent_record.destroy
+        @current_record.destroy
+        @min_ago_record.destroy
         @hour_ago_record.destroy
         @day_ago_record.destroy
         @month_ago_record.destroy
@@ -189,7 +199,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should accept Today as date format" do
-        @class.search_for('date = Today').length.should == 2
+        @class.search_for('date = Today').length.should == 3
       end
 
       it "should accept Yesterday as date format" do
@@ -197,27 +207,31 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find all timestamps and date from today using the = operator" do
-        @class.search_for('= Today').length.should == 2
+        @class.search_for('= Today').length.should == 3
       end
 
       it "should find all timestamps and date from today no operator" do
-        @class.search_for('Today').length.should == 2
+        @class.search_for('Today').length.should == 3
       end
 
       it "should accept 2 days ago as date format" do
         @class.search_for('date < "2 days ago"').length.should == 2
       end
 
-       it "should accept 3 hours ago as date format" do
-        @class.search_for('timestamp > "3 hours ago"').length.should == 2
-       end
+      it "should accept 3 minutes ago as date format" do
+        @class.search_for('timestamp > "3 minutes ago"').length.should == 2
+      end
 
-       it "should accept 1 month ago as date format" do
-        @class.search_for('date > "1 month ago"').length.should == 3
-       end
+      it "should accept 3 hours ago as date format" do
+        @class.search_for('timestamp > "3 hours ago"').length.should == 3
+      end
+
+      it "should accept 1 month ago as date format" do
+        @class.search_for('date > "1 month ago"').length.should == 4
+      end
 
       it "should accept 1 year ago as date format" do
-        @class.search_for('date > "1 year ago"').length.should == 4
+        @class.search_for('date > "1 year ago"').length.should == 5
       end
 
     end
