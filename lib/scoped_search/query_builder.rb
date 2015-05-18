@@ -1,3 +1,5 @@
+require 'date_time_precision'
+
 module ScopedSearch
 
   # The QueryBuilder class builds an SQL query based on aquery string that is
@@ -137,8 +139,7 @@ module ScopedSearch
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
       if field.datetime?
-        span = 1.minute if(value =~ /\A\s*\d+\s+\bminutes?\b\s+\bago\b\s*\z/i)
-        span ||= (timestamp.day_fraction == 0) ? 1.day : 1.hour
+        span = datetime_precision_to_span(timestamp)
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
@@ -165,6 +166,20 @@ module ScopedSearch
       # Yield the timestamp and return the SQL test
       yield(:parameter, timestamp)
       "#{field.to_sql(operator, &block)} #{sql_operator(operator, field)} ?"
+    end
+
+    # Based on the precision of a timestamp, suggest a time span for a search tolerance
+    # that would be logical to the user
+    def datetime_precision_to_span(timestamp)
+      case timestamp.precision
+        when DateTimePrecision::YEAR then 365.days
+        when DateTimePrecision::MONTH then 30.days
+        when DateTimePrecision::DAY then 1.day
+        when DateTimePrecision::HOUR then 1.hour
+        when DateTimePrecision::MIN then 1.minute
+        when DateTimePrecision::SEC then 1.second
+        else 0.seconds
+      end
     end
 
     # Validate the key name is in the set and translate the value to the set value.
