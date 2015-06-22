@@ -83,17 +83,21 @@ module ScopedSearch
       return find_attributes
     end
 
-    def order_by(order, &block)
+    def find_field_for_order_by(order, &block)
       order ||= definition.default_order
-      return nil if order.blank?
+      return [nil, nil] if order.blank?
       field_name, direction_name = order.to_s.split(/\s+/, 2)
       field = definition.field_by_name(field_name)
       raise ScopedSearch::QueryNotSupported, "the field '#{field_name}' in the order statement is not valid field for search" unless field
+      return field, direction_name
+    end
+
+    def order_by(order, &block)
+      field, direction_name = find_field_for_order_by(order, &block)
+      return nil if field.nil?
       sql = field.to_sql(&block)
       direction = (!direction_name.nil? && direction_name.downcase.eql?('desc')) ? " DESC" : " ASC"
-      order = sql + direction
-
-      return order
+      return sql + direction
     end
 
     # A hash that maps the operators of the query language with the corresponding SQL operator.
@@ -516,7 +520,10 @@ module ScopedSearch
 
       def order_by(order, &block)
         sql = super(order, &block)
-        sql += sql.include?('DESC') ? ' NULLS LAST ' : ' NULLS FIRST ' if sql
+        if sql
+          field, _ = find_field_for_order_by(order, &block)
+          sql += sql.include?('DESC') ? ' NULLS LAST ' : ' NULLS FIRST ' if !field.nil? && field.column.null
+        end
         sql
       end
     end
