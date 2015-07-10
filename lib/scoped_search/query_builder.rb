@@ -246,6 +246,16 @@ module ScopedSearch
       end
     end
 
+    def find_has_many_through_association(field, through)
+      middle_table_association = nil
+      field.klass.reflect_on_all_associations(:has_many).each do |reflection| 
+        class_name = reflection.options[:class_name].constantize.table_name if reflection.options[:class_name]
+        middle_table_association = reflection.name if class_name == through.to_s 
+        middle_table_association = reflection.plural_name if reflection.plural_name == through.to_s
+      end
+      middle_table_association
+    end
+
     def has_many_through_join(field)
       many_class = field.definition.klass
       through = definition.reflection_by_name(many_class, field.relation).options[:through]
@@ -261,7 +271,8 @@ module ScopedSearch
       condition1 = field.reflection_conditions(definition.reflection_by_name(field.klass, many_table_name))
 
       # primary and foreign keys + optional condition for the endpoint to middle join
-      pk2, fk2   = field.reflection_keys(definition.reflection_by_name(field.klass, middle_table_name))
+      middle_table_association = find_has_many_through_association(field, through) || middle_table_name
+      pk2, fk2   = field.reflection_keys(definition.reflection_by_name(field.klass, middle_table_association))
       condition2 = field.reflection_conditions(definition.reflection_by_name(many_class, field.relation))
 
       <<-SQL

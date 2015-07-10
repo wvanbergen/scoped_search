@@ -417,7 +417,113 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       it "should find the 3 tags that are related to dogs record" do
         Tag.search_for('baz').length.should == 3
       end
+    end
 
+
+    context 'querying a :has_many => :through relation with alternate name' do
+
+      before do
+
+        # Create some tables
+        ActiveRecord::Migration.create_table(:zaps) { |t| t.integer :moo_id; t.integer :paz_id }
+        ActiveRecord::Migration.create_table(:pazs) { |t| t.string :related }
+        ActiveRecord::Migration.create_table(:moos) { |t| t.string :foo }   
+
+        # The related classes
+        class Zap < ActiveRecord::Base; belongs_to :paz; belongs_to :moo; end
+        class Paz < ActiveRecord::Base; has_many :other_zaps, :class_name => "Zap", :foreign_key => :paz_id; end
+
+        # The class on which to call search_for
+        class Moo < ActiveRecord::Base
+          has_many :zaps
+          has_many :pazs, :through => :zaps
+
+          scoped_search :in => :pazs, :on => :related
+        end
+
+        @moo_1 = Moo.create!(:foo => 'foo')
+        @moo_2 = Moo.create!(:foo => 'foo too')
+        @moo_3 = Moo.create!(:foo => 'foo three')
+
+        @paz_1 = Paz.create(:related => 'paz')
+        @paz_2 = Paz.create(:related => 'paz too!')
+
+        @bar_1 = Zap.create!(:moo => @moo_1, :paz => @paz_1)
+        @bar_2 = Zap.create!(:moo => @moo_1)
+        @bar_3 = Zap.create!(:moo => @moo_2, :paz => @paz_1)
+        @bar_3 = Zap.create!(:moo => @moo_2, :paz => @paz_2)
+        @bar_3 = Zap.create!(:moo => @moo_2, :paz => @paz_2)
+        @bar_4 = Zap.create!(:moo => @moo_3)
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table(:pazs)
+        ActiveRecord::Migration.drop_table(:zaps)
+        ActiveRecord::Migration.drop_table(:moos)
+      end
+
+      it "should find the two records that are related to a paz record" do
+        Moo.search_for('paz').length.should == 2
+      end
+
+      it "should find the one record that is related to two paz records" do
+        Moo.search_for('related=paz AND related="paz too!"').length.should == 1
+      end
+    end
+
+
+    context 'querying a :has_many => :through relation with modules' do
+
+      before do
+
+        # Create some tables with namespaces
+        ActiveRecord::Migration.create_table(:zan_mars) { |t| t.integer :koo_id; t.integer :baz_id }
+        ActiveRecord::Migration.create_table(:zan_bazs) { |t| t.string :related }
+        ActiveRecord::Migration.create_table(:zan_koos) { |t| t.string :foo }   
+
+        # The related classes
+        module Zan; class Mar < ActiveRecord::Base; belongs_to :baz; belongs_to :koo; self.table_name = "zan_mars"; end; end
+        module Zan; class Baz < ActiveRecord::Base; has_many :mars; self.table_name = "zan_bazs"; end; end
+
+        # The class on which to call search_for
+        module Zan
+          class Koo < ActiveRecord::Base
+            has_many :mars, :class_name => "Zan::Mar"
+            has_many :bazs, :through => :mars
+            self.table_name = "zan_koos"
+
+            scoped_search :in => :bazs, :on => :related
+          end
+        end
+
+        @koo_1 = Zan::Koo.create!(:foo => 'foo')
+        @koo_2 = Zan::Koo.create!(:foo => 'foo too')
+        @koo_3 = Zan::Koo.create!(:foo => 'foo three')
+
+        @baz_1 = Zan::Baz.create(:related => 'baz')
+        @baz_2 = Zan::Baz.create(:related => 'baz too!')
+
+        @bar_1 = Zan::Mar.create!(:koo => @koo_1, :baz => @baz_1)
+        @bar_2 = Zan::Mar.create!(:koo => @koo_1)
+        @bar_3 = Zan::Mar.create!(:koo => @koo_2, :baz => @baz_1)
+        @bar_3 = Zan::Mar.create!(:koo => @koo_2, :baz => @baz_2)
+        @bar_3 = Zan::Mar.create!(:koo => @koo_2, :baz => @baz_2)
+        @bar_4 = Zan::Mar.create!(:koo => @koo_3)
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table(:zan_bazs)
+        ActiveRecord::Migration.drop_table(:zan_mars)
+        ActiveRecord::Migration.drop_table(:zan_koos)
+      end
+
+      it "should find the two records that are related to a baz record" do
+        Zan::Koo.search_for('baz').length.should == 2
+      end
+
+      it "should find the one record that is related to two baz records" do
+        Zan::Koo.search_for('related=baz AND related="baz too!"').length.should == 1
+      end
     end
   end
 end
