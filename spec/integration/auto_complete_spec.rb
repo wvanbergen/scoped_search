@@ -52,6 +52,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10)
       Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
+      20.times { Foo.create!(:explicit => "aaa") }
 
       Bar.create!(:related => 'lala',         :foo => @foo_1)
       Bar.create!(:related => 'another lala', :foo => @foo_1)
@@ -136,7 +137,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'value auto complete' do
       it "should complete values list of values " do
-        Foo.complete_for('explicit = ').length.should == 1
+        Foo.complete_for('explicit = ').length.should == 2
       end
 
       it "should complete values should contain baz" do
