@@ -28,9 +28,12 @@ module ScopedSearch
     # Loads the QueryBuilder class for the connection of the given definition.
     # If no specific adapter is found, the default QueryBuilder class is returned.
     def self.class_for(definition)
-      self.const_get(definition.klass.connection.class.name.split('::').last)
-    rescue
-      self
+      case definition.klass.connection.class.name.split('::').last
+      when /postgresql/i
+        PostgreSQLAdapter
+      else
+        self
+      end
     end
 
     # Initializes the instance by setting the relevant parameters
