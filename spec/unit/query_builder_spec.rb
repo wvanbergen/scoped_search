@@ -8,6 +8,7 @@ describe ScopedSearch::QueryBuilder do
     @definition.stub(:profile).and_return(:default)
     @definition.stub(:default_order).and_return(nil)
     @definition.stub(:profile=).and_return(true)
+    @definition.klass.stub(:connection).and_return(double())
   end
 
   it "should raise an ArgumentError if the query is not set" do
@@ -22,4 +23,14 @@ describe ScopedSearch::QueryBuilder do
     ScopedSearch::QueryBuilder.build_query(@definition, "\t ").should == {  }
   end
 
+  it "should use default adapter when connection type is unknown" do
+    ScopedSearch::QueryBuilder.class_for(@definition).should == ScopedSearch::QueryBuilder
+  end
+
+  it "should use postgres adapter for postgres-like connection" do
+    connection = double()
+    connection.stub("name").and_return("SomePostgreSQLAdapter")
+    @definition.klass.connection.stub("class").and_return(connection)
+    ScopedSearch::QueryBuilder.class_for(@definition).should == ScopedSearch::QueryBuilder::PostgreSQLAdapter
+  end
 end
