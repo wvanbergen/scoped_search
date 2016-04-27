@@ -154,9 +154,6 @@ module ScopedSearch
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
     # named scope if it does not yet exist.
-    # Initializes a ScopedSearch definition instance.
-    # This method will also setup a database adapter and create the :search_for
-    # named scope if it does not yet exist.
     def initialize(klass)
       @klass                 = klass
       @fields                = {}
