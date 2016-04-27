@@ -154,6 +154,9 @@ module ScopedSearch
     # Initializes a ScopedSearch definition instance.
     # This method will also setup a database adapter and create the :search_for
     # named scope if it does not yet exist.
+    # Initializes a ScopedSearch definition instance.
+    # This method will also setup a database adapter and create the :search_for
+    # named scope if it does not yet exist.
     def initialize(klass)
       @klass                 = klass
       @fields                = {}
@@ -250,13 +253,15 @@ module ScopedSearch
     def register_named_scope! # :nodoc
       definition = self
       @klass.scope(:search_for, proc { |query, options|
+        klass = definition.klass
+
         search_scope = case ActiveRecord::VERSION::MAJOR
           when 3
-            @klass.scoped
+            klass.scoped
           when 4
-            (ActiveRecord::VERSION::MINOR < 1) ? @klass.where(nil) : @klass.all
+            (ActiveRecord::VERSION::MINOR < 1) ? klass.where(nil) : klass.all
           when 5
-            @klass.all
+            klass.all
           else
             raise ScopedSearch::DefinitionError, 'version ' \
               "#{ActiveRecord::VERSION::MAJOR} of activerecord is not supported"
