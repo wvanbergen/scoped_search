@@ -15,7 +15,7 @@ rvm:
 - "2.0"
 - "2.1"
 - "2.2.2"
-- "2.3.0"
+- "2.3.1"
 - ruby-head
 - jruby-19mode
 - jruby-head
@@ -39,3 +39,5 @@ matrix:
       gemfile: Gemfile.activerecord50
     - rvm: "2.1"
       gemfile: Gemfile.activerecord50
+    - rvm: "2.3.1"
+      gemfile: Gemfile.activerecord32
