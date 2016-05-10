@@ -24,6 +24,7 @@ gemfile:
 - Gemfile.activerecord40
 - Gemfile.activerecord41
 - Gemfile.activerecord42
+- Gemfile.activerecord50
 
 matrix:
   allow_failures:
