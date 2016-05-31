@@ -250,7 +250,19 @@ module ScopedSearch
     def register_named_scope! # :nodoc
       definition = self
       @klass.scope(:search_for, proc { |query, options|
-        search_scope = ActiveRecord::VERSION::MAJOR == 3 ? @klass.scoped : (ActiveRecord::VERSION::MINOR < 1 ? @klass.where(nil) : @klass.all)
+        klass = definition.klass
+
+        search_scope = case ActiveRecord::VERSION::MAJOR
+          when 3
+            klass.scoped
+          when 4
+            (ActiveRecord::VERSION::MINOR < 1) ? klass.where(nil) : klass.all
+          when 5
+            klass.all
+          else
+            raise ScopedSearch::DefinitionError, 'version ' \
+              "#{ActiveRecord::VERSION::MAJOR} of activerecord is not supported"
+          end
 
         find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options || {})
         search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]
