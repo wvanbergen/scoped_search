@@ -13,7 +13,17 @@ module ScopedSearch
     # * <tt>:by</tt> - the name of the named scope. This helper will prepend this value with "ascend_by_" and "descend_by_"
     # * <tt>:as</tt> - the text used in the link, defaults to whatever is passed to :by
     # * <tt>:default</tt> - default sorting order, DESC or ASC
-    def sort(field, options = {}, html_options = {})
+    #
+    # url_options is a hash of URL parameters, defaulting to `params`, to preserve the current URL
+    # parameters.
+    #
+    # On Rails 5 or higher, parameter whitelisting prevents any parameter being used in a link by
+    # default, so `params.permit(..)` should be passed for `url_options` for all known and
+    # permitted URL parameters, e.g.
+    #
+    #   sort @search, {:by => :username}, {}, params.permit(:search)
+    #
+    def sort(field, options = {}, html_options = {}, url_options = params)
 
       unless options[:as]
         id           = field.to_s.downcase == "id"
@@ -45,7 +55,8 @@ module ScopedSearch
         html_options[:class] = css_classes.join(" ")
       end
 
-      url_options = params.merge(:order => new_sort)
+      url_options = url_options.to_h if url_options.respond_to?(:permit)  # convert ActionController::Parameters if given
+      url_options = url_options.merge(:order => new_sort)
 
       options[:as] = raw(options[:as]) if defined?(RailsXss)
 
