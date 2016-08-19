@@ -208,7 +208,7 @@ module ScopedSearch
         .uniq
         .map(&field.field)
         .compact
-        .map { |v| v.to_s =~ /\s/ ? "\"#{v}\"" : v }
+        .map { |v| v.to_s =~ /\s/ ? "\"#{v.gsub('"', '\"')}\"" : v }
     end
 
     def completer_scope(field)
