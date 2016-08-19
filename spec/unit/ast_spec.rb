@@ -150,7 +150,7 @@ describe ScopedSearch::QueryLanguage::AST::OperatorNode do
     end
 
     it "should raise an error of the LHS is requested" do
-      lambda { @node.lhs }.should raise_error
+      lambda { @node.lhs }.should raise_error(ScopedSearch::Exception, "Operator does not have a LHS")
     end
   end
 
@@ -187,11 +187,11 @@ describe ScopedSearch::QueryLanguage::AST::OperatorNode do
     end
 
     it "should raise an error of the LHS is requested" do
-      lambda { @node.lhs }.should raise_error
+      lambda { @node.lhs }.should raise_error(ScopedSearch::Exception, "Operators with more than 2 children do not have LHS/RHS")
     end
 
     it "should raise an error of the RHS is requested" do
-      lambda { @node.rhs }.should raise_error
+      lambda { @node.rhs }.should raise_error(ScopedSearch::Exception, "Operators with more than 2 children do not have LHS/RHS")
     end
   end
 end
