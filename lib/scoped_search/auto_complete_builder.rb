@@ -208,7 +208,7 @@ module ScopedSearch
         .send(scope_distinct_method)
         .map(&field.field)
         .compact
-        .map { |v| v.to_s =~ /\s/ ? "\"#{v}\"" : v }
+        .map { |v| v.to_s =~ /\s/ ? "\"#{v.gsub('"', '\"')}\"" : v }
     end
 
     # distinct is present on Rails 4.0 and higher, use uniq for 3.2

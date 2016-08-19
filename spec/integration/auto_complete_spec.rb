@@ -37,7 +37,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
         scoped_search :on => [:string, :date]
         scoped_search :on => [:int], :complete_value => true
-        scoped_search :on => :another,  :default_operator => :eq, :alias => :alias
+        scoped_search :on => :another,  :default_operator => :eq, :alias => :alias, :complete_value => true
         scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
         scoped_search :on => :deprecated, :complete_enabled => false
         scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
@@ -50,7 +50,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10)
-      Foo.create!(:string => 'bar', :another => 'temp 2', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
+      Foo.create!(:string => 'bar', :another => 'temp "2"', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
       20.times { Foo.create!(:explicit => "aaa") }
 
@@ -142,6 +142,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should complete values should contain baz" do
         Foo.complete_for('explicit = ').should contain('explicit =  baz')
+      end
+
+      it "should complete values with quotes where required" do
+        Foo.complete_for('alias = ').should contain('alias =  "temp \"2\""')
       end
     end
 
