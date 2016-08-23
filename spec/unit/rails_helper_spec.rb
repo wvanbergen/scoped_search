@@ -92,4 +92,24 @@ describe ScopedSearch::RailsHelper do
     params[:order] = "field DESC"
     sort("field")
   end
+
+  context 'with ActionController::Parameters' do
+    let(:ac_params) { double('ActionController::Parameters') }
+
+    it "should call to_h on passed params object" do
+      should_receive(:url_for).with(
+        "controller" => "resources",
+        "action" => "search",
+        "walrus" => "unicorns",
+        "order" => "field ASC"
+      ).and_return("/example")
+
+      params[:walrus] = "unicorns"
+
+      ac_params.should_receive(:respond_to?).with(:permit).and_return(true)
+      ac_params.should_receive(:to_h).and_return(params)
+
+      sort("field", {}, {}, ac_params)
+    end
+  end
 end
