@@ -11,7 +11,6 @@ script:
 - bundle exec rake
 
 rvm:
-- "1.9"
 - "2.0"
 - "2.1"
 - "2.2.2"
@@ -33,8 +32,6 @@ matrix:
     - rvm: jruby-head
     - rvm: jruby-19mode
   exclude:
-    - rvm: "1.9"
-      gemfile: Gemfile.activerecord50
     - rvm: "2.0"
       gemfile: Gemfile.activerecord50
     - rvm: "2.1"
