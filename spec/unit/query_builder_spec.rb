@@ -33,4 +33,26 @@ describe ScopedSearch::QueryBuilder do
     @definition.klass.connection.stub("class").and_return(connection)
     ScopedSearch::QueryBuilder.class_for(@definition).should == ScopedSearch::QueryBuilder::PostgreSQLAdapter
   end
+
+  it "should validate value if validator selected" do
+    field = double('field')
+    field.stub(:only_explicit).and_return(true)
+    field.stub(:field).and_return(:test_field)
+    field.stub(:validator).and_return(->(_value) { false })
+
+    @definition.stub(:field_by_name).and_return(field)
+
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported)
+  end
+
+  it "should display custom error from validator" do
+    field = double('field')
+    field.stub(:only_explicit).and_return(true)
+    field.stub(:field).and_return(:test_field)
+    field.stub(:validator).and_return(->(_value) { raise ScopedSearch::QueryNotSupported, 'my custom message' })
+
+    @definition.stub(:field_by_name).and_return(field)
+
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error('my custom message')
+  end
 end

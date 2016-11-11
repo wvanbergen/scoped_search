@@ -251,9 +251,9 @@ module ScopedSearch
 
     def find_has_many_through_association(field, through)
       middle_table_association = nil
-      field.klass.reflect_on_all_associations(:has_many).each do |reflection| 
+      field.klass.reflect_on_all_associations(:has_many).each do |reflection|
         class_name = reflection.options[:class_name].constantize.table_name if reflection.options[:class_name]
-        middle_table_association = reflection.name if class_name == through.to_s 
+        middle_table_association = reflection.name if class_name == through.to_s
         middle_table_association = reflection.plural_name if reflection.plural_name == through.to_s
       end
       middle_table_association
@@ -468,6 +468,10 @@ module ScopedSearch
           # Search only on the given field.
           field = definition.field_by_name(lhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
+
+          # see if the value passes user defined validation
+          validate_value(field, rhs.value)
+
           builder.sql_test(field, operator, rhs.value,lhs.value, &block)
         end
 
@@ -483,6 +487,16 @@ module ScopedSearch
             to_single_field_sql(builder, definition, &block)
           else
             raise ScopedSearch::QueryNotSupported, "Don't know how to handle this operator node: #{operator.inspect} with #{children.inspect}!"
+          end
+        end
+
+        private
+
+        def validate_value(field, value)
+          validator = field.validator
+          if validator
+            valid = validator.call(value)
+            raise ScopedSearch::QueryNotSupported, "Value '#{value}' is not valid for field '#{field.field}'" unless valid
           end
         end
       end
