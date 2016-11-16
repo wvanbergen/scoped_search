@@ -271,7 +271,7 @@ module ScopedSearch
 
       # primary and foreign keys + optional condition for the many to middle join
       pk1, fk1   = field.reflection_keys(definition.reflection_by_name(many_class, through))
-      condition1 = field.reflection_conditions(definition.reflection_by_name(field.klass, many_table_name))
+      condition1 = field.reflection_conditions(definition.reflection_by_name(field.klass, middle_table_name))
 
       # primary and foreign keys + optional condition for the endpoint to middle join
       middle_table_association = find_has_many_through_association(field, through) || middle_table_name

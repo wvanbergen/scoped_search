@@ -471,6 +471,59 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
     end
 
+    context 'querying a :has_many => :through relation with same name on target class with custom condition' do
+
+      before do
+
+        # Create some tables
+        ActiveRecord::Migration.create_table(:user_groups) { |t| t.integer :user_id; t.integer :group_id }
+        ActiveRecord::Migration.create_table(:conflicts) { |t| t.integer :group_id; t.integer :user_id }
+        ActiveRecord::Migration.create_table(:groups) { |t| t.string :related; t.integer :user_id }
+        ActiveRecord::Migration.create_table(:users) { |t| t.string :foo }
+
+        # The related classes
+        class UserGroup < ActiveRecord::Base; belongs_to :user; belongs_to :group; end
+        class Conflict < ActiveRecord::Base; belongs_to :user; belongs_to :group; end
+        class Group < ActiveRecord::Base
+          has_many :user_groups
+          has_many :users, :through => :conflicts, :source_type => 'User', :source => :user
+        end
+
+        # The class on which to call search_for
+        class User < ActiveRecord::Base
+          has_many :user_groups
+          has_many :groups, :through => :user_groups
+
+          scoped_search :in => :groups, :on => :related
+        end
+
+        @user_1 = User.create!(:foo => 'foo')
+        @user_2 = User.create!(:foo => 'foo too')
+        @user_3 = User.create!(:foo => 'foo three')
+
+        @group_1 = Group.create(:related => 'value')
+        @group_2 = Group.create(:related => 'value too!')
+
+        @bar_1 = UserGroup.create!(:user => @user_1, :group => @group_1)
+        @bar_2 = UserGroup.create!(:user => @user_1)
+        @bar_3 = UserGroup.create!(:user => @user_2, :group => @group_1)
+        @bar_3 = UserGroup.create!(:user => @user_2, :group => @group_2)
+        @bar_3 = UserGroup.create!(:user => @user_2, :group => @group_2)
+        @bar_4 = UserGroup.create!(:user => @user_3)
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table(:user_groups)
+        ActiveRecord::Migration.drop_table(:users)
+        ActiveRecord::Migration.drop_table(:groups)
+        ActiveRecord::Migration.drop_table(:conflicts)
+      end
+
+      it "should find the one record that is related based on forward groups relation" do
+        User.search_for('related=value AND related="value too!"').length.should == 1
+      end
+    end
+
 
     context 'querying a :has_many => :through relation with modules' do
 
