@@ -114,16 +114,6 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('date = 09-01-02').length.should == 1
       end
 
-      if RUBY_VERSION.to_f == 1.8
-        it "should accept MM/DD/YY as date format" do
-          @class.search_for('date = 01/02/09').length.should == 1
-        end
-
-        it "should accept MM/DD/YYYY as date format" do
-          @class.search_for('date = 01/02/2009').length.should == 1
-        end
-      end
-
       it "should accept YYYY/MM/DD as date format" do
         @class.search_for('date = 2009/01/02').length.should == 1
       end

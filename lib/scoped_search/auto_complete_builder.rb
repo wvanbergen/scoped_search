@@ -178,7 +178,7 @@ module ScopedSearch
         .where(value_conditions(field_name, val))
         .select(field_name)
         .limit(20)
-        .send(scope_distinct_method)
+        .distinct
         .map(&field.key_field)
         .compact
         .map { |f| "#{name}.#{f} " }
@@ -205,15 +205,10 @@ module ScopedSearch
         .where(value_conditions(field.quoted_field, val))
         .select(field.quoted_field)
         .limit(20)
-        .send(scope_distinct_method)
+        .distinct
         .map(&field.field)
         .compact
         .map { |v| v.to_s =~ /\s/ ? "\"#{v.gsub('"', '\"')}\"" : v }
-    end
-
-    # distinct is present on Rails 4.0 and higher, use uniq for 3.2
-    def scope_distinct_method
-      ActiveRecord::VERSION::MAJOR >= 4 ? :distinct : :uniq
     end
 
     def completer_scope(field)
