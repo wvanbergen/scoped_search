@@ -9,6 +9,42 @@ describe ScopedSearch::Definition do
   end
 
   describe ScopedSearch::Definition::Field do
+    describe '#initialize' do
+      it "should raise an exception with missing field or 'on' keyword" do
+        lambda {
+          @definition.define
+        }.should raise_error(ArgumentError, "Missing field or 'on' keyword argument")
+      end
+
+      it "should raise an exception with unknown keyword arguments" do
+        lambda {
+          @definition.define(:field, :nonexisting => 'foo')
+        }.should raise_error(ArgumentError, "Unknown arguments to scoped_search: nonexisting")
+      end
+
+      it "should alias :in to :relation" do
+        ActiveSupport::Deprecation.should_receive(:warn).with("'in' argument deprecated, prefer 'relation' since scoped_search 4.0.0", anything)
+        @definition.define(:field, :in => 'foo').relation.should eq('foo')
+      end
+
+      it "should accept :relation" do
+        ActiveSupport::Deprecation.should_not_receive(:warn)
+        @definition.define(:field, :relation => 'foo').relation.should eq('foo')
+      end
+
+      it "should alias :alias to :aliases" do
+        ActiveSupport::Deprecation.should_receive(:warn).with("'alias' argument deprecated, prefer aliases: [..] since scoped_search 4.0.0", anything)
+        @definition.define(:field, :alias => 'foo')
+        @definition.fields.keys.should eq([:field, :foo])
+      end
+
+      it "should accept :relation" do
+        ActiveSupport::Deprecation.should_not_receive(:warn)
+        @definition.define(:field, :aliases => ['foo'])
+        @definition.fields.keys.should eq([:field, :foo])
+      end
+    end
+
     describe '#column' do
       it "should raise an exception when using an unknown field" do
         lambda {

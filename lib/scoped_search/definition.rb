@@ -21,41 +21,71 @@ module ScopedSearch
 
       # Initializes a Field instance given the definition passed to the
       # scoped_search call on the ActiveRecord-based model class.
-      def initialize(definition, options = {})
-        @definition = definition
-        @definition.profile = options[:profile] if options[:profile]
-        @definition.default_order ||= default_order(options)
+      #
+      # Field name may be given in positional 'field' argument or 'on' named
+      # argument.
+      def initialize(definition,
+                     field = nil,
+                     aliases: [],
+                     complete_enabled: true,
+                     complete_value: nil,
+                     default_operator: nil,
+                     default_order: nil,
+                     ext_method: nil,
+                     full_text_search: nil,
+                     in_key: nil,
+                     offset: nil,
+                     on: field,
+                     on_key: nil,
+                     only_explicit: nil,
+                     operators: nil,
+                     profile: nil,
+                     relation: nil,
+                     rename: nil,
+                     validator: nil,
+                     word_size: 1,
+                     **kwargs)
 
-        case options
-        when Symbol, String
-          @field = field.to_sym
-        when Hash
-          @field = options.delete(:on)
+        # Prefer 'on' kw arg if given, defaults to the 'field' positional to allow either syntax
+        raise ArgumentError, "Missing field or 'on' keyword argument" if on.nil?
+        @field = on.to_sym
 
-          # Set attributes from options hash
-          @complete_value   = options[:complete_value]
-          @relation         = options[:in]
-          @key_relation     = options[:in_key]
-          @key_field        = options[:on_key]
-          @offset           = options[:offset]
-          @word_size        = options[:word_size] || 1
-          @ext_method       = options[:ext_method]
-          @operators        = options[:operators]
-          @only_explicit    = !!options[:only_explicit]
-          @full_text_search = options[:full_text_search]
-          @default_operator = options[:default_operator] if options.has_key?(:default_operator)
-          @complete_enabled = options[:complete_enabled].nil? ? true : options[:complete_enabled]
-          @validator        = options[:validator]
+        # Reserved Ruby keywords so access via kwargs instead, but deprecate them for future versions
+        if kwargs.key?(:in)
+          relation = kwargs.delete(:in)
+          ActiveSupport::Deprecation.warn("'in' argument deprecated, prefer 'relation' since scoped_search 4.0.0", caller(6))
         end
+        if kwargs.key?(:alias)
+          aliases += [kwargs.delete(:alias)]
+          ActiveSupport::Deprecation.warn("'alias' argument deprecated, prefer aliases: [..] since scoped_search 4.0.0", caller(6))
+        end
+        raise ArgumentError, "Unknown arguments to scoped_search: #{kwargs.keys.join(', ')}" unless kwargs.empty?
 
-        # Store this field is the field array
-        definition.fields[@field]                  ||= self unless options[:rename]
-        definition.fields[options[:rename].to_sym] ||= self if     options[:rename]
-        definition.unique_fields                   << self
+        @definition = definition
+        @definition.profile = profile if profile
+        @definition.default_order ||= generate_default_order(default_order, rename || @field) if default_order
 
-        # Store definition for alias / aliases as well
-        definition.fields[options[:alias].to_sym]                  ||= self   if options[:alias]
-        options[:aliases].each { |al| definition.fields[al.to_sym] ||= self } if options[:aliases]
+        # Set attributes from keyword arguments
+        @complete_enabled = complete_enabled
+        @complete_value   = complete_value
+        @default_operator = default_operator
+        @ext_method       = ext_method
+        @full_text_search = full_text_search
+        @key_field        = on_key
+        @key_relation     = in_key
+        @offset           = offset
+        @only_explicit    = !!only_explicit
+        @operators        = operators
+        @relation         = relation
+        @validator        = validator
+        @word_size        = word_size
+
+        # Store this field in the field array
+        definition.fields[rename ? rename.to_sym : @field] ||= self
+        definition.unique_fields << self
+
+        # Store definition for aliases as well
+        aliases.each { |al| definition.fields[al.to_sym] ||= self }
       end
 
       # The ActiveRecord-based class that belongs to this field.
@@ -137,11 +167,9 @@ module ScopedSearch
         end
       end
 
-      def default_order(options)
-        return nil if options[:default_order].nil?
-        field_name = options[:rename].nil? ? options[:on] : options[:rename]
-        order = (options[:default_order].to_s.downcase.include?('desc')) ? "DESC" : "ASC"
-        return "#{field_name} #{order}"
+      def generate_default_order(default_order, field)
+        order = (default_order.to_s.downcase.include?('desc')) ? "DESC" : "ASC"
+        return "#{field} #{order}"
       end
 
       # Return 'table'.'column' with the correct database quotes
@@ -236,8 +264,8 @@ module ScopedSearch
     end
 
     # Defines a new search field for this search definition.
-    def define(options)
-      Field.new(self, options)
+    def define(*args)
+      Field.new(self, *args)
     end
 
     # Returns a reflection for a given klass and name
