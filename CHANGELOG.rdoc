@@ -8,6 +8,26 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 *Nothing yet*
 
+=== Version 4.0.0
+
+- Drop support for Ruby 1.9
+- Drop support for ActiveRecord 3, 4.0, and 4.1
+- `scoped_search` registration deprecates `:in` in favor of `:relation`, and
+  `:alias` in favor of `aliases: [..]` to avoid clash with Ruby reserved words.
+- `sort` helper: any HTML options must now be given as a keyword argument,
+  instead of the third argument, i.e. `html_options: {..}`
+- `sort` helper now takes hash of `url_options`, defaulting to an unfiltered
+  `params`. Call `params.permit(..)` and pass in the result to safely generate
+  URLs and prevent non-sanitized errors under Rails 5.
+- Auto completion: remove autocomplete_* JavaScript helpers in favor of jQuery
+  method provided via asset pipeline. Call `$(..).scopedSearch` on autocomplete
+  text boxes to activate.
+- Auto completion: escape quotes in listed values (#138)
+- Add :validator option to definitions to validate user's search inputs
+- Fix incorrect association conditions being used on through relations
+- Use `#distinct` on Rails 4+
+- Test Rails 5.0.x releases, test latest AR adapters
+
 === Version 3.3.0
 
 - Support for ActiveRecord 5.0
