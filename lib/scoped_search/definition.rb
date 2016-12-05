@@ -179,6 +179,14 @@ module ScopedSearch
       end
     end
 
+    DEFAULT_DATE_PARSER = lambda do |input|
+      begin
+        DateTime.parse(input, true)
+      rescue ArgumentError
+        nil
+      end
+    end
+
     attr_reader :klass
 
     # Initializes a ScopedSearch definition instance.
@@ -190,12 +198,13 @@ module ScopedSearch
       @unique_fields         = []
       @profile_fields        = {:default => {}}
       @profile_unique_fields = {:default => []}
+      @date_parser           = DEFAULT_DATE_PARSER
 
       register_named_scope! unless klass.respond_to?(:search_for)
       register_complete_for! unless klass.respond_to?(:complete_for)
     end
 
-    attr_accessor :profile, :default_order
+    attr_accessor :profile, :default_order, :date_parser
 
     def fields
       @profile ||= :default
@@ -239,20 +248,9 @@ module ScopedSearch
       column_types += [:string, :text]                if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:double, :float, :decimal]     if value =~ NUMERICAL_REGXP
       column_types += [:integer]                      if value =~ INTEGER_REGXP
-      column_types += [:datetime, :date, :timestamp]  if (parse_temporal(value))
+      column_types += [:datetime, :date, :timestamp]  unless date_parser.call(value).nil?
 
       default_fields.select { |field| column_types.include?(field.type) && !field.set? }
-    end
-
-    # Try to parse a string as a datetime.
-    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago','Jan 23, 2004'
-    # And many more formats that are documented in Ruby DateTime API Doc.
-    def parse_temporal(value)
-      return Date.current if value =~ /\btoday\b/i
-      return 1.day.ago.to_date if value =~ /\byesterday\b/i
-      return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*(\d+\s+\b(?:hours?|minutes?)\b\s+\bago)\b\s*\z/i
-      return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bago)\b\s*\z/i
-      DateTime.parse(value, true) rescue nil
     end
 
     # Returns a list of fields that should be searched on by default.

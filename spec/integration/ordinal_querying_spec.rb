@@ -31,39 +31,39 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find the record with an exact integer match" do
-        @class.search_for('9').length.should == 1
+        @class.search_for('9').count.should == 1
       end
 
       it "should find the record with an exact decimal match" do
-        @class.search_for('1.23').length.should == 1
+        @class.search_for('1.23').count.should == 1
       end
 
       it "should find the record with an exact integer match with an explicit operator" do
-        @class.search_for('= 9').length.should == 1
+        @class.search_for('= 9').count.should == 1
       end
 
       it "should find the record with an exact integer match with an explicit field name" do
-        @class.search_for('int = 9').length.should == 1
+        @class.search_for('int = 9').count.should == 1
       end
 
       it "should find the record with an exact integer match with an explicit field name" do
-        @class.search_for('int > 8').length.should == 1
+        @class.search_for('int > 8').count.should == 1
       end
 
       it "should find the record with a grater than operator and explicit field" do
-        @class.search_for('int > 9').length.should == 0
+        @class.search_for('int > 9').count.should == 0
       end
 
       it "should find the record with an >= operator with an implicit field name" do
-        @class.search_for('>= 9').length.should == 1
+        @class.search_for('>= 9').count.should == 1
       end
 
       it "should not return the record if only one predicate is true and AND is used (by default)" do
-        @class.search_for('int <= 8, int > 8').length.should == 0
+        @class.search_for('int <= 8, int > 8').count.should == 0
       end
 
       it "should return the record in only one predicate is true and OR is used as operator" do
-        @class.search_for('int <= 8 || int > 8').length.should == 1
+        @class.search_for('int <= 8 || int > 8').count.should == 1
       end
     end
 
@@ -90,7 +90,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should not return records for which the query matches unindex records" do
-        @class.search_for('= 10').length.should == 0
+        @class.search_for('= 10').count.should == 0
       end
     end
 
@@ -107,25 +107,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should accept YYYY-MM-DD as date format" do
-        @class.search_for('date = 2009-01-02').length.should == 1
+        @class.search_for('date = 2009-01-02').count.should == 1
       end
 
       it "should accept YY-MM-DD as date format" do
-        @class.search_for('date = 09-01-02').length.should == 1
-      end
-
-      if RUBY_VERSION.to_f == 1.8
-        it "should accept MM/DD/YY as date format" do
-          @class.search_for('date = 01/02/09').length.should == 1
-        end
-
-        it "should accept MM/DD/YYYY as date format" do
-          @class.search_for('date = 01/02/2009').length.should == 1
-        end
+        @class.search_for('date = 09-01-02').count.should == 1
       end
 
       it "should accept YYYY/MM/DD as date format" do
-        @class.search_for('date = 2009/01/02').length.should == 1
+        @class.search_for('date = 2009/01/02').count.should == 1
       end
 
       it "should ignore an invalid date and thus return all records" do
@@ -133,94 +123,93 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should find the records with a timestamp set some point on the provided date" do
-        @class.search_for('>= 2009-01-02').length.should == 1
+        @class.search_for('>= 2009-01-02').count.should == 1
       end
 
       it "should support full timestamps" do
-        @class.search_for('> "2009-01-02 02:02:02"').length.should == 1
+        @class.search_for('> "2009-01-02 02:02:02"').count.should == 1
       end
 
       it "should find no record with a timestamp in the past" do
-        @class.search_for('< 2009-01-02').length.should == 0
+        @class.search_for('< 2009-01-02').count.should == 0
       end
 
       it "should find all timestamps on a date if no time is given using the = operator" do
-        @class.search_for('= 2009-01-02').length.should == 1
+        @class.search_for('= 2009-01-02').count.should == 1
       end
 
       it "should find all timestamps on a date if no time is when no operator is given" do
-        @class.search_for('2009-01-02').length.should == 1
+        @class.search_for('2009-01-02').count.should == 1
       end
 
       it "should find all timestamps not on a date if no time is given using the != operator" do
-        @class.search_for('!= 2009-01-02').length.should == 0
+        @class.search_for('!= 2009-01-02').count.should == 0
       end
 
       it "should find the records when the date part of a timestamp matches a date" do
-        @class.search_for('>= 2009-01-02').length.should == 1
+        @class.search_for('>= 2009-01-02').count.should == 1
       end
 
       it "should find the record with the timestamp today or in the past" do
-        @class.search_for('<= 2009-01-02').length.should == 1
+        @class.search_for('<= 2009-01-02').count.should == 1
       end
 
       it "should find no record with a timestamp later than today" do
-        @class.search_for('> 2009-01-02').length.should == 0
+        @class.search_for('> 2009-01-02').count.should == 0
       end
 
     end
 
-    context 'humanized date and time query' do
+    # context 'humanized date and time query' do
 
-      before(:all) do
-        @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
-        @hour_ago_record = @class.create!(:timestamp => Time.current - 1.hour, :date => Date.current)
-        @day_ago_record = @class.create!(:timestamp => Time.current - 1.day, :date => Date.current - 1.day)
-        @month_ago_record = @class.create!(:timestamp => Time.current - 1.month, :date => Date.current - 1.month)
-        @year_ago_record = @class.create!(:timestamp => Time.current - 1.year, :date => Date.current - 1.year)
-      end
+    #   before(:all) do
+    #     @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
+    #     @hour_ago_record = @class.create!(:timestamp => Time.current - 1.hour, :date => Date.current)
+    #     @day_ago_record = @class.create!(:timestamp => Time.current - 1.day, :date => Date.current - 1.day)
+    #     @month_ago_record = @class.create!(:timestamp => Time.current - 1.month, :date => Date.current - 1.month)
+    #     @year_ago_record = @class.create!(:timestamp => Time.current - 1.year, :date => Date.current - 1.year)
+    #   end
 
-      after(:all) do
-        @curent_record.destroy
-        @hour_ago_record.destroy
-        @day_ago_record.destroy
-        @month_ago_record.destroy
-        @year_ago_record.destroy
-      end
+    #   after(:all) do
+    #     @curent_record.destroy
+    #     @hour_ago_record.destroy
+    #     @day_ago_record.destroy
+    #     @month_ago_record.destroy
+    #     @year_ago_record.destroy
+    #   end
 
-      it "should accept Today as date format" do
-        @class.search_for('date = Today').length.should == 2
-      end
+    #   it "should accept Today as date format" do
+    #     @class.search_for('date = Today').count.should == 2
+    #   end
 
-      it "should accept Yesterday as date format" do
-        @class.search_for('date = yesterday').length.should == 1
-      end
+    #   it "should accept Yesterday as date format" do
+    #     @class.search_for('date = yesterday').count.should == 1
+    #   end
 
-      it "should find all timestamps and date from today using the = operator" do
-        @class.search_for('= Today').length.should == 2
-      end
+    #   it "should find all timestamps and date from today using the = operator" do
+    #     @class.search_for('= Today').count.should == 2
+    #   end
 
-      it "should find all timestamps and date from today no operator" do
-        @class.search_for('Today').length.should == 2
-      end
+    #   it "should find all timestamps and date from today no operator" do
+    #     @class.search_for('Today').count.should == 2
+    #   end
 
-      it "should accept 2 days ago as date format" do
-        @class.search_for('date < "2 days ago"').length.should == 2
-      end
+    #   it "should accept 2 days ago as date format" do
+    #     @class.search_for('date < "2 days ago"').count.should == 2
+    #   end
 
-       it "should accept 3 hours ago as date format" do
-        @class.search_for('timestamp > "3 hours ago"').length.should == 2
-       end
+    #   it "should accept 3 hours ago as date format" do
+    #     @class.search_for('timestamp > "3 hours ago"').count.should == 2
+    #   end
 
-       it "should accept 1 month ago as date format" do
-        @class.search_for('date > "1 month ago"').length.should == 3
-       end
+    #   it "should accept 1 month ago as date format" do
+    #     @class.search_for('date > "1 month ago"').count.should == 3
+    #   end
 
-      it "should accept 1 year ago as date format" do
-        @class.search_for('date > "1 year ago"').length.should == 4
-      end
-
-    end
+    #   it "should accept 1 year ago as date format" do
+    #     @class.search_for('date > "1 year ago"').count.should == 4
+    #   end
+    # end
 
     context 'querying bitwise fields' do
 
@@ -238,27 +227,27 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should not find any record because first equal = 2" do
-        @foo.search_for('first = 4').length.should == 0
+        @foo.search_for('first = 4').count.should == 0
       end
 
       it "should find the record" do
-        @foo.search_for('first = 2').length.should == 1
+        @foo.search_for('first = 2').count.should == 1
       end
 
       it "should not find any record with a grater than operator" do
-        @foo.search_for('first > 9').length.should == 0
+        @foo.search_for('first > 9').count.should == 0
       end
 
       it "should find the record with an >= operator" do
-        @foo.search_for('sec >= 4').length.should == 1
+        @foo.search_for('sec >= 4').count.should == 1
       end
 
       it "should find the record with AND operator is used" do
-        @foo.search_for('sec <= 8 and first = 2').length.should == 1
+        @foo.search_for('sec <= 8 and first = 2').count.should == 1
       end
 
       it "should return the record in if one predicate is true and OR is used as operator" do
-        @foo.search_for('sec <= 8 || first > 8').length.should == 1
+        @foo.search_for('sec <= 8 || first > 8').count.should == 1
       end
     end
   end
