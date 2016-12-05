@@ -4,30 +4,31 @@ module ScopedSearch
     #
     # Examples:
     #
-    #   sort @search, :by => :username
-    #   sort @search, :by => :created_at, :as => "Created"
-    #   sort @search, :by => :created_at, :default => "DESC"
+    #   sort :username
+    #   sort :created_at, as: "Created"
+    #   sort :created_at, default: "DESC"
+    #
+    # * <tt>field</tt> - the name of the named scope. This helper will prepend this value with "ascend_by_" and "descend_by_"
     #
     # This helper accepts the following options:
     #
-    # * <tt>:by</tt> - the name of the named scope. This helper will prepend this value with "ascend_by_" and "descend_by_"
-    # * <tt>:as</tt> - the text used in the link, defaults to whatever is passed to :by
+    # * <tt>:as</tt> - the text used in the link, defaults to whatever is passed to `field`
     # * <tt>:default</tt> - default sorting order, DESC or ASC
-    #
-    # url_options is a hash of URL parameters, defaulting to `params`, to preserve the current URL
-    # parameters.
+    # * <tt>:html_options</tt> - is a hash of HTML options for the anchor tag
+    # * <tt>:url_options</tt> - is a hash of URL parameters, defaulting to `params`, to preserve the current URL
+    #   parameters.
     #
     # On Rails 5 or higher, parameter whitelisting prevents any parameter being used in a link by
     # default, so `params.permit(..)` should be passed for `url_options` for all known and
     # permitted URL parameters, e.g.
     #
-    #   sort @search, {:by => :username}, {}, params.permit(:search)
+    #   sort :username, url_options: params.permit(:search)
     #
-    def sort(field, options = {}, html_options = {}, url_options = params)
+    def sort(field, as: nil, default: "ASC", html_options: {}, url_options: params)
 
-      unless options[:as]
-        id           = field.to_s.downcase == "id"
-        options[:as] = id ? field.to_s.upcase : field.to_s.humanize
+      unless as
+        id = field.to_s.downcase == "id"
+        as = id ? field.to_s.upcase : field.to_s.humanize
       end
 
       ascend  = "#{field} ASC"
@@ -40,16 +41,16 @@ module ScopedSearch
         when descend
           new_sort = ascend
         else
-          new_sort = ["ASC", "DESC"].include?(options[:default]) ? "#{field} #{options[:default]}" : ascend
+          new_sort = ["ASC", "DESC"].include?(default) ? "#{field} #{default}" : ascend
       end
 
       unless selected_sort.nil?
         css_classes = html_options[:class] ? html_options[:class].split(" ") : []
         if selected_sort == ascend
-          options[:as] = "&#9650;&nbsp;#{options[:as]}"
+          as = "&#9650;&nbsp;#{as}"
           css_classes << "ascending"
         else
-          options[:as] = "&#9660;&nbsp;#{options[:as]}"
+          as = "&#9660;&nbsp;#{as}"
           css_classes << "descending"
         end
         html_options[:class] = css_classes.join(" ")
@@ -58,9 +59,9 @@ module ScopedSearch
       url_options = url_options.to_h if url_options.respond_to?(:permit)  # convert ActionController::Parameters if given
       url_options = url_options.merge(:order => new_sort)
 
-      options[:as] = raw(options[:as]) if defined?(RailsXss)
+      as = raw(as) if defined?(RailsXss)
 
-      a_link(options[:as], html_escape(url_for(url_options)),html_options)
+      a_link(as, html_escape(url_for(url_options)),html_options)
     end
 
     # Adds AJAX auto complete functionality to the text input field with the

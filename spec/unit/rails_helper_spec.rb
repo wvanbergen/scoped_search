@@ -109,7 +109,7 @@ describe ScopedSearch::RailsHelper do
       ac_params.should_receive(:respond_to?).with(:permit).and_return(true)
       ac_params.should_receive(:to_h).and_return(params)
 
-      sort("field", {}, {}, ac_params)
+      sort("field", url_options: ac_params)
     end
   end
 end
