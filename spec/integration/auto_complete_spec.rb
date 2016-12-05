@@ -37,13 +37,13 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
         scoped_search :on => [:string, :date]
         scoped_search :on => [:int], :complete_value => true
-        scoped_search :on => :another,  :default_operator => :eq, :alias => :alias, :complete_value => true
+        scoped_search :on => :another,  :default_operator => :eq, :aliases => [:alias], :complete_value => true
         scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
         scoped_search :on => :deprecated, :complete_enabled => false
-        scoped_search :on => :related, :in => :bars, :rename => 'bars.related'.to_sym
-        scoped_search :on => :other_a, :in => :bars, :rename => 'bars.other_a'.to_sym
-        scoped_search :on => :other_b, :in => :bars, :rename => 'bars.other_b'.to_sym
-        scoped_search :on => :other_c, :in => :bars, :rename => 'bars.other_c'.to_sym
+        scoped_search :on => :related, :relation => :bars, :rename => 'bars.related'.to_sym
+        scoped_search :on => :other_a, :relation => :bars, :rename => 'bars.other_a'.to_sym
+        scoped_search :on => :other_b, :relation => :bars, :rename => 'bars.other_b'.to_sym
+        scoped_search :on => :other_c, :relation => :bars, :rename => 'bars.other_c'.to_sym
       end
 
       class ::Infoo < ::Foo

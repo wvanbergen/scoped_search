@@ -46,7 +46,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ActiveRecord::Migration.create_table(:loos) { |t| t.string :foo; t.integer :har_id }
         class Loo < ActiveRecord::Base
           belongs_to :har
-          scoped_search :in => :har, :on => :related
+          scoped_search :relation => :har, :on => :related
         end
 
         @har_record = Har.create!(:related => 'bar')
@@ -93,7 +93,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         class Goo < ActiveRecord::Base
           has_many :jars
           scoped_search :on => :foo
-          scoped_search :in => :jars, :on => :related
+          scoped_search :relation => :jars, :on => :related
         end
 
         @foo_1 = Goo.create!(:foo => 'foo')
@@ -158,7 +158,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         class Hoo < ActiveRecord::Base
           has_one :car
           scoped_search :on => :foo
-          scoped_search :in => :car, :on => :related
+          scoped_search :relation => :car, :on => :related
         end
 
         @hoo_1 = Hoo.create!(:foo => 'foo')
@@ -206,7 +206,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         # The class on which to call search_for
         class Joo < ActiveRecord::Base
           has_and_belongs_to_many :dars
-          scoped_search :in => :dars, :on => :related
+          scoped_search :relation => :dars, :on => :related
         end
 
         @joo_1 = Joo.create!(:foo => 'foo')
@@ -265,7 +265,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           # as an indication for a polymorphic relation.
           has_many :bazs, :through => :mars, :source => :baz
 
-          scoped_search :in => :bazs, :on => :related
+          scoped_search :relation => :bazs, :on => :related
         end
 
         @koo_1 = Koo.create!(:foo => 'foo')
@@ -316,7 +316,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           belongs_to :zar
           has_many :bazs, :through => :zar
 
-          scoped_search :in => :bazs, :on => :related
+          scoped_search :relation => :bazs, :on => :related
         end
 
         baz_1 = Baz.create(:related => 'baz')
@@ -362,7 +362,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           has_many :taggables
           has_many :dogs, :through => :taggables, :source => :taggable, :source_type => 'Dog'
 
-          scoped_search :in => :dogs, :on => :related, :rename => :dog
+          scoped_search :relation => :dogs, :on => :related, :rename => :dog
         end
 
         # The class on which to call search_for
@@ -370,7 +370,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           has_many :taggables, :as => :taggable
           has_many :tags, :through => :taggables
 
-          scoped_search :in => :tags, :on => :foo
+          scoped_search :relation => :tags, :on => :foo
         end
 
         class Cat < ActiveRecord::Base
@@ -438,7 +438,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           has_many :zaps
           has_many :pazs, :through => :zaps
 
-          scoped_search :in => :pazs, :on => :related
+          scoped_search :relation => :pazs, :on => :related
         end
 
         @moo_1 = Moo.create!(:foo => 'foo')
@@ -494,7 +494,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           has_many :user_groups
           has_many :groups, :through => :user_groups
 
-          scoped_search :in => :groups, :on => :related
+          scoped_search :relation => :groups, :on => :related
         end
 
         @user_1 = User.create!(:foo => 'foo')
@@ -545,7 +545,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
             has_many :bazs, :through => :mars
             self.table_name = "zan_koos"
 
-            scoped_search :in => :bazs, :on => :related
+            scoped_search :relation => :bazs, :on => :related
           end
         end
 

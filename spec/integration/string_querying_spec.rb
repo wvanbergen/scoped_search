@@ -16,7 +16,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           :description => :string
           ) do |klass|
         klass.scoped_search :on => :string
-        klass.scoped_search :on => :another,  :default_operator => :eq, :alias => :alias, :default_order => :desc
+        klass.scoped_search :on => :another,  :default_operator => :eq, :aliases => [:alias], :default_order => :desc
         klass.scoped_search :on => :explicit, :only_explicit => true
         klass.scoped_search :on => :description
       end

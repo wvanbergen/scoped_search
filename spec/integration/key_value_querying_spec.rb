@@ -32,7 +32,7 @@ require "spec_helper"
             has_many :facts
             has_many :keys, :through => :facts
 
-            scoped_search :in => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
+            scoped_search :relation => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
           end
           class ::MyItem < ::Item
           end
