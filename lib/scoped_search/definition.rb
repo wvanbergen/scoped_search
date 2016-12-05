@@ -114,11 +114,7 @@ module ScopedSearch
           if klass.columns_hash.has_key?(field.to_s)
             klass.columns_hash[field.to_s]
           else
-            if "#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}".to_f < 4.1
-              raise ActiveRecord::UnknownAttributeError, "#{klass.inspect} doesn't have column #{field.inspect}."
-            else
-              raise ActiveRecord::UnknownAttributeError.new(klass, field)
-            end
+            raise ActiveRecord::UnknownAttributeError.new(klass, field)
           end
         end
       end
@@ -282,24 +278,13 @@ module ScopedSearch
       @klass.scope(:search_for, proc { |query, options|
         klass = definition.klass
 
-        search_scope = case ActiveRecord::VERSION::MAJOR
-          when 3
-            klass.scoped
-          when 4
-            (ActiveRecord::VERSION::MINOR < 1) ? klass.where(nil) : klass.all
-          when 5
-            klass.all
-          else
-            raise ScopedSearch::DefinitionError, 'version ' \
-              "#{ActiveRecord::VERSION::MAJOR} of activerecord is not supported"
-          end
-
+        search_scope = klass.all
         find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options || {})
         search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]
         search_scope = search_scope.includes(find_options[:include])   if find_options[:include]
         search_scope = search_scope.joins(find_options[:joins])        if find_options[:joins]
         search_scope = search_scope.reorder(find_options[:order])      if find_options[:order]
-        search_scope = search_scope.references(find_options[:include]) if find_options[:include] && ActiveRecord::VERSION::MAJOR >= 4
+        search_scope = search_scope.references(find_options[:include]) if find_options[:include]
 
         search_scope
       })
