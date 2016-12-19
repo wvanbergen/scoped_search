@@ -81,11 +81,10 @@ module ScopedSearch
         @word_size        = word_size
 
         # Store this field in the field array
-        definition.fields[rename ? rename.to_sym : @field] ||= self
-        definition.unique_fields << self
+        definition.define_field(rename || @field, self)
 
         # Store definition for aliases as well
-        aliases.each { |al| definition.fields[al.to_sym] ||= self }
+        aliases.each { |al| definition.define_field(al, self) }
       end
 
       # The ActiveRecord-based class that belongs to this field.
@@ -193,14 +192,29 @@ module ScopedSearch
 
     attr_accessor :profile, :default_order
 
+    def super_definition
+      klass.superclass.try(:scoped_search_definition)
+    end
+
+    def define_field(name, field)
+      @profile ||= :default
+      @profile_fields[@profile] ||= {}
+      @profile_fields[@profile][name.to_sym] ||= field
+      @profile_unique_fields[@profile] ||= []
+      @profile_unique_fields[@profile] = (@profile_unique_fields[@profile] + [field]).uniq
+      field
+    end
+
     def fields
       @profile ||= :default
       @profile_fields[@profile] ||= {}
+      super_definition ? super_definition.fields.merge(@profile_fields[@profile]) : @profile_fields[@profile]
     end
 
     def unique_fields
       @profile ||= :default
       @profile_unique_fields[@profile] ||= []
+      super_definition ? (super_definition.unique_fields + @profile_unique_fields[@profile]).uniq : @profile_unique_fields[@profile]
     end
 
     # this method return definitions::field object from string
@@ -277,10 +291,10 @@ module ScopedSearch
 
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
-      definition = self
       @klass.define_singleton_method(:search_for) do |query = '', options = {}|
         # klass may be different to @klass if the scope is called on a subclass
         klass = self
+        definition = klass.scoped_search_definition
 
         search_scope = klass.all
         find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options)

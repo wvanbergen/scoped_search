@@ -6,6 +6,7 @@ describe ScopedSearch::Definition do
     @klass      = mock_activerecord_class
     @definition = ScopedSearch::Definition.new(@klass)
     @definition.stub(:setup_adapter)
+    @klass.stub(:scoped_search_definition).and_return(@definition)
   end
 
   describe ScopedSearch::Definition::Field do
@@ -70,6 +71,57 @@ describe ScopedSearch::Definition do
       @klass.stub(:search_for)
       @klass.should_not_receive(:define_singleton_method)
       ScopedSearch::Definition.new(@klass)
+    end
+  end
+
+  describe '#define_field' do
+    it "should add to fields" do
+      field = instance_double('ScopedSearch::Definition::Field')
+      @definition.define_field('test', field)
+      @definition.fields.should eq(test: field)
+      @definition.unique_fields.should eq([field])
+    end
+
+    it "should add aliases" do
+      field = instance_double('ScopedSearch::Definition::Field')
+      @definition.define_field('test', field)
+      @definition.define_field('alias', field)
+      @definition.fields.should eq(test: field, alias: field)
+      @definition.unique_fields.should eq([field])
+    end
+
+    it "should ignore duplicate field names" do
+      field1 = instance_double('ScopedSearch::Definition::Field')
+      field2 = instance_double('ScopedSearch::Definition::Field')
+      @definition.define_field('test', field1)
+      @definition.define_field('test', field2)
+      @definition.fields.should eq(test: field1)
+      @definition.unique_fields.should eq([field1, field2])
+    end
+  end
+
+  describe '#fields' do
+    before(:each) do
+      @subklass      = mock_activerecord_subclass(@klass)
+      @subdefinition = ScopedSearch::Definition.new(@subklass)
+      @subdefinition.stub(:setup_adapter)
+    end
+
+    it "should return fields from class" do
+      field = @definition.define(on: 'foo')
+      @definition.fields.should eq(foo: field)
+    end
+
+    it "should return fields from parent class" do
+      field = @definition.define(on: 'foo')
+      @subdefinition.fields.should eq(foo: field)
+    end
+
+    it "should combine fields from class and parent class" do
+      field1 = @definition.define(on: 'foo')
+      field2 = @subdefinition.define(on: 'foo', only_explicit: true)
+      field3 = @subdefinition.define(on: 'bar')
+      @subdefinition.fields.should eq(foo: field2, bar: field3)
     end
   end
 end

@@ -8,6 +8,9 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 - Support calling `search_for` on an STI subclass, returning only records of the
   subclass type.
+- Inherited search definitions: when defining search fields on both STI parents
+  and subclasses, the subclass can now be searched on all fields, including
+  those inherited from the parent. Only works for STI classes.
 
 === Version 4.0.0
 
