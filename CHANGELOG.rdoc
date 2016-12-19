@@ -6,7 +6,8 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
-*Nothing yet*
+- Support calling `search_for` on an STI subclass, returning only records of the
+  subclass type.
 
 === Version 4.0.0
 

@@ -62,13 +62,13 @@ describe ScopedSearch::Definition do
 
   describe '#initialize' do
     it "should create the named scope when" do
-      @klass.should_receive(:scope).with(:search_for, instance_of(Proc))
       ScopedSearch::Definition.new(@klass)
+      @klass.should respond_to(:search_for)
     end
 
     it "should not create the named scope if it already exists" do
       @klass.stub(:search_for)
-      @klass.should_not_receive(:scope)
+      @klass.should_not_receive(:define_singleton_method)
       ScopedSearch::Definition.new(@klass)
     end
   end

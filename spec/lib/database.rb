@@ -58,6 +58,13 @@ module ScopedSearch::RSpec::Database
     return klass
   end
 
+  def self.create_sti_model(parent)
+    klass_name = "#{parent.table_name}_#{rand}".gsub(/\W/, '')
+    klass = ScopedSearch::RSpec::Database.const_set(klass_name.classify, Class.new(parent))
+    yield(klass) if block_given?
+    return klass
+  end
+
   def self.drop_model(klass)
     klass.constants.grep(/\AHABTM_/).each do |habtm_class|
       ActiveRecord::Migration.drop_table(klass.const_get(habtm_class).table_name)

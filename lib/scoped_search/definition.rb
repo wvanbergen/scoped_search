@@ -278,11 +278,12 @@ module ScopedSearch
     # Registers the search_for named scope within the class that is used for searching.
     def register_named_scope! # :nodoc
       definition = self
-      @klass.scope(:search_for, proc { |query, options|
-        klass = definition.klass
+      @klass.define_singleton_method(:search_for) do |query = '', options = {}|
+        # klass may be different to @klass if the scope is called on a subclass
+        klass = self
 
         search_scope = klass.all
-        find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options || {})
+        find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options)
         search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]
         search_scope = search_scope.includes(find_options[:include])   if find_options[:include]
         search_scope = search_scope.joins(find_options[:joins])        if find_options[:joins]
@@ -290,7 +291,7 @@ module ScopedSearch
         search_scope = search_scope.references(find_options[:include]) if find_options[:include]
 
         search_scope
-      })
+      end
     end
 
     # Registers the complete_for method within the class that is used for searching.
