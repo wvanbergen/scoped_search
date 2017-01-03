@@ -311,7 +311,7 @@ module ScopedSearch
           klass_table_name = relation ? "#{klass.table_name}_#{num}" : klass.table_name
           return "#{connection.quote_table_name(klass_table_name)}.#{connection.quote_column_name(field.to_s)}"
         elsif relation
-          yield(:include, relation)
+          yield(:include, relation) unless definition.reflection_by_name(definition.klass, relation).macro == :has_many && [:eq, :ne, :gt, :gte, :lt, :lte].include?(operator)
         end
         column_name = connection.quote_table_name(klass.table_name.to_s) + "." + connection.quote_column_name(field.to_s)
         column_name = "(#{column_name} >> #{offset*word_size} & #{2**word_size - 1})" if offset
