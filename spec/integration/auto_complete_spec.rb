@@ -91,7 +91,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should complete when query is already distinct" do
-        Foo.uniq.complete_for('int =').length.should > 0
+        Foo.distinct.complete_for('int =').length.should > 0
       end
 
       it "should raise error for unindexed field" do
