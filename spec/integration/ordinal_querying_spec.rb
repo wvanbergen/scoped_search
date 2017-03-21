@@ -166,6 +166,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @curent_record = @class.create!(:timestamp => Time.current, :date => Date.current)
         @hour_ago_record = @class.create!(:timestamp => Time.current - 1.hour, :date => Date.current)
         @day_ago_record = @class.create!(:timestamp => Time.current - 1.day, :date => Date.current - 1.day)
+        @tomorrow_record = @class.create!(:timestamp => Time.current + 1.day, :date => Date.current + 1.day)
+        @week_from_now_record = @class.create!(:timestamp => Time.current + 1.week, :date => Date.current + 1.week)
         @month_ago_record = @class.create!(:timestamp => Time.current - 1.month, :date => Date.current - 1.month)
         @year_ago_record = @class.create!(:timestamp => Time.current - 1.year, :date => Date.current - 1.year)
       end
@@ -174,6 +176,8 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @curent_record.destroy
         @hour_ago_record.destroy
         @day_ago_record.destroy
+        @tomorrow_record.destroy
+        @week_from_now_record.destroy
         @month_ago_record.destroy
         @year_ago_record.destroy
       end
@@ -184,6 +188,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should accept Yesterday as date format" do
         @class.search_for('date = yesterday').length.should == 1
+      end
+
+      it "should accept Tomorrow as date format" do
+        @class.search_for('date = tomorrow').length.should == 1
       end
 
       it "should find all timestamps and date from today using the = operator" do
@@ -198,16 +206,24 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('date < "2 days ago"').length.should == 2
       end
 
-       it "should accept 3 hours ago as date format" do
-        @class.search_for('timestamp > "3 hours ago"').length.should == 2
-       end
+      it "should accept 3 hours ago as date format" do
+        @class.search_for('timestamp > "3 hours ago"').length.should == 4
+      end
 
-       it "should accept 1 month ago as date format" do
-        @class.search_for('date > "1 month ago"').length.should == 3
-       end
+      it "should accept 1 week from now as date format" do
+        @class.search_for('date < "1 week from now"').length.should == 6
+      end
+
+      it "should accept 1 month ago as date format" do
+        @class.search_for('date > "1 month ago"').length.should == 5
+      end
+
+      it "should accept 1 month from now as date format" do
+        @class.search_for('date < "1 month from now"').length.should == 7
+      end
 
       it "should accept 1 year ago as date format" do
-        @class.search_for('date > "1 year ago"').length.should == 4
+        @class.search_for('date > "1 year ago"').length.should == 6
       end
 
     end
