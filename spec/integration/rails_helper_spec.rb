@@ -1,19 +1,10 @@
 require "spec_helper"
+require "action_view"
 require "scoped_search/rails_helper"
-
-module ActionViewHelperStubs
-  def html_escape(str)
-    str
-  end
-
-  def tag_options(options)
-    ""
-  end
-end
 
 describe ScopedSearch::RailsHelper do
   include ScopedSearch::RailsHelper
-  include ActionViewHelperStubs
+  include ActionView::Helpers
 
   let(:params) { HashWithIndifferentAccess.new(:controller => "resources", :action => "search") }
 
@@ -71,15 +62,21 @@ describe ScopedSearch::RailsHelper do
     sort("other")
   end
 
+  it "should set :href on anchor" do
+    should_receive(:url_for).and_return('/example')
+    should_receive(:content_tag).with(:a, 'Field', href: '/example')
+    sort("field")
+  end
+
   it "should add no styling by default" do
     should_receive(:url_for)
-    should_receive(:a_link).with('Field', anything, hash_excluding(:class))
+    should_receive(:content_tag).with(:a, 'Field', hash_excluding(:class))
     sort("field")
   end
 
   it "should add ascending style for current ascending sort order " do
     should_receive(:url_for)
-    should_receive(:a_link).with('&#9650;&nbsp;Field', anything, hash_including(:class => 'ascending'))
+    should_receive(:content_tag).with(:a, '&#9650;&nbsp;Field', hash_including(:class => 'ascending'))
 
     params[:order] = "field ASC"
     sort("field")
@@ -87,7 +84,7 @@ describe ScopedSearch::RailsHelper do
 
   it "should add descending style for current descending sort order " do
     should_receive(:url_for)
-    should_receive(:a_link).with('&#9660;&nbsp;Field', anything, hash_including(:class => 'descending'))
+    should_receive(:content_tag).with(:a, '&#9660;&nbsp;Field', hash_including(:class => 'descending'))
 
     params[:order] = "field DESC"
     sort("field")

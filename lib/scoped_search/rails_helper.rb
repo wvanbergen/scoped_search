@@ -47,10 +47,10 @@ module ScopedSearch
       unless selected_sort.nil?
         css_classes = html_options[:class] ? html_options[:class].split(" ") : []
         if selected_sort == ascend
-          as = "&#9650;&nbsp;#{as}"
+          as = "&#9650;&nbsp;".html_safe + as
           css_classes << "ascending"
         else
-          as = "&#9660;&nbsp;#{as}"
+          as = "&#9660;&nbsp;".html_safe + as
           css_classes << "descending"
         end
         html_options[:class] = css_classes.join(" ")
@@ -61,13 +61,7 @@ module ScopedSearch
 
       as = raw(as) if defined?(RailsXss)
 
-      a_link(as, html_escape(url_for(url_options)),html_options)
-    end
-
-    def a_link(name, href, html_options)
-      tag_options = tag_options(html_options)
-      link = "<a href=\"#{href}\"#{tag_options}>#{name}</a>"
-      return link.respond_to?(:html_safe) ? link.html_safe : link
+      content_tag(:a, as, html_options.merge(href: url_for(url_options)))
     end
   end
 end
