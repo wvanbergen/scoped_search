@@ -241,13 +241,16 @@ module ScopedSearch
     end
 
     # Try to parse a string as a datetime.
-    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago','Jan 23, 2004'
+    # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago', '4 weeks from now', 'Jan 23, 2004'
     # And many more formats that are documented in Ruby DateTime API Doc.
     def parse_temporal(value)
       return Date.current if value =~ /\btoday\b/i
       return 1.day.ago.to_date if value =~ /\byesterday\b/i
+      return 1.day.from_now.to_date if value =~ /\btomorrow\b/i
       return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*(\d+\s+\b(?:hours?|minutes?)\b\s+\bago)\b\s*\z/i
       return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bago)\b\s*\z/i
+      return (eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*(\d+\s+\b(?:hours?|minutes?)\b\s+\bfrom\s+now)\b\s*\z/i
+      return (eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bfrom\s+now)\b\s*\z/i
       DateTime.parse(value, true) rescue nil
     end
 
