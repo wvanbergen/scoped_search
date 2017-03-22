@@ -2,9 +2,11 @@ require "spec_helper"
 
 describe ScopedSearch::QueryBuilder do
 
+  let(:klass) { Class.new(ActiveRecord::Base) }
+
   before(:each) do
     @definition = double('ScopedSearch::Definition')
-    @definition.stub(:klass).and_return(Class.new(ActiveRecord::Base))
+    @definition.stub(:klass).and_return(klass)
     @definition.stub(:profile).and_return(:default)
     @definition.stub(:default_order).and_return(nil)
     @definition.stub(:profile=).and_return(true)
@@ -54,5 +56,36 @@ describe ScopedSearch::QueryBuilder do
     @definition.stub(:field_by_name).and_return(field)
 
     lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error('my custom message')
+  end
+
+  context "with ext_method" do
+    before do
+      @definition = ScopedSearch::Definition.new(klass)
+      @definition.define(:test_field, ext_method: :ext_test)
+    end
+
+    it "should return combined :conditions and :parameter" do
+      klass.should_receive(:ext_test).with('test_field', '=', 'test_val').and_return(conditions: 'field = ?', parameter: ['test_val'])
+      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val').should eq(conditions: ['(field = ?)', 'test_val'])
+    end
+
+    it "should return :joins and :include" do
+      klass.should_receive(:ext_test).with('test_field', '=', 'test_val').and_return(include: 'test1', joins: 'test2')
+      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val').should eq(include: ['test1'], joins: ['test2'])
+    end
+
+    it "should raise error when non-hash returned" do
+      klass.should_receive(:ext_test).and_return('test')
+      lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported, /should return hash/)
+    end
+
+    it "should raise error when method doesn't exist" do
+      lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported, /doesn't respond to 'ext_test'/)
+    end
+
+    it "should ignore exceptions" do
+      klass.should_receive(:ext_test).and_raise('test')
+      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val').should eq({})
+    end
   end
 end
