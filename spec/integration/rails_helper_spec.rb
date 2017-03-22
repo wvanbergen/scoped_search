@@ -62,32 +62,21 @@ describe ScopedSearch::RailsHelper do
     sort("other")
   end
 
-  it "should set :href on anchor" do
+  it "should set :href and no :class on anchor" do
     should_receive(:url_for).and_return('/example')
-    should_receive(:content_tag).with(:a, 'Field', href: '/example')
-    sort("field")
-  end
-
-  it "should add no styling by default" do
-    should_receive(:url_for)
-    should_receive(:content_tag).with(:a, 'Field', hash_excluding(:class))
-    sort("field")
+    sort("field").should == '<a href="/example">Field</a>'
   end
 
   it "should add ascending style for current ascending sort order " do
-    should_receive(:url_for)
-    should_receive(:content_tag).with(:a, '&#9650;&nbsp;Field', hash_including(:class => 'ascending'))
-
+    should_receive(:url_for).and_return('/example')
     params[:order] = "field ASC"
-    sort("field")
+    sort("field").should == '<a class="ascending" href="/example">&#9650;&nbsp;Field</a>'
   end
 
   it "should add descending style for current descending sort order " do
-    should_receive(:url_for)
-    should_receive(:content_tag).with(:a, '&#9660;&nbsp;Field', hash_including(:class => 'descending'))
-
+    should_receive(:url_for).and_return('/example')
     params[:order] = "field DESC"
-    sort("field")
+    sort("field").should == '<a class="descending" href="/example">&#9660;&nbsp;Field</a>'
   end
 
   context 'with ActionController::Parameters' do
