@@ -24,9 +24,14 @@ module ScopedSearch
 
     # Export the scoped_search method fo defining the search options.
     # This method will create a definition instance for the class if it does not yet exist,
-    # and use the object as block argument and retun value.
+    # or if a parent definition exists then it will create a new one inheriting it,
+    # and use the object as block argument and return value.
     def scoped_search(*definitions)
       self.scoped_search_definition ||= ScopedSearch::Definition.new(self)
+      unless self.scoped_search_definition.klass == self  # inheriting the parent
+        self.scoped_search_definition = ScopedSearch::Definition.new(self)
+      end
+
       definitions.each do |definition|
         if definition[:on].kind_of?(Array)
           definition[:on].each { |field| self.scoped_search_definition.define(definition.merge(:on => field)) }

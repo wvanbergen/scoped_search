@@ -21,13 +21,6 @@ describe ScopedSearch, "API" do
     ScopedSearch::RSpec::Database.close_connection
   end
 
-  context 'for unprepared ActiveRecord model' do
-
-    it "should respond to :scoped_search to setup scoped_search for the model" do
-      Class.new(ActiveRecord::Base).should respond_to(:scoped_search)
-    end
-  end
-
   context 'for a prepared ActiveRecord model' do
 
     before(:all) do
@@ -44,8 +37,22 @@ describe ScopedSearch, "API" do
       @class.should respond_to(:search_for)
     end
 
-    it "should return a ActiveRecord::Relation instance" do
+    it "should return a ActiveRecord::Relation instance with no arguments" do
+      @class.search_for.should be_a(ActiveRecord::Relation)
+    end
+
+    it "should return a ActiveRecord::Relation instance with one argument" do
       @class.search_for('query').should be_a(ActiveRecord::Relation)
+    end
+
+    it "should return a ActiveRecord::Relation instance with two arguments" do
+      @class.search_for('query', {}).should be_a(ActiveRecord::Relation)
+    end
+
+    it "should respect existing scope" do
+      @class.create! field: 'a'
+      record = @class.create! field: 'ab'
+      @class.where(field: 'ab').search_for('field ~ a').should eq([record])
     end
   end
 end
