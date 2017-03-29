@@ -6,11 +6,18 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
+*Nothing yet*
+
+=== Version 4.1.0
+
+- Add support for ActiveRecord and ActionView 5.1
+- Add support for Ruby 2.4
 - Support calling `search_for` on an STI subclass, returning only records of the
-  subclass type.
+  subclass type. (#112)
 - Inherited search definitions: when defining search fields on both STI parents
   and subclasses, the subclass can now be searched on all fields, including
-  those inherited from the parent. Only works for STI classes.
+  those inherited from the parent. Only works for STI classes. (#135)
+- Add 'tomorrow' and 'from now' keywords for searching future dates (#162)
 
 === Version 4.0.0
 
