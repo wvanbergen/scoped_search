@@ -236,7 +236,7 @@ module ScopedSearch
       options << 5.days.ago.strftime('%A')
       options << '"6 days ago"'
       options << 7.days.ago.strftime('"%b %d,%Y"')
-      options << '2 weeks from now'
+      options << '"2 weeks from now"'
       options
     end
 
