@@ -262,6 +262,7 @@ module ScopedSearch
     def has_many_through_join(field)
       many_class = field.definition.klass
       through = definition.reflection_by_name(many_class, field.relation).options[:through]
+
       connection = many_class.connection
 
       # table names
@@ -269,9 +270,10 @@ module ScopedSearch
       many_table_name = many_class.table_name
       middle_table_name = definition.reflection_by_name(many_class, through).klass.table_name
 
-      # primary and foreign keys + optional condition for the many to middle join
+      # primary and foreign keys + optional conditions for the joins
       pk1, fk1   = field.reflection_keys(definition.reflection_by_name(many_class, through))
-      condition1 = field.reflection_conditions(definition.reflection_by_name(field.klass, middle_table_name))
+      condition_many_to_middle = field.reflection_conditions(definition.reflection_by_name(field.klass, many_table_name))
+      condition_middle_to_end = field.reflection_conditions(definition.reflection_by_name(field.klass, middle_table_name))
 
       # primary and foreign keys + optional condition for the endpoint to middle join
       middle_table_association = find_has_many_through_association(field, through) || middle_table_name
@@ -281,7 +283,7 @@ module ScopedSearch
       <<-SQL
         #{connection.quote_table_name(many_table_name)}
         INNER JOIN #{connection.quote_table_name(middle_table_name)}
-        ON #{connection.quote_table_name(many_table_name)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk1)} #{condition1}
+        ON #{connection.quote_table_name(many_table_name)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk1)} #{condition_many_to_middle} #{condition_middle_to_end}
         INNER JOIN #{connection.quote_table_name(endpoint_table_name)}
         ON #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk2)} = #{connection.quote_table_name(endpoint_table_name)}.#{connection.quote_column_name(pk2)} #{condition2}
       SQL

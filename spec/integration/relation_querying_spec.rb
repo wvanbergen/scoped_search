@@ -479,11 +479,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ActiveRecord::Migration.create_table(:user_groups) { |t| t.integer :user_id; t.integer :group_id }
         ActiveRecord::Migration.create_table(:conflicts) { |t| t.integer :group_id; t.integer :user_id }
         ActiveRecord::Migration.create_table(:groups) { |t| t.string :related; t.integer :user_id }
-        ActiveRecord::Migration.create_table(:users) { |t| t.string :foo }
+        ActiveRecord::Migration.create_table(:users) { |t| t.string :foo; t.string :user_type }
 
         # The related classes
         class UserGroup < ActiveRecord::Base; belongs_to :user; belongs_to :group; end
-        class Conflict < ActiveRecord::Base; belongs_to :user; belongs_to :group; end
+        class Conflict < ActiveRecord::Base; belongs_to :user, :polymorphic => true; belongs_to :group; end
         class Group < ActiveRecord::Base
           has_many :user_groups
           has_many :users, :through => :conflicts, :source_type => 'User', :source => :user
@@ -497,9 +497,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           scoped_search :relation => :groups, :on => :related
         end
 
-        @user_1 = User.create!(:foo => 'foo')
-        @user_2 = User.create!(:foo => 'foo too')
-        @user_3 = User.create!(:foo => 'foo three')
+        @user_1 = User.create!(:foo => 'foo', :user_type => 'User')
+        @user_2 = User.create!(:foo => 'foo too', :user_type => 'User')
+        @user_3 = User.create!(:foo => 'foo three',  :user_type => 'User')
 
         @group_1 = Group.create(:related => 'value')
         @group_2 = Group.create(:related => 'value too!')
@@ -523,7 +523,6 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         User.search_for('related=value AND related="value too!"').length.should == 1
       end
     end
-
 
     context 'querying a :has_many => :through relation with modules' do
 
@@ -576,6 +575,64 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find the one record that is related to two baz records" do
         Zan::Koo.search_for('related=baz AND related="baz too!"').length.should == 1
+      end
+    end
+
+    context 'querying a :has_many => :through with polymorphism' do
+      before do
+        ActiveRecord::Migration.create_table(:subnets) { |t| t.string :name }
+        ActiveRecord::Migration.create_table(:taxable_taxonomies) { |t| t.integer :taxable_id; t.integer :taxonomy_id; t.string :taxable_type }
+        ActiveRecord::Migration.create_table(:taxonomies) { |t| t.string :type; t.string :name }
+
+        class Subnet < ActiveRecord::Base
+          has_many :taxable_taxonomies, :as => :taxable
+          has_many :locations, -> { where(:type => 'Location') }, :through => :taxable_taxonomies, :source => :taxonomy
+          has_many :organizations, -> { where(:type => 'Organization') }, :through => :taxable_taxonomies, :source => :taxonomy
+
+          scoped_search :relation => :locations, :on => :id, :rename => :location_id
+          scoped_search :relation => :organizations, :on => :id, :rename => :organization_id
+        end
+
+        class TaxableTaxonomy < ActiveRecord::Base
+          belongs_to :taxonomy
+          belongs_to :taxable, :polymorphic => true
+        end
+
+        class Taxonomy < ActiveRecord::Base
+          has_many :taxable_taxonomies
+          has_many :subnets, :through => :taxable_taxonomies, :source => :taxable, :source_type => 'Subnet'
+        end
+
+        class Organization < Taxonomy; end
+        class Location < Taxonomy; end
+
+        @loc_a = Location.create!(:name => 'Location A')
+        @loc_b = Location.create!(:name => 'Location B')
+        @org_a = Organization.create!(:name => 'Organization A')
+        @org_b = Organization.create!(:name => 'Organization B')
+
+        @subnet_a = Subnet.create!(:name => 'Subnet A')
+        @subnet_b = Subnet.create!(:name => 'Subnet B')
+
+
+        TaxableTaxonomy.create!(:taxable_id => @subnet_a.id, :taxonomy_id => @loc_a.id, :taxable_type => 'Subnet')
+        TaxableTaxonomy.create!(:taxable_id => @subnet_b.id, :taxonomy_id => @loc_b.id, :taxable_type => 'Subnet')
+        TaxableTaxonomy.create!(:taxable_id => @subnet_a.id, :taxonomy_id => @org_a.id, :taxable_type => 'Subnet')
+        TaxableTaxonomy.create!(:taxable_id => @subnet_b.id, :taxonomy_id => @loc_b.id, :taxable_type => 'Subnet')
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table :subnets
+        ActiveRecord::Migration.drop_table :taxable_taxonomies
+        ActiveRecord::Migration.drop_table :taxonomies
+      end
+
+      it "should find the records based on location id" do
+        Subnet.search_for("location_id = #{@loc_a.id}").length.should == 1
+      end
+
+      it "should find the records based on organization id" do
+        Subnet.search_for("organization_id = #{@org_a.id}").length.should == 1
       end
     end
   end
