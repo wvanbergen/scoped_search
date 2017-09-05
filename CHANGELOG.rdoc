@@ -8,6 +8,11 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 *Nothing yet*
 
+=== Version 4.1.1
+
+- Bugfix related to quoting when building autocomplete queries for date fields (#167)
+- Bugfix related to using polymorphic relations (#168)
+
 === Version 4.1.0
 
 - Add support for ActiveRecord and ActionView 5.1
