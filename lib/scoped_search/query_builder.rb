@@ -262,17 +262,22 @@ module ScopedSearch
     def has_many_through_join(field)
       many_class = field.definition.klass
       through = definition.reflection_by_name(many_class, field.relation).options[:through]
+      through_class = definition.reflection_by_name(many_class, through).klass
 
       connection = many_class.connection
 
       # table names
       endpoint_table_name = field.klass.table_name
       many_table_name = many_class.table_name
-      middle_table_name = definition.reflection_by_name(many_class, through).klass.table_name
+      middle_table_name = through_class.table_name
 
       # primary and foreign keys + optional conditions for the joins
       pk1, fk1   = field.reflection_keys(definition.reflection_by_name(many_class, through))
-      condition_many_to_middle = field.reflection_conditions(definition.reflection_by_name(field.klass, many_table_name))
+      condition_many_to_middle = if with_polymorphism?(many_class, field.klass, through, through_class)
+                                   field.reflection_conditions(definition.reflection_by_name(field.klass, many_table_name))
+                                 else
+                                   ''
+                                 end
       condition_middle_to_end = field.reflection_conditions(definition.reflection_by_name(field.klass, middle_table_name))
 
       # primary and foreign keys + optional condition for the endpoint to middle join
@@ -287,6 +292,13 @@ module ScopedSearch
         INNER JOIN #{connection.quote_table_name(endpoint_table_name)}
         ON #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk2)} = #{connection.quote_table_name(endpoint_table_name)}.#{connection.quote_column_name(pk2)} #{condition2}
       SQL
+    end
+
+    def with_polymorphism?(many_class, endpoint_class, through, through_class)
+      reflections = [definition.reflection_by_name(endpoint_class, through), definition.reflection_by_name(many_class, through)].compact
+      as = reflections.map(&:options).compact.map { |opt| opt[:as] }.compact
+      return false if as.empty?
+      definition.reflection_by_name(through_class, as.first).options[:polymorphic]
     end
 
     # This module gets included into the Field class to add SQL generation.

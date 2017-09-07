@@ -479,11 +479,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ActiveRecord::Migration.create_table(:user_groups) { |t| t.integer :user_id; t.integer :group_id }
         ActiveRecord::Migration.create_table(:conflicts) { |t| t.integer :group_id; t.integer :user_id }
         ActiveRecord::Migration.create_table(:groups) { |t| t.string :related; t.integer :user_id }
-        ActiveRecord::Migration.create_table(:users) { |t| t.string :foo; t.string :user_type }
+        ActiveRecord::Migration.create_table(:users) { |t| t.string :foo }
 
         # The related classes
         class UserGroup < ActiveRecord::Base; belongs_to :user; belongs_to :group; end
-        class Conflict < ActiveRecord::Base; belongs_to :user, :polymorphic => true; belongs_to :group; end
+        class Conflict < ActiveRecord::Base; belongs_to :user; belongs_to :group; end
         class Group < ActiveRecord::Base
           has_many :user_groups
           has_many :users, :through => :conflicts, :source_type => 'User', :source => :user
@@ -497,9 +497,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
           scoped_search :relation => :groups, :on => :related
         end
 
-        @user_1 = User.create!(:foo => 'foo', :user_type => 'User')
-        @user_2 = User.create!(:foo => 'foo too', :user_type => 'User')
-        @user_3 = User.create!(:foo => 'foo three',  :user_type => 'User')
+        @user_1 = User.create!(:foo => 'foo')
+        @user_2 = User.create!(:foo => 'foo too')
+        @user_3 = User.create!(:foo => 'foo three')
 
         @group_1 = Group.create(:related => 'value')
         @group_2 = Group.create(:related => 'value too!')
@@ -581,16 +581,29 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'querying a :has_many => :through with polymorphism' do
       before do
         ActiveRecord::Migration.create_table(:subnets) { |t| t.string :name }
+        ActiveRecord::Migration.create_table(:domains) { |t| t.string :name }
         ActiveRecord::Migration.create_table(:taxable_taxonomies) { |t| t.integer :taxable_id; t.integer :taxonomy_id; t.string :taxable_type }
         ActiveRecord::Migration.create_table(:taxonomies) { |t| t.string :type; t.string :name }
 
-        class Subnet < ActiveRecord::Base
-          has_many :taxable_taxonomies, :as => :taxable
-          has_many :locations, -> { where(:type => 'Location') }, :through => :taxable_taxonomies, :source => :taxonomy
-          has_many :organizations, -> { where(:type => 'Organization') }, :through => :taxable_taxonomies, :source => :taxonomy
+        module Taxonomix
+          def self.included(base)
+            base.class_eval do
+              has_many :taxable_taxonomies, :as => :taxable
+              has_many :locations, -> { where(:type => 'Location') }, :through => :taxable_taxonomies, :source => :taxonomy
+              has_many :organizations, -> { where(:type => 'Organization') }, :through => :taxable_taxonomies, :source => :taxonomy
 
-          scoped_search :relation => :locations, :on => :id, :rename => :location_id
-          scoped_search :relation => :organizations, :on => :id, :rename => :organization_id
+              scoped_search :relation => :locations, :on => :id, :rename => :location_id
+              scoped_search :relation => :organizations, :on => :id, :rename => :organization_id
+            end
+          end
+        end
+
+        class Subnet < ActiveRecord::Base
+          include Taxonomix
+        end
+
+        class Domain < ActiveRecord::Base
+          include Taxonomix
         end
 
         class TaxableTaxonomy < ActiveRecord::Base
@@ -614,15 +627,23 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @subnet_a = Subnet.create!(:name => 'Subnet A')
         @subnet_b = Subnet.create!(:name => 'Subnet B')
 
+        @domain_a = Domain.create!(:name => 'Domain A')
+        @domain_b = Domain.create!(:name => 'Domain B')
 
         TaxableTaxonomy.create!(:taxable_id => @subnet_a.id, :taxonomy_id => @loc_a.id, :taxable_type => 'Subnet')
         TaxableTaxonomy.create!(:taxable_id => @subnet_b.id, :taxonomy_id => @loc_b.id, :taxable_type => 'Subnet')
         TaxableTaxonomy.create!(:taxable_id => @subnet_a.id, :taxonomy_id => @org_a.id, :taxable_type => 'Subnet')
-        TaxableTaxonomy.create!(:taxable_id => @subnet_b.id, :taxonomy_id => @loc_b.id, :taxable_type => 'Subnet')
+        TaxableTaxonomy.create!(:taxable_id => @subnet_b.id, :taxonomy_id => @org_b.id, :taxable_type => 'Subnet')
+
+        TaxableTaxonomy.create!(:taxable_id => @domain_a.id, :taxonomy_id => @loc_a.id, :taxable_type => 'Domain')
+        TaxableTaxonomy.create!(:taxable_id => @domain_b.id, :taxonomy_id => @loc_b.id, :taxable_type => 'Domain')
+        TaxableTaxonomy.create!(:taxable_id => @domain_a.id, :taxonomy_id => @org_a.id, :taxable_type => 'Domain')
+        TaxableTaxonomy.create!(:taxable_id => @domain_b.id, :taxonomy_id => @org_b.id, :taxable_type => 'Domain')
       end
 
       after do
         ActiveRecord::Migration.drop_table :subnets
+        ActiveRecord::Migration.drop_table :domains
         ActiveRecord::Migration.drop_table :taxable_taxonomies
         ActiveRecord::Migration.drop_table :taxonomies
       end
@@ -633,6 +654,70 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find the records based on organization id" do
         Subnet.search_for("organization_id = #{@org_a.id}").length.should == 1
+      end
+    end
+
+    context 'querying with multiple :has_many => :through and polymorphism' do
+      before do
+        ActiveRecord::Migration.create_table(:usergroups) { |t| t.string :name }
+        ActiveRecord::Migration.create_table(:usergroup_members) { |t| t.integer :usergroup_id; t.integer :member_id; t.string :member_type }
+        ActiveRecord::Migration.create_table(:usermats) { |t| t.string :username }
+        ActiveRecord::Migration.create_table(:cached_usergroup_members) { |t| t.integer :usergroup_id; t.integer :usermat_id }
+
+        class Usergroup < ActiveRecord::Base
+          has_many :usergroup_members
+          has_many :usermats, :through => :usergroup_members, :source => :member, :source_type => 'Usermat'
+          has_many :usergroups, :through => :usergroup_members, :source => :member, :source_type => 'Usergroup'
+
+          has_many :cached_usergroup_members
+          has_many :cached_usergroups, :through => :cached_usergroup_members, :source => :usergroup
+          has_many :cached_usergroup_members, :foreign_key => 'usergroup_id'
+        end
+
+        class UsergroupMember < ActiveRecord::Base
+          belongs_to :member, :polymorphic => true
+          belongs_to :usergroup
+        end
+
+        class Usermat < ActiveRecord::Base
+          has_many :usergroup_member, :as => :member
+          has_many :cached_usergroup_members
+          has_many :cached_usergroups, :through => :cached_usergroup_members, :source => :usergroup
+
+          scoped_search :relation => :cached_usergroups, :on => :name, :rename => :usergroup_name
+        end
+
+        class CachedUsergroupMember < ActiveRecord::Base
+          belongs_to :usermat
+          belongs_to :usergroup
+        end
+
+        @group_1 = Usergroup.create!(:name => 'first')
+        @group_2 = Usergroup.create!(:name => 'second')
+        @group_3 = Usergroup.create!(:name => 'third')
+        @group_4 = Usergroup.create!(:name => 'fourth')
+
+        @usermat_1 = Usermat.create(:username => 'user A')
+        @usermat_2 = Usermat.create(:username => 'user B')
+
+        UsergroupMember.create!(:usergroup_id => @group_2.id, :member_id => @group_3.id, :member_type => 'Usergroup')
+        UsergroupMember.create!(:usergroup_id => @group_1.id, :member_id => @usermat_2, :member_type => 'Usermat')
+        UsergroupMember.create!(:usergroup_id => @group_4.id, :member_id => @usermat_1, :member_type => 'Usermat')
+
+        CachedUsergroupMember.create!(:usergroup_id => @group_1.id, :usermat_id => @usermat_1.id)
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table :usergroups
+        ActiveRecord::Migration.drop_table :usergroup_members
+        ActiveRecord::Migration.drop_table :usermats
+        ActiveRecord::Migration.drop_table :cached_usergroup_members
+      end
+
+      it "should find the usermat when searching on usergroup" do
+        result = Usermat.search_for("usergroup_name = #{@group_1.name}")
+        result.length.should == 1
+        result.first.username.should == @usermat_1.username
       end
     end
   end
