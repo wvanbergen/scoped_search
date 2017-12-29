@@ -484,7 +484,11 @@ module ScopedSearch
           raise ScopedSearch::QueryNotSupported, "Field '#{lhs.value}' not recognized for searching!" unless field
 
           # see if the value passes user defined validation
-          validate_value(field, rhs.value)
+          if operator == :in
+            rhs.value.split(',').each { |v| validate_value(field, v) }
+          else
+            validate_value(field, rhs.value)
+          end
 
           builder.sql_test(field, operator, rhs.value,lhs.value, &block)
         end
