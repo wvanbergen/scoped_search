@@ -47,6 +47,22 @@ describe ScopedSearch::QueryBuilder do
     lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported)
   end
 
+  it "should validate value if validator selected" do
+    field = double('field')
+    field.stub(:only_explicit).and_return(true)
+    field.stub(:field).and_return(:test_field)
+    field.stub(:ext_method).and_return(nil)
+    field.stub(:key_field).and_return(nil)
+    field.stub(:set?).and_return(false)
+    field.stub(:to_sql).and_return('')
+    field.stub(:validator).and_return(->(value) { value =~ /^\d+$/ })
+
+    @definition.stub(:field_by_name).and_return(field)
+
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field ^ (1,2)') }.should_not raise_error
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field ^ (1,a)') }.should raise_error(ScopedSearch::QueryNotSupported)
+  end
+
   it "should display custom error from validator" do
     field = double('field')
     field.stub(:only_explicit).and_return(true)
