@@ -99,9 +99,9 @@ describe ScopedSearch::QueryBuilder do
       lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported, /doesn't respond to 'ext_test'/)
     end
 
-    it "should ignore exceptions" do
+    it "should raise error when method raises exception" do
       klass.should_receive(:ext_test).and_raise('test')
-      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val').should eq({})
+      lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported, /failed with error: test/)
     end
   end
 end
