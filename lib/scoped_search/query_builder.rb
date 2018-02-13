@@ -402,7 +402,11 @@ module ScopedSearch
 
       def to_ext_method_sql(key, operator, value, &block)
         raise ScopedSearch::QueryNotSupported, "'#{definition.klass}' doesn't respond to '#{ext_method}'" unless definition.klass.respond_to?(ext_method)
-        conditions = definition.klass.send(ext_method.to_sym,key, operator, value) rescue {}
+        begin
+          conditions = definition.klass.send(ext_method.to_sym, key, operator, value) 
+        rescue StandardError => e
+          raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' failed with error: #{e}"
+        end
         raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' should return hash" unless conditions.kind_of?(Hash)
         sql = ''
         conditions.map do |notification, content|
