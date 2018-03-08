@@ -124,4 +124,11 @@ describe ScopedSearch::Definition do
       @subdefinition.fields.should eq(foo: field2, bar: field3)
     end
   end
+
+  describe '#default_fields_for' do
+    it "finds fields when there's a field not directly mapped to a DB column" do
+      @definition.define(:on => :custom_flag, :complete_value => { :true => true, :false => false }, :ext_method => :search_by_custom_flag)
+      @definition.default_fields_for("").should eq([])
+    end
+  end
 end

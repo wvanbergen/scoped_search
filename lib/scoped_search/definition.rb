@@ -251,7 +251,7 @@ module ScopedSearch
       column_types += [:integer]                      if value =~ INTEGER_REGXP
       column_types += [:datetime, :date, :timestamp]  if (parse_temporal(value))
 
-      default_fields.select { |field| column_types.include?(field.type) && !field.set? }
+      default_fields.select { |field| !field.set? && column_types.include?(field.type) }
     end
 
     # Try to parse a string as a datetime.
