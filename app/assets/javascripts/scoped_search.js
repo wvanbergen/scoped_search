@@ -25,6 +25,7 @@ $.widget( "custom.catcomplete", $.ui.autocomplete, {
     var options = arguments[0] || {};
     $(this).each(function(i,el){
       var target = $(el);
+      var clearFn = options.onClear || function(){ target.val(''); };
 
       target.catcomplete({
         source: options.source || function( request, response ) {
@@ -50,6 +51,6 @@ $.widget( "custom.catcomplete", $.ui.autocomplete, {
         $(this).catcomplete( target.attr('id'));
       });
       target.after('<a class="autocomplete-clear" tabindex="-1" title="Clear">&times;</a>')
-      target.next().on("click",function(){ target.val(''); })
+      target.next().on("click", clearFn)
     })
   };
