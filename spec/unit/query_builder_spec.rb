@@ -90,6 +90,11 @@ describe ScopedSearch::QueryBuilder do
       ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val').should eq(include: ['test1'], joins: ['test2'])
     end
 
+    it "should support LIKE query even if database field doesn't exist" do
+      klass.should_receive(:ext_test).with('test_field', 'LIKE', 'test_val').and_return(conditions: 'field LIKE ?', parameter: ['%test_val%'])
+      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field ~ test_val').should eq(conditions: ['(field LIKE ?)', '%test_val%'])
+    end
+
     it "should raise error when non-hash returned" do
       klass.should_receive(:ext_test).and_return('test')
       lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported, /should return hash/)
