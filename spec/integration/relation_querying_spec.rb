@@ -142,6 +142,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         ::Goo.search_for('too another').length.should == 0
       end
 
+      it "shouldn't eager load extra data for related table" do
+        ::Goo.search_for('related = bar').includes_values.length.should == 0
+      end
     end
 
     context 'querying a :has_one relation' do
@@ -427,7 +430,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         # Create some tables
         ActiveRecord::Migration.create_table(:zaps) { |t| t.integer :moo_id; t.integer :paz_id }
         ActiveRecord::Migration.create_table(:pazs) { |t| t.string :related }
-        ActiveRecord::Migration.create_table(:moos) { |t| t.string :foo }   
+        ActiveRecord::Migration.create_table(:moos) { |t| t.string :foo }
 
         # The related classes
         class Zap < ActiveRecord::Base; belongs_to :paz; belongs_to :moo; end
@@ -531,7 +534,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         # Create some tables with namespaces
         ActiveRecord::Migration.create_table(:zan_mars) { |t| t.integer :koo_id; t.integer :baz_id }
         ActiveRecord::Migration.create_table(:zan_bazs) { |t| t.string :related }
-        ActiveRecord::Migration.create_table(:zan_koos) { |t| t.string :foo }   
+        ActiveRecord::Migration.create_table(:zan_koos) { |t| t.string :foo }
 
         # The related classes
         module Zan; class Mar < ActiveRecord::Base; belongs_to :baz; belongs_to :koo; self.table_name = "zan_mars"; end; end
