@@ -125,7 +125,7 @@ module ScopedSearch
 
       # Returns the column type of this field.
       def type
-        @type ||= column.type
+        @type ||= virtual? ? :virtual : column.type
       end
 
       # Returns true if this field is a datetime-like column.
@@ -237,6 +237,7 @@ module ScopedSearch
       field = field_by_name(name)
       return [] if field.nil?
       return field.operators                                          if field.operators
+      return ['=', '!=', '>', '<', '<=', '>=', '~', '!~', '^', '!^']  if field.virtual?
       return ['=', '!=']                                              if field.set?
       return ['=', '>', '<', '<=', '>=', '!=', '^', '!^']             if field.numerical?
       return ['=', '!=', '~', '!~', '^', '!^']                        if field.textual?
@@ -250,7 +251,7 @@ module ScopedSearch
     # Returns a list of appropriate fields to search in given a search keyword and operator.
     def default_fields_for(value, operator = nil)
 
-      column_types  = []
+      column_types  = [:virtual]
       column_types += [:string, :text]                if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:double, :float, :decimal]     if value =~ NUMERICAL_REGXP
       column_types += [:integer]                      if value =~ INTEGER_REGXP
