@@ -107,6 +107,11 @@ module ScopedSearch
         end
       end
 
+      # Returns true if this is a virtual field.
+      def virtual?
+        !ext_method.nil?
+      end
+
       # Returns the ActiveRecord column definition that corresponds to this field.
       def column
         @column ||= begin

@@ -113,7 +113,7 @@ module ScopedSearch
     # By default, it will simply look up the correct SQL operator in the SQL_OPERATORS
     # hash, but this can be overridden by a database adapter.
     def sql_operator(operator, field)
-      raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if !field.ext_method and [:like, :unlike].include?(operator) and !field.textual?
+      raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if !field.virtual? and [:like, :unlike].include?(operator) and !field.textual?
       SQL_OPERATORS[operator]
     end
 
@@ -210,7 +210,7 @@ module ScopedSearch
     # <tt>operator</tt>:: The operator used for comparison.
     # <tt>value</tt>:: The value to compare the field with.
     def sql_test(field, operator, value, lhs, &block) # :yields: finder_option_type, value
-      return field.to_ext_method_sql(lhs, sql_operator(operator, field), value, &block) if field.ext_method
+      return field.to_ext_method_sql(lhs, sql_operator(operator, field), value, &block) if field.virtual?
 
       yield(:keyparameter, lhs.sub(/^.*\./,'')) if field.key_field
 
@@ -554,7 +554,7 @@ module ScopedSearch
       # Switches out the default LIKE operator in the default <tt>sql_operator</tt>
       # method for ILIKE or @@ if full text searching is enabled.
       def sql_operator(operator, field)
-        raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if !field.ext_method and [:like, :unlike].include?(operator) and !field.textual?
+        raise ScopedSearch::QueryNotSupported, "the operator '#{operator}' is not supported for field type '#{field.type}'" if !field.virtual? and [:like, :unlike].include?(operator) and !field.textual?
         return '@@' if [:like, :unlike].include?(operator) && field.full_text_search
         case operator
           when :like   then 'ILIKE'

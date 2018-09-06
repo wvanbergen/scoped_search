@@ -38,6 +38,7 @@ describe ScopedSearch::QueryBuilder do
 
   it "should validate value if validator selected" do
     field = double('field')
+    field.stub(:virtual?).and_return(false)
     field.stub(:only_explicit).and_return(true)
     field.stub(:field).and_return(:test_field)
     field.stub(:validator).and_return(->(_value) { false })
@@ -49,6 +50,7 @@ describe ScopedSearch::QueryBuilder do
 
   it "should validate value if validator selected" do
     field = double('field')
+    field.stub(:virtual?).and_return(false)
     field.stub(:only_explicit).and_return(true)
     field.stub(:field).and_return(:test_field)
     field.stub(:ext_method).and_return(nil)
@@ -65,6 +67,7 @@ describe ScopedSearch::QueryBuilder do
 
   it "should display custom error from validator" do
     field = double('field')
+    field.stub(:virtual?).and_return(false)
     field.stub(:only_explicit).and_return(true)
     field.stub(:field).and_return(:test_field)
     field.stub(:validator).and_return(->(_value) { raise ScopedSearch::QueryNotSupported, 'my custom message' })
