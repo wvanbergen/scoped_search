@@ -6,7 +6,12 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
+*Nothing yet*
+
+=== Version 4.1.4
+
 - Bugfix related to LIKE queries on virtual fields (#178)
+- Add an "onClear" option to scopedSearch (#176)
 
 === Version 4.1.3
 
