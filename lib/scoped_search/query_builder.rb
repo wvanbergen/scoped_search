@@ -403,7 +403,7 @@ module ScopedSearch
       def to_ext_method_sql(key, operator, value, &block)
         raise ScopedSearch::QueryNotSupported, "'#{definition.klass}' doesn't respond to '#{ext_method}'" unless definition.klass.respond_to?(ext_method)
         begin
-          conditions = definition.klass.send(ext_method.to_sym, key, operator, value) 
+          conditions = definition.klass.send(ext_method.to_sym, key, operator, value)
         rescue StandardError => e
           raise ScopedSearch::QueryNotSupported, "external method '#{ext_method}' failed with error: #{e}"
         end

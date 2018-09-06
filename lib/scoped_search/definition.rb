@@ -123,12 +123,12 @@ module ScopedSearch
         @type ||= column.type
       end
 
-      # Returns true if this field is a datetime-like column
+      # Returns true if this field is a datetime-like column.
       def datetime?
         [:datetime, :time, :timestamp].include?(type)
       end
 
-      # Returns true if this field is a date-like column
+      # Returns true if this field is a date-like column.
       def date?
         type == :date
       end
@@ -167,7 +167,7 @@ module ScopedSearch
         return "#{field} #{order}"
       end
 
-      # Return 'table'.'column' with the correct database quotes
+      # Return 'table'.'column' with the correct database quotes.
       def quoted_field
         c = klass.connection
         "#{c.quote_table_name(klass.table_name)}.#{c.quote_column_name(field)}"
@@ -231,11 +231,11 @@ module ScopedSearch
     def operator_by_field_name(name)
       field = field_by_name(name)
       return [] if field.nil?
-      return field.operators                                      if field.operators
-      return ['= ', '!= ']                                        if field.set?
-      return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ ']  if field.numerical?
-      return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']              if field.textual?
-      return ['= ', '> ', '< ']                                   if field.temporal?
+      return field.operators                                          if field.operators
+      return ['=', '!=']                                              if field.set?
+      return ['=', '>', '<', '<=', '>=', '!=', '^', '!^']             if field.numerical?
+      return ['=', '!=', '~', '!~', '^', '!^']                        if field.textual?
+      return ['=', '>', '<']                                          if field.temporal?
       raise ScopedSearch::QueryNotSupported, "Unsupported type '#{field.type.inspect}')' for field '#{name}'. This can be a result of a search definition problem."
     end
 
