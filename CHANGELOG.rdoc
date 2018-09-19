@@ -6,7 +6,7 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
-*Nothing yet*
+- Bugfix related to auto-completion of virtual fields (#182)
 
 === Version 4.1.4
 

@@ -270,7 +270,7 @@ module ScopedSearch
 
     # This method complete infix operators by field type
     def complete_operator(node)
-      definition.operator_by_field_name(node.value)
+      definition.operator_by_field_name(node.value).map { |o| o.end_with?(' ') ? o : "#{o} " }
     end
   end
 end

@@ -107,6 +107,11 @@ module ScopedSearch
         end
       end
 
+      # Returns true if this is a virtual field.
+      def virtual?
+        !ext_method.nil?
+      end
+
       # Returns the ActiveRecord column definition that corresponds to this field.
       def column
         @column ||= begin
@@ -120,15 +125,15 @@ module ScopedSearch
 
       # Returns the column type of this field.
       def type
-        @type ||= column.type
+        @type ||= virtual? ? :virtual : column.type
       end
 
-      # Returns true if this field is a datetime-like column
+      # Returns true if this field is a datetime-like column.
       def datetime?
         [:datetime, :time, :timestamp].include?(type)
       end
 
-      # Returns true if this field is a date-like column
+      # Returns true if this field is a date-like column.
       def date?
         type == :date
       end
@@ -167,7 +172,7 @@ module ScopedSearch
         return "#{field} #{order}"
       end
 
-      # Return 'table'.'column' with the correct database quotes
+      # Return 'table'.'column' with the correct database quotes.
       def quoted_field
         c = klass.connection
         "#{c.quote_table_name(klass.table_name)}.#{c.quote_column_name(field)}"
@@ -231,11 +236,12 @@ module ScopedSearch
     def operator_by_field_name(name)
       field = field_by_name(name)
       return [] if field.nil?
-      return field.operators                                      if field.operators
-      return ['= ', '!= ']                                        if field.set?
-      return ['= ', '> ', '< ', '<= ', '>= ','!= ', '^ ', '!^ ']  if field.numerical?
-      return ['= ', '!= ', '~ ', '!~ ', '^ ', '!^ ']              if field.textual?
-      return ['= ', '> ', '< ']                                   if field.temporal?
+      return field.operators                                          if field.operators
+      return ['=', '!=', '>', '<', '<=', '>=', '~', '!~', '^', '!^']  if field.virtual?
+      return ['=', '!=']                                              if field.set?
+      return ['=', '>', '<', '<=', '>=', '!=', '^', '!^']             if field.numerical?
+      return ['=', '!=', '~', '!~', '^', '!^']                        if field.textual?
+      return ['=', '>', '<']                                          if field.temporal?
       raise ScopedSearch::QueryNotSupported, "Unsupported type '#{field.type.inspect}')' for field '#{name}'. This can be a result of a search definition problem."
     end
 
@@ -245,7 +251,7 @@ module ScopedSearch
     # Returns a list of appropriate fields to search in given a search keyword and operator.
     def default_fields_for(value, operator = nil)
 
-      column_types  = []
+      column_types  = [:virtual]
       column_types += [:string, :text]                if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:double, :float, :decimal]     if value =~ NUMERICAL_REGXP
       column_types += [:integer]                      if value =~ INTEGER_REGXP
