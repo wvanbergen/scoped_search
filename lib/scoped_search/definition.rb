@@ -17,7 +17,7 @@ module ScopedSearch
 
       attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :full_text_search,
                   :key_field, :complete_value, :complete_enabled, :offset, :word_size, :ext_method, :operators,
-                  :validator
+                  :validator, :value_translation, :special_values
 
       # Initializes a Field instance given the definition passed to the
       # scoped_search call on the ActiveRecord-based model class.
@@ -42,7 +42,9 @@ module ScopedSearch
                      profile: nil,
                      relation: nil,
                      rename: nil,
+                     special_values: [],
                      validator: nil,
+                     value_translation: nil,
                      word_size: 1,
                      **kwargs)
 
@@ -77,8 +79,10 @@ module ScopedSearch
         @only_explicit    = !!only_explicit
         @operators        = operators
         @relation         = relation
+        @special_values   = special_values
         @validator        = validator
         @word_size        = word_size
+        @value_translation = value_translation
 
         # Store this field in the field array
         definition.define_field(rename || @field, self)

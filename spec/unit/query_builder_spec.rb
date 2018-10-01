@@ -58,6 +58,7 @@ describe ScopedSearch::QueryBuilder do
     field.stub(:set?).and_return(false)
     field.stub(:to_sql).and_return('')
     field.stub(:validator).and_return(->(value) { value =~ /^\d+$/ })
+    field.stub(:value_translation).and_return(nil)
 
     @definition.stub(:field_by_name).and_return(field)
 
@@ -75,6 +76,41 @@ describe ScopedSearch::QueryBuilder do
     @definition.stub(:field_by_name).and_return(field)
 
     lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error('my custom message')
+  end
+
+  context 'with value_translation' do
+    let(:translator) do
+      ->(value) do
+        if %w(a b c).include?(value)
+          'good'
+        elsif value == 'd'
+          'okay'
+        end
+      end
+    end
+    before do
+      field = double('field')
+      field.stub(:field).and_return(:test_field)
+      field.stub(:key_field).and_return(nil)
+      field.stub(:to_sql).and_return('test_field')
+      [:virtual?, :set?, :temporal?, :relation, :offset].each { |key| field.stub(key).and_return(false) }
+      field.stub(:validator).and_return(->(value) { %w(a b c x).include?(value) })
+      field.stub(:value_translation).and_return(translator)
+      @definition.stub(:field_by_name).and_return(field)
+    end
+
+    it 'should translate the value' do
+      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = a').should eq(conditions: ['(test_field = ?)', 'good'])
+      ScopedSearch::QueryBuilder.build_query(@definition, 'test_field ^ (a, b, c)').should eq(conditions: ['(test_field IN (?,?,?))', 'good', 'good', 'good'])
+    end
+
+    it 'should validate before translation' do
+      proc { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = d') }.should raise_error(ScopedSearch::QueryNotSupported, /Value 'd' is not valid for field/)
+    end
+
+    it 'should raise an error if translated value is nil' do
+      proc { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = x') }.should raise_error(ScopedSearch::QueryNotSupported, /Translation from any value to nil is not allowed/)
+    end
   end
 
   context "with ext_method" do

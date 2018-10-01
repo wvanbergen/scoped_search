@@ -201,10 +201,16 @@ module ScopedSearch
       return complete_date_value if field.temporal?
       return complete_key_value(field, token, val) if field.key_field
 
+      special_values = field.special_values.select { |v| v =~ /\A#{val}/ }
+      special_values + complete_value_from_db(field, special_values, val)
+    end
+
+    def complete_value_from_db(field, special_values, val)
+      count = 20 - special_values.count
       completer_scope(field)
         .where(value_conditions(field.quoted_field, val))
         .select(field.quoted_field)
-        .limit(20)
+        .limit(count)
         .distinct
         .map(&field.field)
         .compact
