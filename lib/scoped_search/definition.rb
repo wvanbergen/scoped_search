@@ -154,6 +154,10 @@ module ScopedSearch
         [:string, :text].include?(type)
       end
 
+      def uuid?
+        type == :uuid
+      end
+
       # Returns true if this is a set.
       def set?
         complete_value.is_a?(Hash)
@@ -238,7 +242,7 @@ module ScopedSearch
       return [] if field.nil?
       return field.operators                                          if field.operators
       return ['=', '!=', '>', '<', '<=', '>=', '~', '!~', '^', '!^']  if field.virtual?
-      return ['=', '!=']                                              if field.set?
+      return ['=', '!=']                                              if field.set? || field.uuid?
       return ['=', '>', '<', '<=', '>=', '!=', '^', '!^']             if field.numerical?
       return ['=', '!=', '~', '!~', '^', '!^']                        if field.textual?
       return ['=', '>', '<']                                          if field.temporal?
@@ -247,6 +251,7 @@ module ScopedSearch
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
     INTEGER_REGXP = /^\-?\d+$/
+    UUID_REGXP = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/
 
     # Returns a list of appropriate fields to search in given a search keyword and operator.
     def default_fields_for(value, operator = nil)
@@ -255,6 +260,7 @@ module ScopedSearch
       column_types += [:string, :text]                if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:double, :float, :decimal]     if value =~ NUMERICAL_REGXP
       column_types += [:integer]                      if value =~ INTEGER_REGXP
+      column_types += [:uuid]                         if value =~ UUID_REGXP
       column_types += [:datetime, :date, :timestamp]  if (parse_temporal(value))
 
       default_fields.select { |field| !field.set? && column_types.include?(field.type) }
