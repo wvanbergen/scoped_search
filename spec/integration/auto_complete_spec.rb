@@ -25,6 +25,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         t.integer :int
         t.date    :date
         t.integer :unindexed
+
+        if on_postgresql?
+          t.uuid :uuid
+        else
+          t.string :uuid
+        end
       end
 
       class ::Bar < ActiveRecord::Base
@@ -35,7 +41,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         has_many :bars
         default_scope { order(:string) }
 
-        scoped_search :on => [:string, :date]
+        scoped_search :on => [:string, :date, :uuid]
         scoped_search :on => [:int], :complete_value => true
         scoped_search :on => :another,  :default_operator => :eq, :aliases => [:alias], :complete_value => true
         scoped_search :on => :explicit, :only_explicit => true, :complete_value => true
@@ -88,6 +94,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should complete the temporal (date) comparators" do
         Foo.complete_for('date ').should =~ (["date  = ", "date  < ", "date  > "])
+      end
+
+      it "should complete the uuid comparators" do
+        if on_postgresql?
+          Foo.complete_for('uuid ').should =~ (["uuid  = ", "uuid  != "])
+        end
       end
 
       it "should complete when query is already distinct" do
@@ -190,7 +202,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'exceptional search strings' do
 
       it "query that starts with 'or'" do
-        Foo.complete_for('or ').length.should == 9
+        Foo.complete_for('or ').length.should == 10
       end
 
       it "value completion with quotes" do
@@ -212,7 +224,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     # the string.
     context 'dotted options in the completion list' do
       it "query that starts with space should not include the dotted options" do
-        Foo.complete_for(' ').length.should == 9
+        Foo.complete_for(' ').length.should == 10
       end
 
       it "query that starts with the dotted string should include the dotted options" do

@@ -10,6 +10,9 @@ require "#{File.dirname(__FILE__)}/lib/matchers"
 require "#{File.dirname(__FILE__)}/lib/database"
 require "#{File.dirname(__FILE__)}/lib/mocks"
 
+def on_postgresql?
+  ActiveRecord::Base.connection.adapter_name == 'PostgreSQL'
+end
 
 RSpec.configure do |config|
   config.include ScopedSearch::RSpec::Mocks
