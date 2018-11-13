@@ -527,7 +527,7 @@ module ScopedSearch
         def validate_value(field, value)
           validator = field.validator
           if validator
-            valid = validator.call(value)
+            valid = field.special_values.include?(value) || validator.call(value)
             raise ScopedSearch::QueryNotSupported, "Value '#{value}' is not valid for field '#{field.field}'" unless valid
           end
         end

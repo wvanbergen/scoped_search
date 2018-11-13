@@ -42,6 +42,7 @@ describe ScopedSearch::QueryBuilder do
     field.stub(:only_explicit).and_return(true)
     field.stub(:field).and_return(:test_field)
     field.stub(:validator).and_return(->(_value) { false })
+    field.stub(:special_values).and_return([])
 
     @definition.stub(:field_by_name).and_return(field)
 
@@ -59,6 +60,7 @@ describe ScopedSearch::QueryBuilder do
     field.stub(:to_sql).and_return('')
     field.stub(:validator).and_return(->(value) { value =~ /^\d+$/ })
     field.stub(:value_translation).and_return(nil)
+    field.stub(:special_values).and_return([])
 
     @definition.stub(:field_by_name).and_return(field)
 
@@ -72,6 +74,7 @@ describe ScopedSearch::QueryBuilder do
     field.stub(:only_explicit).and_return(true)
     field.stub(:field).and_return(:test_field)
     field.stub(:validator).and_return(->(_value) { raise ScopedSearch::QueryNotSupported, 'my custom message' })
+    field.stub(:special_values).and_return([])
 
     @definition.stub(:field_by_name).and_return(field)
 
@@ -83,18 +86,18 @@ describe ScopedSearch::QueryBuilder do
       ->(value) do
         if %w(a b c).include?(value)
           'good'
-        elsif value == 'd'
-          'okay'
         end
       end
     end
+    let(:special_values) { %w(a b c) }
     before do
       field = double('field')
       field.stub(:field).and_return(:test_field)
       field.stub(:key_field).and_return(nil)
       field.stub(:to_sql).and_return('test_field')
       [:virtual?, :set?, :temporal?, :relation, :offset].each { |key| field.stub(key).and_return(false) }
-      field.stub(:validator).and_return(->(value) { %w(a b c x).include?(value) })
+      field.stub(:validator).and_return(->(value) { value == 'x' }) # Nothing except for special_values and x is valid
+      field.stub(:special_values).and_return(special_values)
       field.stub(:value_translation).and_return(translator)
       @definition.stub(:field_by_name).and_return(field)
     end
