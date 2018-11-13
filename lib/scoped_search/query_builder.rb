@@ -184,7 +184,7 @@ module ScopedSearch
     def map_value(field, value)
       old_value = value
       translator = field.value_translation
-      value = field.value_translation.call(value) if translator
+      value = translator.call(value) if translator
       raise ScopedSearch::QueryNotSupported, "Translation from any value to nil is not allowed, translated '#{old_value}'" if value.nil?
       value
     end
