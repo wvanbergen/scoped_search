@@ -52,6 +52,8 @@ module ScopedSearch
         raise ArgumentError, "Missing field or 'on' keyword argument" if on.nil?
         @field = on.to_sym
 
+        raise ArgumentError, "'special_values' must be an Array" unless special_values.kind_of?(Array)
+
         # Reserved Ruby keywords so access via kwargs instead, but deprecate them for future versions
         if kwargs.key?(:in)
           relation = kwargs.delete(:in)
