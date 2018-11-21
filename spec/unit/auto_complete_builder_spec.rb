@@ -9,6 +9,8 @@ describe ScopedSearch::AutoCompleteBuilder do
     @definition.stub(:klass).and_return(klass)
     @definition.stub(:profile).and_return(:default)
     @definition.stub(:profile=).and_return(true)
+    @definition.klass.stub(:connection).and_return(double())
+    @definition.stub(:default_order).and_return(nil)
   end
 
   it "should return empty suggestions if the search query is nil" do
@@ -17,6 +19,19 @@ describe ScopedSearch::AutoCompleteBuilder do
 
   it "should return empty suggestions if the query is blank" do
     ScopedSearch::AutoCompleteBuilder.auto_complete(@definition, "").should == []
+  end
+
+  it 'should suggest special values' do
+    field = double('field')
+    [:temporal?, :set?, :key_field, :validator, :virtual?, :relation, :offset, :value_translation, :to_sql].each { |key| field.stub(key) }
+    field.stub(:special_values).and_return %w(foo bar baz)
+    field.stub(:complete_value).and_return(true)
+    @definition.stub(:default_fields_for).and_return([])
+    @definition.stub(:field_by_name).and_return(field)
+    @definition.stub(:fields).and_return [field]
+    ScopedSearch::AutoCompleteBuilder.any_instance.stub(:complete_value_from_db).and_return([])
+    ScopedSearch::AutoCompleteBuilder.auto_complete(@definition, "custom_field =").should eq(['custom_field = foo', 'custom_field = bar', 'custom_field = baz'])
+    ScopedSearch::AutoCompleteBuilder.auto_complete(@definition, "custom_field = f").should eq(['custom_field =  foo'])
   end
 
   context "with ext_method" do

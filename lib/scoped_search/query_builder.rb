@@ -181,6 +181,14 @@ module ScopedSearch
       translated_value
     end
 
+    def map_value(field, value)
+      old_value = value
+      translator = field.value_translation
+      value = translator.call(value) if translator
+      raise ScopedSearch::QueryNotSupported, "Translation from any value to nil is not allowed, translated '#{old_value}'" if value.nil?
+      value
+    end
+
     # A 'set' is group of possible values, for example a status might be "on", "off" or "unknown" and the database representation
     # could be for example a numeric value. This method will validate the input and translate it into the database representation.
     def set_test(field, operator,value, &block)
@@ -219,7 +227,7 @@ module ScopedSearch
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
 
       elsif [:in, :notin].include?(operator)
-        value.split(',').collect { |v| yield(:parameter, field.set? ? translate_value(field, v) : v.strip) }
+        value.split(',').collect { |v| yield(:parameter, map_value(field, field.set? ? translate_value(field, v) : v.strip)) }
         value = value.split(',').collect { "?" }.join(",")
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} (#{value})"
 
@@ -231,6 +239,7 @@ module ScopedSearch
 
       elsif field.relation && definition.reflection_by_name(field.definition.klass, field.relation).macro == :has_many
         value = value.to_i if field.offset
+        value = map_value(field, value)
         yield(:parameter, value)
         connection = field.definition.klass.connection
         primary_key = "#{connection.quote_table_name(field.definition.klass.table_name)}.#{connection.quote_column_name(field.definition.klass.primary_key)}"
@@ -244,6 +253,7 @@ module ScopedSearch
 
       else
         value = value.to_i if field.offset
+        value = map_value(field, value)
         yield(:parameter, value)
         return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
       end
@@ -517,7 +527,7 @@ module ScopedSearch
         def validate_value(field, value)
           validator = field.validator
           if validator
-            valid = validator.call(value)
+            valid = field.special_values.include?(value) || validator.call(value)
             raise ScopedSearch::QueryNotSupported, "Value '#{value}' is not valid for field '#{field.field}'" unless valid
           end
         end
