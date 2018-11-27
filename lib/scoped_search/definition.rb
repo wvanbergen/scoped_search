@@ -238,6 +238,9 @@ module ScopedSearch
       if field.nil?
         dotted = name.to_s.split('.')[0]
         field = fields[dotted.to_sym] unless dotted.blank?
+        if field && field.key_relation.nil?
+          return nil
+        end
       end
       field
     end
