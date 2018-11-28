@@ -33,6 +33,7 @@ require "spec_helper"
             has_many :keys, :through => :facts
 
             scoped_search :relation => :facts, :on => :value, :rename => :facts, :in_key => :keys, :on_key => :name, :complete_value => true
+            scoped_search :relation => :facts, :on => :value, :rename => 'myfacts.value', :aliases => ['prefixed', 'prefixed.value']
           end
           class ::MyItem < ::Item
           end
@@ -101,6 +102,20 @@ require "spec_helper"
 
         it "should find all bars with a fact name color and fact value gold of descendant class" do
           MyItem.search_for('facts.color = gold').first.name.should eql('barbary')
+        end
+
+        describe 'with prefixed aliases' do
+          it 'should search by the prefix' do
+            Item.search_for('prefixed = green').length.should == 1
+          end
+
+          it 'should search by the full length variant' do
+            Item.search_for('prefixed.value = green').length.should == 1
+          end
+
+          it 'should not search by just any key with common prefix' do
+            proc { Item.search_for('prefixed.something_which_is_not_defined = green') }.should raise_error(ScopedSearch::QueryNotSupported)
+          end
         end
       end
     end
