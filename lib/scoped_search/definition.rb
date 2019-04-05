@@ -278,6 +278,8 @@ module ScopedSearch
     # Try to parse a string as a datetime.
     # Supported formats are Today, Yesterday, Sunday, '1 day ago', '2 hours ago', '3 months ago', '4 weeks from now', 'Jan 23, 2004'
     # And many more formats that are documented in Ruby DateTime API Doc.
+    # In case Time responds to #zone, we know this is Rails environment and we can use Time.zone.parse. The benefit is that the
+    # current timezone is respected and does not have to be specified explicitly. That way even relative dates work as expected.
     def parse_temporal(value)
       return Date.current if value =~ /\btoday\b/i
       return 1.day.ago.to_date if value =~ /\byesterday\b/i
@@ -286,7 +288,12 @@ module ScopedSearch
       return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bago)\b\s*\z/i
       return (eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*(\d+\s+\b(?:hours?|minutes?)\b\s+\bfrom\s+now)\b\s*\z/i
       return (eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bfrom\s+now)\b\s*\z/i
-      DateTime.parse(value, true) rescue nil
+      if Time.respond_to?(:zone) && !Time.zone.nil?
+        parsed = Time.zone.parse(value) rescue nil
+        parsed && parsed.to_datetime
+      else
+        DateTime.parse(value, true) rescue nil
+      end
     end
 
     # Returns a list of fields that should be searched on by default.
