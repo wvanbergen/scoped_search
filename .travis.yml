@@ -14,8 +14,10 @@ rvm:
 - "2.0"
 - "2.1"
 - "2.2.2"
-- "2.3.1"
+- "2.3.7"
 - "2.4.0"
+- "2.5.0"
+- "2.6.0"
 - ruby-head
 - jruby-19mode
 - jruby-head
@@ -24,6 +26,8 @@ gemfile:
 - Gemfile.activerecord42
 - Gemfile.activerecord50
 - Gemfile.activerecord51
+- Gemfile.activerecord52
+- Gemfile.activerecord52_with_activesupport52
 
 matrix:
   allow_failures:
@@ -39,3 +43,12 @@ matrix:
       gemfile: Gemfile.activerecord51
     - rvm: "2.1"
       gemfile: Gemfile.activerecord51
+    - rvm: "2.0"
+      gemfile: Gemfile.activerecord52
+    - rvm: "2.1"
+      gemfile: Gemfile.activerecord52
+    - rvm: "2.0"
+      gemfile: Gemfile.activerecord52_with_activesupport52
+    - rvm: "2.1"
+      gemfile: Gemfile.activerecord52_with_activesupport52
+
