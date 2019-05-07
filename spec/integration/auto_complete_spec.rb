@@ -17,6 +17,13 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         t.string :other_c
       end
 
+      ActiveRecord::Migration.create_table(:quxes, :force => true) do |t|
+        t.string :related
+        t.string :other_a
+        t.string :other_b
+        t.string :other_c
+      end
+
       ActiveRecord::Migration.create_table(:foos, :force => true) do |t|
         t.string  :string
         t.string  :another
@@ -25,6 +32,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         t.integer :int
         t.date    :date
         t.integer :unindexed
+        t.integer :qux_id
 
         if on_postgresql?
           t.uuid :uuid
@@ -37,8 +45,13 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         belongs_to :foo
       end
 
+      class ::Qux < ActiveRecord::Base
+        has_many :foos
+      end
+
       class ::Foo < ActiveRecord::Base
         has_many :bars
+        belongs_to :qux
         default_scope { order(:string) }
 
         scoped_search :on => [:string, :date, :uuid]
@@ -55,7 +68,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       class ::Infoo < ::Foo
       end
 
-      @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10)
+      @qux_1 = Qux.create!()
+      @qux_2 = Qux.create!()
+      @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10, :qux => @qux_1)
+      @foo_2 = Foo.create!(:string => 'foo', :another => 'temp 2', :explicit => 'baz', :int => 10  , :date => 'February 8, 2011' , :unindexed => 10, :qux => @qux_2)
       Foo.create!(:string => 'bar', :another => 'temp "2"', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
       20.times { Foo.create!(:explicit => "aaa") }
@@ -240,6 +256,15 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'autocompleting integer comparisons' do
       it 'should autocomplete numerical fields' do
         Foo.complete_for('int > 2').first.should match(/22/)
+      end
+    end
+
+    context 'autocompleting with value_filter' do
+      it 'should return filtered values' do
+        Foo.complete_for('int =', value_filter: { qux_id: @qux_1.id }).should == ['int = 9']
+      end
+      it 'should return filtered for invalid value' do
+        Foo.complete_for('int =', value_filter: { qux_id: 99 }).should == []
       end
     end
   end
