@@ -13,15 +13,18 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       @parent_class = ScopedSearch::RSpec::Database.create_model(int: :integer, type: :string, related_id: :integer) do |klass|
         klass.scoped_search on: :int
+        klass.belongs_to @related_class.table_name.to_sym, foreign_key: :related_id
       end
       @subclass1 = ScopedSearch::RSpec::Database.create_sti_model(@parent_class)
       @subclass2 = ScopedSearch::RSpec::Database.create_sti_model(@parent_class) do |klass|
-        klass.belongs_to @related_class.table_name.to_sym, foreign_key: :related_id
         klass.scoped_search on: :int, rename: :other_int
         klass.scoped_search relation: @related_class.table_name, on: :int, rename: :related_int
       end
 
-      @related_class.has_many @subclass1.table_name.to_sym
+      @related_class.has_many @subclass1.table_name.to_sym, :foreign_key => :related_id
+      @related_class.has_many @subclass2.table_name.to_sym, :foreign_key => :related_id
+      @related_class.scoped_search :relation => @subclass1.table_name.to_sym, :on => :int, :rename => 'subclass1.id'
+      @related_class.scoped_search :relation => @subclass2.table_name.to_sym, :on => :int, :rename => 'subclass2.id'
 
       @record1 = @subclass1.create!(int: 7)
       @related_record1 = @related_class.create!(int: 42)
@@ -77,6 +80,13 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find a record via relation" do
         @subclass2.search_for('related_int = 42').should eq([@record2])
+      end
+    end
+
+    context 'querying related records' do
+      it 'shuld find only relevant instances of STI subclasses' do
+        @related_class.search_for("subclass1.id ^ (#{@record1.int})").should eq([])
+        @related_class.search_for("subclass2.id ^ (#{@record1.int}, #{@record2.int})").should eq([@related_record1])
       end
     end
   end
