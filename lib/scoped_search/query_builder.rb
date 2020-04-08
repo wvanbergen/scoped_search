@@ -137,7 +137,7 @@ module ScopedSearch
 
       # Parse the value as a date/time and ignore invalid timestamps
       timestamp = definition.parse_temporal(value)
-      return nil unless timestamp
+      return [] unless timestamp
 
       timestamp = timestamp.to_date if field.date?
       # Check for the case that a date-only value is given as search keyword,
@@ -149,11 +149,9 @@ module ScopedSearch
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
-          yield(:parameter, timestamp)
-          yield(:parameter, timestamp + span)
           negate    = (operator == :ne) ? 'NOT ' : ''
           field_sql = field.to_sql(operator, &block)
-          return "#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)"
+          return ["#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)", timestamp, timestamp + span]
 
         elsif operator == :gt
           # Make sure timestamps on the given date are not included in the results
@@ -169,9 +167,8 @@ module ScopedSearch
         end
       end
 
-      # Yield the timestamp and return the SQL test
-      yield(:parameter, timestamp)
-      "#{field.to_sql(operator, &block)} #{sql_operator(operator, field)} ?"
+      # return the SQL test
+      ["#{field.to_sql(operator, &block)} #{sql_operator(operator, field)} ?", timestamp]
     end
 
     # Validate the key name is in the set and translate the value to the set value.
@@ -205,8 +202,7 @@ module ScopedSearch
           set_value = false
         end
       end
-      yield(:parameter, set_value)
-      return "#{negate}(#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?)"
+      ["#{negate}(#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?)", set_value]
     end
 
     # Generates a simple SQL test expression, for a field and value using an operator.
@@ -222,41 +218,45 @@ module ScopedSearch
 
       yield(:keyparameter, lhs.sub(/^.*\./,'')) if field.key_field
 
-      if [:like, :unlike].include?(operator)
-        yield(:parameter, (value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%'))
-        return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
+      condition, *values = if field.temporal?
+                             datetime_test(field, operator, value)
+                           elsif field.set?
+                             set_test(field, operator, value)
+                           else
+                             ["#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} #{value_placeholders(operator, value)}", value]
+                           end
+      values.each { |value| preprocess_parameters(field, operator, value, &block) }
 
-      elsif [:in, :notin].include?(operator)
-        value.split(',').collect { |v| yield(:parameter, map_value(field, field.set? ? translate_value(field, v) : v.strip)) }
-        value = value.split(',').collect { "?" }.join(",")
-        return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} (#{value})"
-
-      elsif field.temporal?
-        return datetime_test(field, operator, value, &block)
-
-      elsif field.set?
-        return set_test(field, operator, value, &block)
-
-      elsif field.relation && definition.reflection_by_name(field.definition.klass, field.relation).macro == :has_many
-        value = value.to_i if field.offset
-        value = map_value(field, value)
-        yield(:parameter, value)
+      if field.relation && definition.reflection_by_name(field.definition.klass, field.relation).macro == :has_many
         connection = field.definition.klass.connection
         primary_key = "#{connection.quote_table_name(field.definition.klass.table_name)}.#{connection.quote_column_name(field.definition.klass.primary_key)}"
-        if definition.reflection_by_name(field.definition.klass, field.relation).options.has_key?(:through)
-          join = has_many_through_join(field)
-          return "#{primary_key} IN (SELECT #{primary_key} FROM #{join} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
-        else
-          foreign_key = connection.quote_column_name(field.reflection_keys(definition.reflection_by_name(field.definition.klass, field.relation))[1])
-          return "#{primary_key} IN (SELECT #{foreign_key} FROM #{connection.quote_table_name(field.klass.table_name)} WHERE #{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ? )"
-        end
+        key, join_table = if definition.reflection_by_name(field.definition.klass, field.relation).options.has_key?(:through)
+                            [primary_key, has_many_through_join(field)]
+                          else
+                            [connection.quote_column_name(field.reflection_keys(definition.reflection_by_name(field.definition.klass, field.relation))[1]),
+                             connection.quote_table_name(field.klass.table_name)]
+                          end
 
-      else
-        value = value.to_i if field.offset
-        value = map_value(field, value)
-        yield(:parameter, value)
-        return "#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} ?"
+        condition = "#{primary_key} IN (SELECT #{key} FROM #{join_table} WHERE #{condition} )"
       end
+      condition
+    end
+
+    def preprocess_parameters(field, operator, value, &block)
+      values = if [:in, :notin].include?(operator)
+                 value.split(',').map { |v| map_value(field, field.set? ? translate_value(field, v) : v.strip) }
+               elsif [:like, :unlike].include?(operator)
+                 [(value !~ /^\%|\*/ && value !~ /\%|\*$/) ? "%#{value}%" : value.tr_s('%*', '%')]
+               else
+                 [map_value(field, field.offset ? value.to_i : value)]
+               end
+      values.each { |value| yield(:parameter, value) }
+    end
+
+    def value_placeholders(operator, value)
+      return '?' unless [:in, :notin].include?(operator)
+
+      '(' + value.split(',').map { '?' }.join(',') + ')'
     end
 
     def find_has_many_through_association(field, through)
