@@ -326,11 +326,11 @@ module ScopedSearch
 
         search_scope = klass.all
         find_options = ScopedSearch::QueryBuilder.build_query(definition, query || '', options)
-        search_scope = search_scope.where(find_options[:conditions])   if find_options[:conditions]
-        search_scope = search_scope.includes(find_options[:include])   if find_options[:include]
-        search_scope = search_scope.joins(find_options[:joins])        if find_options[:joins]
-        search_scope = search_scope.reorder(find_options[:order])      if find_options[:order]
-        search_scope = search_scope.references(find_options[:include]) if find_options[:include]
+        search_scope = search_scope.where(find_options[:conditions])        if find_options[:conditions]
+        search_scope = search_scope.includes(find_options[:include])        if find_options[:include]
+        search_scope = search_scope.joins(find_options[:joins])             if find_options[:joins]
+        search_scope = search_scope.reorder(Arel.sql(find_options[:order])) if find_options[:order]
+        search_scope = search_scope.references(find_options[:include])      if find_options[:include]
 
         search_scope
       end
