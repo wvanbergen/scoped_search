@@ -219,9 +219,9 @@ module ScopedSearch
       yield(:keyparameter, lhs.sub(/^.*\./,'')) if field.key_field
 
       condition, *values = if field.temporal?
-                             datetime_test(field, operator, value)
+                             datetime_test(field, operator, value, &block)
                            elsif field.set?
-                             set_test(field, operator, value)
+                             set_test(field, operator, value, &block)
                            else
                              ["#{field.to_sql(operator, &block)} #{self.sql_operator(operator, field)} #{value_placeholders(operator, value)}", value]
                            end
