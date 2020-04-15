@@ -8,6 +8,11 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 - Nothing yet
 
+=== Version 4.1.8
+
+- Fix querying in associations by set, datetime or IN searches
+- Add support for ActiveRecord 6.0 and Rails 6.1
+
 === Version 4.1.7
 
 - When Active Support is available, we parse time respecting current time zone
