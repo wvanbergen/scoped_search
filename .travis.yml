@@ -21,6 +21,7 @@ rvm:
 - "2.4.0"
 - "2.5.1"
 - "2.6.0"
+- "2.7.1"
 - ruby-head
 - jruby-19mode
 - jruby-head
@@ -76,3 +77,13 @@ matrix:
       gemfile: Gemfile.activerecord60_with_activesupport60
     - rvm: "2.4.0"
       gemfile: Gemfile.activerecord60_with_activesupport60
+    - rvm: "2.7.1"
+      gemfile: Gemfile.activerecord42
+    - rvm: "2.7.1"
+      gemfile: Gemfile.activerecord50
+    - rvm: "2.7.1"
+      gemfile: Gemfile.activerecord51
+    - rvm: "2.7.1"
+      gemfile: Gemfile.activerecord52
+    - rvm: "2.7.1"
+      gemfile: Gemfile.activerecord52_with_activesupport52
