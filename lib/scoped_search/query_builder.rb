@@ -288,7 +288,8 @@ module ScopedSearch
       table_names = [many_class.table_name] + join_reflections.map(&:table_name)
 
       join_reflections.zip(table_names).reduce(sql) do |acc, (reflection, previous_table)|
-        fk1, pk1 = reflection.join_keys.values # We are joining the tables "in reverse", so the PK and FK are swapped
+        klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : []
+        fk1, pk1 = reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
         t1 = previous_table
 
         t2 = reflection.table_name
