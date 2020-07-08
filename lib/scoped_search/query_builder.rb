@@ -300,7 +300,7 @@ module ScopedSearch
                                      ''
                                    end
 
-        acc + ' ' + <<~SQL
+        acc + <<-SQL
           INNER JOIN #{connection.quote_table_name(t2)}
           ON #{connection.quote_table_name(t1)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(t2)}.#{connection.quote_column_name(fk1)} #{condition_many_to_middle}
         SQL
