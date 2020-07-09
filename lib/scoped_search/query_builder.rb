@@ -287,7 +287,7 @@ module ScopedSearch
       join_reflections = nested_has_many(many_class, field.relation)
       table_names = [many_class.table_name] + join_reflections.map(&:table_name)
 
-      join_reflections.zip(table_names.zip(join_reflections[1..])).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
+      join_reflections.zip(table_names.zip(join_reflections.drop(1))).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
         klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : [] # ActiveRecord <5.2 workaround
         fk1, pk1 = reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
 
