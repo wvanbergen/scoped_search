@@ -287,32 +287,28 @@ module ScopedSearch
       join_reflections = nested_has_many(many_class, field.relation)
       table_names = [many_class.table_name] + join_reflections.map(&:table_name)
 
-      join_reflections.zip(table_names).reduce(sql) do |acc, (reflection, previous_table)|
-        klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : []
+      join_reflections.zip(table_names.zip(join_reflections[1..])).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
+        klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : [] # ActiveRecord <5.2 workaround
         fk1, pk1 = reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
-        t1 = previous_table
-
-        t2 = reflection.table_name
 
         # primary and foreign keys + optional conditions for the joins
-        condition_many_to_middle = if with_polymorphism?(many_class, field.klass, reflection.name, reflection.klass)
-                                     field.reflection_conditions(definition.reflection_by_name(field.klass, many_class.table_name))
-                                   else
-                                     ''
-                                   end
+        join_condition = if with_polymorphism?(reflection)
+                           field.reflection_conditions(definition.reflection_by_name(next_reflection.klass, previous_table))
+                         else
+                           ''
+                         end
 
         acc + <<-SQL
-          INNER JOIN #{connection.quote_table_name(t2)}
-          ON #{connection.quote_table_name(t1)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(t2)}.#{connection.quote_column_name(fk1)} #{condition_many_to_middle}
+          INNER JOIN #{connection.quote_table_name(reflection.table_name)}
+          ON #{connection.quote_table_name(previous_table)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(reflection.table_name)}.#{connection.quote_column_name(fk1)} #{join_condition}
         SQL
       end
     end
 
-    def with_polymorphism?(many_class, endpoint_class, through, through_class)
-      reflections = [definition.reflection_by_name(endpoint_class, through), definition.reflection_by_name(many_class, through)].compact
-      as = reflections.map(&:options).compact.map { |opt| opt[:as] }.compact
-      return false if as.empty?
-      definition.reflection_by_name(through_class, as.first).options[:polymorphic]
+    def with_polymorphism?(reflection)
+      as = reflection.options[:as]
+      return unless as
+      definition.reflection_by_name(reflection.klass, as).options[:polymorphic]
     end
 
     # This module gets included into the Field class to add SQL generation.
