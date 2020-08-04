@@ -269,46 +269,46 @@ module ScopedSearch
       middle_table_association
     end
 
-    def has_many_through_join(field)
-      many_class = field.definition.klass
-      through = definition.reflection_by_name(many_class, field.relation).options[:through]
-      through_class = definition.reflection_by_name(many_class, through).klass
-
-      connection = many_class.connection
-
-      # table names
-      endpoint_table_name = field.klass.table_name
-      many_table_name = many_class.table_name
-      middle_table_name = through_class.table_name
-
-      # primary and foreign keys + optional conditions for the joins
-      pk1, fk1   = field.reflection_keys(definition.reflection_by_name(many_class, through))
-      condition_many_to_middle = if with_polymorphism?(many_class, field.klass, through, through_class)
-                                   field.reflection_conditions(definition.reflection_by_name(field.klass, many_table_name))
-                                 else
-                                   ''
-                                 end
-      condition_middle_to_end = field.reflection_conditions(definition.reflection_by_name(field.klass, middle_table_name))
-
-      # primary and foreign keys + optional condition for the endpoint to middle join
-      middle_table_association = find_has_many_through_association(field, through) || middle_table_name
-      pk2, fk2   = field.reflection_keys(definition.reflection_by_name(field.klass, middle_table_association))
-      condition2 = field.reflection_conditions(definition.reflection_by_name(many_class, field.relation))
-
-      <<-SQL
-        #{connection.quote_table_name(many_table_name)}
-        INNER JOIN #{connection.quote_table_name(middle_table_name)}
-        ON #{connection.quote_table_name(many_table_name)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk1)} #{condition_many_to_middle} #{condition_middle_to_end}
-        INNER JOIN #{connection.quote_table_name(endpoint_table_name)}
-        ON #{connection.quote_table_name(middle_table_name)}.#{connection.quote_column_name(fk2)} = #{connection.quote_table_name(endpoint_table_name)}.#{connection.quote_column_name(pk2)} #{condition2}
-      SQL
+    # Walk the chain of has-many-throughs, collecting all tables we will need to join
+    def nested_has_many(many_class, relation)
+      acc = [relation]
+      while (reflection = definition.reflection_by_name(many_class, relation))
+        break if reflection.nil? || reflection.options[:through].nil?
+        relation = reflection.options[:through]
+        acc.unshift(relation)
+      end
+      acc.map { |relation| definition.reflection_by_name(many_class, relation) }
     end
 
-    def with_polymorphism?(many_class, endpoint_class, through, through_class)
-      reflections = [definition.reflection_by_name(endpoint_class, through), definition.reflection_by_name(many_class, through)].compact
-      as = reflections.map(&:options).compact.map { |opt| opt[:as] }.compact
-      return false if as.empty?
-      definition.reflection_by_name(through_class, as.first).options[:polymorphic]
+    def has_many_through_join(field)
+      many_class = field.definition.klass
+      connection = many_class.connection
+      sql = connection.quote_table_name(many_class.table_name)
+      join_reflections = nested_has_many(many_class, field.relation)
+      table_names = [many_class.table_name] + join_reflections.map(&:table_name)
+
+      join_reflections.zip(table_names.zip(join_reflections.drop(1))).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
+        klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : [] # ActiveRecord <5.2 workaround
+        fk1, pk1 = reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
+
+        # primary and foreign keys + optional conditions for the joins
+        join_condition = if with_polymorphism?(reflection)
+                           field.reflection_conditions(definition.reflection_by_name(next_reflection.klass, previous_table))
+                         else
+                           ''
+                         end
+
+        acc + <<-SQL
+          INNER JOIN #{connection.quote_table_name(reflection.table_name)}
+          ON #{connection.quote_table_name(previous_table)}.#{connection.quote_column_name(pk1)} = #{connection.quote_table_name(reflection.table_name)}.#{connection.quote_column_name(fk1)} #{join_condition}
+        SQL
+      end
+    end
+
+    def with_polymorphism?(reflection)
+      as = reflection.options[:as]
+      return unless as
+      definition.reflection_by_name(reflection.klass, as).options[:polymorphic]
     end
 
     # This module gets included into the Field class to add SQL generation.
