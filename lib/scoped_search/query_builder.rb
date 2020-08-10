@@ -229,12 +229,13 @@ module ScopedSearch
 
       if field.relation && definition.reflection_by_name(field.definition.klass, field.relation).macro == :has_many
         connection = field.definition.klass.connection
-        primary_key_col = field.definition.klass.reflections[field.relation.to_s]&.options[:primary_key] || field.definition.klass.primary_key
+        reflection = definition.reflection_by_name(field.definition.klass, field.relation)
+        primary_key_col = reflection.options[:primary_key] || field.definition.klass.primary_key
         primary_key = "#{connection.quote_table_name(field.definition.klass.table_name)}.#{connection.quote_column_name(primary_key_col)}"
-        key, join_table = if definition.reflection_by_name(field.definition.klass, field.relation).options.has_key?(:through)
+        key, join_table = if reflection.options.has_key?(:through)
                             [primary_key, has_many_through_join(field)]
                           else
-                            [connection.quote_column_name(field.reflection_keys(definition.reflection_by_name(field.definition.klass, field.relation))[1]),
+                            [connection.quote_column_name(field.reflection_keys(reflection)[1]),
                              connection.quote_table_name(field.klass.table_name)]
                           end
 

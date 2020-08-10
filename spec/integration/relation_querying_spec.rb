@@ -738,5 +738,49 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         result.first.username.should == @usermat_1.username
       end
     end
+
+    context "querying on :has_many with primary key override" do
+
+      before do
+        ActiveRecord::Migration.create_table(:books) { |t| t.string :title; t.string :isbn }
+        ActiveRecord::Migration.create_table(:comments) { |t| t.string :comment; t.string :isbn }
+
+        class Book < ActiveRecord::Base
+          has_many :comments, foreign_key: 'isbn', primary_key: 'isbn'
+
+          scoped_search on: [:title]
+          scoped_search relation: :comments, on: [:comment]
+        end
+
+        class Comment < ActiveRecord::Base
+          belongs_to :book, foreign_key: 'isbn', primary_key: 'isbn'
+        end
+
+        @book1 = Book.create(:title => 'Eloquent Ruby', :isbn => '978-0321584106')
+        @book2 = Book.create(:title => 'The Well-Grounded Rubyist', :isbn => '978-1617295218')
+        Comment.create(:comment => 'Definitely worth a read', :isbn => @book1.isbn)
+        Comment.create(:comment => 'Wait what? I expected a book about gemstones', :isbn => @book1.isbn)
+        Comment.create(:comment => 'Cool book about ruby', :isbn => @book2.isbn)
+      end
+
+      after do
+        ActiveRecord::Migration.drop_table :comments
+        ActiveRecord::Migration.drop_table :books
+      end
+
+      it "correctly joins the tables" do
+        query = Book.search_for("test").to_sql
+        # On PostgreSQL and SQLite we use double quotes, on MySQL we use backticks
+        query.should =~ /LEFT OUTER JOIN ["`]comments["`] ON ["`]comments["`]\.["`]isbn["`] = ["`]books["`]\.["`]isbn["`]/
+        query.should =~ /["`]books["`]\.["`]isbn["`] IN \(SELECT ["`]isbn["`]/
+      end
+
+      it "finds the right results" do
+        Book.search_for('python').should == []
+        Book.search_for('comment ~ Wait').should == [@book1]
+        Book.search_for('comment ~ book').pluck(:id).sort.uniq.should == [@book1, @book2].map(&:id).sort
+        Book.search_for('comment ~ Cool').should == [@book2]
+      end
+    end
   end
 end
