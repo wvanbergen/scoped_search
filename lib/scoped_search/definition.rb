@@ -305,9 +305,8 @@ module ScopedSearch
     end
 
     # Defines a new search field for this search definition.
-    def define(*args)
-      options = args.last.is_a?(Hash) ? args.pop : {}
-      Field.new(self, *args, **options)
+    def define(*args, **kwargs)
+      Field.new(self, *args, **kwargs)
     end
 
     # Returns a reflection for a given klass and name
