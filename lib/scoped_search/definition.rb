@@ -305,8 +305,8 @@ module ScopedSearch
     end
 
     # Defines a new search field for this search definition.
-    def define(*args)
-      Field.new(self, *args)
+    def define(*args, **kwargs)
+      Field.new(self, *args, **kwargs)
     end
 
     # Returns a reflection for a given klass and name
