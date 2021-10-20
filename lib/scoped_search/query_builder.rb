@@ -290,8 +290,14 @@ module ScopedSearch
       table_names = [many_class.table_name] + join_reflections.map(&:table_name)
 
       join_reflections.zip(table_names.zip(join_reflections.drop(1))).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
-        klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : [] # ActiveRecord <5.2 workaround
-        fk1, pk1 = reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
+        if reflection.respond_to?(:join_keys)
+          klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : [] # ActiveRecord <5.2 workaround
+          fk1, pk1 = reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
+        else
+          fk1 = reflection.join_primary_key
+          pk1 = reflection.join_foreign_key
+        end
+
 
         # primary and foreign keys + optional conditions for the joins
         join_condition = if with_polymorphism?(reflection)

@@ -35,6 +35,8 @@ gemfile:
 - Gemfile.activerecord52_with_activesupport52
 - Gemfile.activerecord60
 - Gemfile.activerecord60_with_activesupport60
+- Gemfile.activerecord61
+- Gemfile.activerecord61_with_activesupport61
 
 matrix:
   allow_failures:
@@ -78,6 +80,26 @@ matrix:
       gemfile: Gemfile.activerecord60_with_activesupport60
     - rvm: "2.4.0"
       gemfile: Gemfile.activerecord60_with_activesupport60
+    - rvm: "2.0"
+      gemfile: Gemfile.activerecord61
+    - rvm: "2.1"
+      gemfile: Gemfile.activerecord61
+    - rvm: "2.2.2"
+      gemfile: Gemfile.activerecord61
+    - rvm: "2.3.7"
+      gemfile: Gemfile.activerecord61
+    - rvm: "2.4.0"
+      gemfile: Gemfile.activerecord61
+    - rvm: "2.0"
+      gemfile: Gemfile.activerecord61_with_activesupport61
+    - rvm: "2.1"
+      gemfile: Gemfile.activerecord61_with_activesupport61
+    - rvm: "2.2.2"
+      gemfile: Gemfile.activerecord61_with_activesupport61
+    - rvm: "2.3.7"
+      gemfile: Gemfile.activerecord61_with_activesupport61
+    - rvm: "2.4.0"
+      gemfile: Gemfile.activerecord61_with_activesupport61
     - rvm: "2.7.1"
       gemfile: Gemfile.activerecord42
     - rvm: "2.7.1"
