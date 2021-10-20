@@ -34,9 +34,9 @@ module ScopedSearch
 
       definitions.each do |definition|
         if definition[:on].kind_of?(Array)
-          definition[:on].each { |field| self.scoped_search_definition.define(definition.merge(:on => field)) }
+          definition[:on].each { |field| self.scoped_search_definition.define(**definition.merge(:on => field)) }
         else
-          self.scoped_search_definition.define(definition)
+          self.scoped_search_definition.define(**definition)
         end
       end
       return self.scoped_search_definition
