@@ -32,8 +32,8 @@ jobs:
           # - jruby-19mode
           # - jruby-head
         db:
-          - postgresql
-          # - mysql
+          # - postgresql
+          - mysql
           # - sqlite
         gemfile:
           - Gemfile
