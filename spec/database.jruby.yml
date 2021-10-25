@@ -4,7 +4,7 @@ sqlite:
 
 mysql:
   adapter: jdbcmysql
-  host: localhost
+  host: 127.0.0.1
   username: root
   database: scoped_search_test
 
