@@ -21,7 +21,7 @@ jobs:
         ruby_version:
           - 2.0
           - 2.1
-          - 2.2.2
+          - 2.2.10
           - 2.3.7
           - 2.4.0
           - 2.5.1
@@ -32,7 +32,6 @@ jobs:
           - jruby-19mode
           - jruby-head
         gemfile:
-          - Gemfile
           - Gemfile.activerecord42
           - Gemfile.activerecord50
           - Gemfile.activerecord51
@@ -64,7 +63,7 @@ jobs:
             gemfile: Gemfile.activerecord60
           - ruby_version: 2.1
             gemfile: Gemfile.activerecord60
-          - ruby_version: 2.2.2
+          - ruby_version: 2.2.10
             gemfile: Gemfile.activerecord60
           - ruby_version: 2.3.7
             gemfile: Gemfile.activerecord60
@@ -74,7 +73,7 @@ jobs:
             gemfile: Gemfile.activerecord60_with_activesupport60
           - ruby_version: 2.1
             gemfile: Gemfile.activerecord60_with_activesupport60
-          - ruby_version: 2.2.2
+          - ruby_version: 2.2.10
             gemfile: Gemfile.activerecord60_with_activesupport60
           - ruby_version: 2.3.7
             gemfile: Gemfile.activerecord60_with_activesupport60
@@ -84,7 +83,7 @@ jobs:
             gemfile: Gemfile.activerecord61
           - ruby_version: 2.1
             gemfile: Gemfile.activerecord61
-          - ruby_version: 2.2.2
+          - ruby_version: 2.2.10
             gemfile: Gemfile.activerecord61
           - ruby_version: 2.3.7
             gemfile: Gemfile.activerecord61
@@ -94,7 +93,7 @@ jobs:
             gemfile: Gemfile.activerecord61_with_activesupport61
           - ruby_version: 2.1
             gemfile: Gemfile.activerecord61_with_activesupport61
-          - ruby_version: 2.2.2
+          - ruby_version: 2.2.10
             gemfile: Gemfile.activerecord61_with_activesupport61
           - ruby_version: 2.3.7
             gemfile: Gemfile.activerecord61_with_activesupport61
