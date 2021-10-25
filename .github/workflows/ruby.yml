@@ -1,0 +1,111 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will download a prebuilt Ruby version, install dependencies and run tests with Rake
+# For more information see: https://github.com/marketplace/actions/setup-ruby-jruby-and-truffleruby
+
+name: Ruby
+
+on: [pull_request]
+
+env:
+  TESTOPTS: --verbose
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby_version:
+          # - 2.0
+          # - 2.1
+          # - 2.2.2
+          # - 2.3.7
+          # - 2.4.0
+          # - 2.5.1
+          # - 2.6.0
+          - 2.7.1
+          # - 3.0.0
+          # - ruby-head
+          # - jruby-19mode
+          # - jruby-head
+        db:
+          - postgresql
+          # - mysql
+          # - sqlite
+        gemfile:
+          - Gemfile
+          # - Gemfile.activerecord42
+          # - Gemfile.activerecord50
+          # - Gemfile.activerecord51
+          # - Gemfile.activerecord52
+          # - Gemfile.activerecord52_with_activesupport52
+          # - Gemfile.activerecord60
+          # - Gemfile.activerecord60_with_activesupport60
+
+        # include:
+        #   - db: postgresql
+        #     conn_string: postgres://postgres@localhost/travis_ci_test
+        #   - db: mysql
+        #     conn_string: mysql2://root@127.0.0.1/travis_ci_test
+        #   - db: sqlite3
+        #     conn_string: sqlite:/
+        # exclude:
+        #   - db: mysql
+        #     ruby_version: 2.5.0
+        #   - db: mysql
+        #     ruby_version: 2.6.0
+        #   - db: mysql
+        #     ruby_version: 3.0.0
+        #   - db: mysql
+        #     concurrent_ruby_ext: 'true'
+        #   - db: sqlite3
+        #     ruby_version: 2.5.0
+        #   - db: sqlite3
+        #     ruby_version: 2.6.0
+        #   - db: sqlite3
+        #     ruby_version: 3.0.0
+        #   - db: sqlite3
+        #     concurrent_ruby_ext: 'true'
+        #   - db: postgresql
+        #     ruby_version: 2.5.0
+        #     concurrent_ruby_ext: 'true'
+        #   - db: postgresql
+        #     ruby_version: 2.6.0
+        #     concurrent_ruby_ext: 'true'
+        #   - db: postgresql
+        #     ruby_version: 3.0.0
+        #     concurrent_ruby_ext: 'true'
+
+    services:
+      postgres:
+        image: postgres:12.1
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        env:
+          POSTGRES_DB: scoped_search_test
+      mariadb:
+        image: mariadb:10
+        ports: ['3306:3306']
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: scoped_search_test
+
+    env:
+      DATABASE: ${{ matrix.db }}
+      BUNDLE_GEMFILE: ${{ github.workspace }}/${{ matrix.gemfile }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby
+    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
+    # change this to (see https://github.com/ruby/setup-ruby#versioning):
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby_version }}
+    - name: Install dependencies
+      run: bundle install
+    - name: Run tests
+      run: bundle exec rake
