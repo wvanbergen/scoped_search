@@ -19,22 +19,11 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - 2.0
-          - 2.1
-          - 2.2.10
-          - 2.3.7
-          - 2.4.0
-          - 2.5.1
-          - 2.6.0
           - 2.7.1
           - 3.0.0
           - ruby-head
-          - jruby-19mode
           - jruby-head
         gemfile:
-          - Gemfile.activerecord42
-          - Gemfile.activerecord50
-          - Gemfile.activerecord51
           - Gemfile.activerecord52
           - Gemfile.activerecord52_with_activesupport52
           - Gemfile.activerecord60
@@ -43,78 +32,10 @@ jobs:
           - Gemfile.activerecord61_with_activesupport61
 
         exclude:
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord50
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord50
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord51
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord51
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord52
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord52
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord52_with_activesupport52
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord52_with_activesupport52
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord60
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord60
-          - ruby_version: 2.2.10
-            gemfile: Gemfile.activerecord60
-          - ruby_version: 2.3.7
-            gemfile: Gemfile.activerecord60
-          - ruby_version: 2.4.0
-            gemfile: Gemfile.activerecord60
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord60_with_activesupport60
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord60_with_activesupport60
-          - ruby_version: 2.2.10
-            gemfile: Gemfile.activerecord60_with_activesupport60
-          - ruby_version: 2.3.7
-            gemfile: Gemfile.activerecord60_with_activesupport60
-          - ruby_version: 2.4.0
-            gemfile: Gemfile.activerecord60_with_activesupport60
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord61
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord61
-          - ruby_version: 2.2.10
-            gemfile: Gemfile.activerecord61
-          - ruby_version: 2.3.7
-            gemfile: Gemfile.activerecord61
-          - ruby_version: 2.4.0
-            gemfile: Gemfile.activerecord61
-          - ruby_version: 2.0
-            gemfile: Gemfile.activerecord61_with_activesupport61
-          - ruby_version: 2.1
-            gemfile: Gemfile.activerecord61_with_activesupport61
-          - ruby_version: 2.2.10
-            gemfile: Gemfile.activerecord61_with_activesupport61
-          - ruby_version: 2.3.7
-            gemfile: Gemfile.activerecord61_with_activesupport61
-          - ruby_version: 2.4.0
-            gemfile: Gemfile.activerecord61_with_activesupport61
-          - ruby_version: 2.7.1
-            gemfile: Gemfile.activerecord42
-          - ruby_version: 2.7.1
-            gemfile: Gemfile.activerecord50
-          - ruby_version: 2.7.1
-            gemfile: Gemfile.activerecord51
           - ruby_version: 2.7.1
             gemfile: Gemfile.activerecord52
           - ruby_version: 2.7.1
             gemfile: Gemfile.activerecord52_with_activesupport52
-          - ruby_version: 3.0.2
-            gemfile: Gemfile.activerecord42
-          - ruby_version: 3.0.2
-            gemfile: Gemfile.activerecord50
-          - ruby_version: 3.0.2
-            gemfile: Gemfile.activerecord51
           - ruby_version: 3.0.2
             gemfile: Gemfile.activerecord52
           - ruby_version: 3.0.2
