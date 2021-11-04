@@ -36,9 +36,9 @@ jobs:
             gemfile: Gemfile.activerecord52
           - ruby_version: 2.7.1
             gemfile: Gemfile.activerecord52_with_activesupport52
-          - ruby_version: 3.0.2
+          - ruby_version: 3.0.0
             gemfile: Gemfile.activerecord52
-          - ruby_version: 3.0.2
+          - ruby_version: 3.0.0
             gemfile: Gemfile.activerecord52_with_activesupport52
     services:
       postgres:
