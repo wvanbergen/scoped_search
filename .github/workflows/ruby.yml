@@ -40,6 +40,10 @@ jobs:
             gemfile: Gemfile.activerecord52
           - ruby_version: 3.0.0
             gemfile: Gemfile.activerecord52_with_activesupport52
+          - ruby_version: ruby-head
+            gemfile: Gemfile.activerecord52
+          - ruby_version: ruby-head
+            gemfile: Gemfile.activerecord52_with_activesupport52
     services:
       postgres:
         image: postgres:12.1
