@@ -38,7 +38,9 @@ module ScopedSearch
 
     # Initializes the instance by setting the relevant parameters
     def initialize(definition, ast, profile)
-      @definition, @ast, @definition.profile = definition, ast, profile
+      @definition = definition
+      @ast = ast
+      @definition.profile = profile
     end
 
     # Actually builds the find parameters hash that should be used in the search_for
