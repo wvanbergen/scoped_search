@@ -289,7 +289,7 @@ module ScopedSearch
       connection = many_class.connection
       sql = connection.quote_table_name(many_class.table_name)
       join_reflections = nested_has_many(many_class, field.relation)
-      table_names = [many_class.table_name] + join_reflections.map(&:table_name)
+      table_names = [[many_class.table_name, many_class.sti_name.tableize]] + join_reflections.map(&:table_name)
 
       join_reflections.zip(table_names.zip(join_reflections.drop(1))).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
         fk1, pk1 = if reflection.respond_to?(:join_keys)
@@ -299,9 +299,10 @@ module ScopedSearch
                      [reflection.join_primary_key, reflection.join_foreign_key] #ActiveRecord 6.1
                    end
 
+        previous_table, sti_name = previous_table
         # primary and foreign keys + optional conditions for the joins
         join_condition = if with_polymorphism?(reflection)
-                           field.reflection_conditions(definition.reflection_by_name(next_reflection.klass, previous_table))
+                           field.reflection_conditions(definition.reflection_by_name(next_reflection.klass, sti_name || previous_table))
                          else
                            ''
                          end
