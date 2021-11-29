@@ -6,8 +6,16 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
+=== Version 4.1.10
+
 - Fix querying through associations in Rails 6.1 (undefined method join_keys) (#201)
 - Fix query generation when going through STI associations (#211)
+- Properly support Ruby 3
+- Add support for postgres citext type
+
+=== Version 4.1.9
+- Fix querying on nested has-many associations (#196)
+- Abide "has_many ..., primary_key" overrides in relation searches
 
 === Version 4.1.8
 
