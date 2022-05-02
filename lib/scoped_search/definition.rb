@@ -281,13 +281,13 @@ module ScopedSearch
     # In case Time responds to #zone, we know this is Rails environment and we can use Time.zone.parse. The benefit is that the
     # current timezone is respected and does not have to be specified explicitly. That way even relative dates work as expected.
     def parse_temporal(value)
-      return Date.current if value =~ /\btoday\b/i
-      return 1.day.ago.to_date if value =~ /\byesterday\b/i
-      return 1.day.from_now.to_date if value =~ /\btomorrow\b/i
+      return date_with_timezone(Date.current) if value =~ /\btoday\b/i
+      return date_with_timezone(1.day.ago) if value =~ /\byesterday\b/i
+      return date_with_timezone(1.day.from_now) if value =~ /\btomorrow\b/i
       return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*(\d+\s+\b(?:hours?|minutes?)\b\s+\bago)\b\s*\z/i
-      return (eval($1.strip.gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bago)\b\s*\z/i
+      return date_with_timezone(eval($1.strip.gsub(/\s+/,'.').downcase)) if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bago)\b\s*\z/i
       return (eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)).to_datetime if value =~ /\A\s*(\d+\s+\b(?:hours?|minutes?)\b\s+\bfrom\s+now)\b\s*\z/i
-      return (eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)).to_date     if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bfrom\s+now)\b\s*\z/i
+      return date_with_timezone(eval($1.strip.gsub(/from\s+now/i,'from_now').gsub(/\s+/,'.').downcase)) if value =~ /\A\s*(\d+\s+\b(?:days?|weeks?|months?|years?)\b\s+\bfrom\s+now)\b\s*\z/i
       if Time.respond_to?(:zone) && !Time.zone.nil?
         parsed = Time.zone.parse(value) rescue nil
         parsed && parsed.to_datetime
@@ -333,6 +333,14 @@ module ScopedSearch
         search_scope = search_scope.references(find_options[:include])      if find_options[:include]
 
         search_scope
+      end
+
+      # This should get called only when the relative specifiers (1 day ago and
+      # so on), this code path is only viable when Rails are available
+      def date_with_timezone(datetime)
+        date = datetime.to_date
+        return datetime unless date.respond_to?(:in_time_zone)
+        date.in_time_zone.to_datetime
       end
     end
 

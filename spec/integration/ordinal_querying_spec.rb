@@ -210,6 +210,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for('timestamp > "3 hours ago"').length.should == 4
       end
 
+      it "should take timezone into consideration" do
+        now = Time.now
+        expected = DateTime.new(now.year, now.month, now.day, 0, 0, 0, now.zone).utc.strftime('%Y-%m-%d %H:%M:%S')
+        @class.search_for('timestamp > yesterday').to_sql.should include(expected)
+      end
+
       it "should accept 1 week from now as date format" do
         @class.search_for('date < "1 week from now"').length.should == 6
       end
