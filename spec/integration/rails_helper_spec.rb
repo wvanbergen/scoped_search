@@ -9,54 +9,54 @@ describe ScopedSearch::RailsHelper do
   let(:params) { HashWithIndifferentAccess.new(:controller => "resources", :action => "search") }
 
   it "should generate a link with the order param set" do
-    should_receive(:url_for).with(
+    should_receive(:url_for).with({
       "controller" => "resources",
       "action" => "search",
       "order" => "field ASC"
-    ).and_return("/example")
+    }).and_return("/example")
 
     sort("field")
   end
 
   it "should generate a link with order param set to alternative default sorting order" do
-    should_receive(:url_for).with(
+    should_receive(:url_for).with({
       "controller" => "resources",
       "action" => "search",
       "order" => "field DESC"
-    ).and_return("/example")
+    }).and_return("/example")
 
     sort("field", :default => "DESC")
   end
 
   it "should generate a link with the order param inverted" do
-    should_receive(:url_for).with(
+    should_receive(:url_for).with({
       "controller" => "resources",
       "action" => "search",
       "order" => "field DESC"
-    ).and_return("/example")
+    }).and_return("/example")
 
     params[:order] = "field ASC"
     sort("field")
   end
 
   it "should generate a link with other parameters retained" do
-    should_receive(:url_for).with(
+    should_receive(:url_for).with({
       "controller" => "resources",
       "action" => "search",
       "walrus" => "unicorns",
       "order" => "field ASC"
-    ).and_return("/example")
+    }).and_return("/example")
 
     params[:walrus] = "unicorns"
     sort("field")
   end
 
   it "should replace the current sorting order" do
-    should_receive(:url_for).with(
+    should_receive(:url_for).with({
       "controller" => "resources",
       "action" => "search",
       "order" => "other ASC"
-    ).and_return("/example")
+    }).and_return("/example")
 
     params[:order] = "field ASC"
     sort("other")
@@ -83,12 +83,12 @@ describe ScopedSearch::RailsHelper do
     let(:ac_params) { double('ActionController::Parameters') }
 
     it "should call to_h on passed params object" do
-      should_receive(:url_for).with(
+      should_receive(:url_for).with({
         "controller" => "resources",
         "action" => "search",
         "walrus" => "unicorns",
         "order" => "field ASC"
-      ).and_return("/example")
+      }).and_return("/example")
 
       params[:walrus] = "unicorns"
 
