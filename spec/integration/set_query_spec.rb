@@ -12,6 +12,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       @class = ScopedSearch::RSpec::Database.create_model(:bool => :boolean, :status => :integer) do |klass|
         klass.scoped_search :on => :bool, :complete_value => {:yes => true, :no => false}
         klass.scoped_search :on => :status, :complete_value => {:unknown => 0, :up => 1, :down => 2}
+        klass.scoped_search :on => :bool, :rename => :bool2, :complete_value => {:true => true, :false => false}
       end
     end
 
@@ -70,6 +71,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       it "should find two record with bool = false" do
         @class.search_for('bool != yes').length.should == 2
+      end
+
+      it "should be able to search without value" do
+        @class.search_for('bool').length.should == 1
+        @class.search_for('bool2').length.should == 1
       end
     end
   end
