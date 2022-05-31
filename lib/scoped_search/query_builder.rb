@@ -450,7 +450,9 @@ module ScopedSearch
           field = definition.field_by_name(value)
           if field && field.set? && field.complete_value.values.include?(true)
             key = field.complete_value.map{|k,v| k if v == true}.compact.first
-            return builder.set_test(field, :eq, key, &block)
+            sql, *params = builder.set_test(field, :eq, key, &block)
+            params.each { |p| yield(:parameter, p) }
+            return sql
           end
           # Search keywords found without context, just search on all the default fields
           fragments = definition.default_fields_for(value).map do |field|
