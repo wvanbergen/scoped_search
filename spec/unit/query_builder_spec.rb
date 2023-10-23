@@ -68,6 +68,8 @@ describe ScopedSearch::QueryBuilder do
 
     lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field ^ (1,2)') }.should_not raise_error
     lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field ^ (1,a)') }.should raise_error(ScopedSearch::QueryNotSupported)
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field !^ (1,2)') }.should_not raise_error
+    lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field !^ (1,a)') }.should raise_error(ScopedSearch::QueryNotSupported)
   end
 
   it "should display custom error from validator" do
