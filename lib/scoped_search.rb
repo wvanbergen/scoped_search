@@ -71,6 +71,7 @@ require 'scoped_search/query_language'
 require 'scoped_search/query_builder'
 require 'scoped_search/auto_complete_builder'
 require 'scoped_search/validators'
+require 'scoped_search/value_translators/encrypted'
 
 # Import the search_on method in the ActiveReocrd::Base class
 ActiveRecord::Base.send(:extend, ScopedSearch::ClassMethods)
