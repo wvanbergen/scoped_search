@@ -3,6 +3,7 @@ gemspec
 
 gem 'actionview', '~> 6.0.0'
 gem 'activerecord', '~> 6.0.0'
+gem 'mutex_m'
 
 platforms :jruby do
   gem 'activerecord-jdbcsqlite3-adapter'
