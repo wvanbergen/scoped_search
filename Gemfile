@@ -16,5 +16,4 @@ platforms :ruby do
   gem 'sqlite3'
   gem 'mysql2'
   gem 'pg'
-  gem 'mutex_m'
 end
