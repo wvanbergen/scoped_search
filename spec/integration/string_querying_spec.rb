@@ -239,7 +239,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     context 'interpreted as a not_null operation' do
 
       it "should reference the correct column" do
-        @class.search_for('has string').to_sql.should include(/["`]string["`] IS NOT NULL/)
+        @class.search_for('has string').to_sql.should match(/["`]string["`] IS NOT NULL/)
       end
 
       it "should raise a specific error with a missing column" do

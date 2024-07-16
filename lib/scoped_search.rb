@@ -66,7 +66,7 @@ module ScopedSearch
   # as referencing a non-existent database column
   #
   # You may want to catch this exception to inform the user.
-  class ColumnNotFound < ScopedSearch::Exception
+  class ColumnNotFound < QueryNotSupported
   end
 
 end
