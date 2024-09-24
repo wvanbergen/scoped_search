@@ -102,7 +102,12 @@ describe ScopedSearch::QueryLanguage::Parser do
     'set? a b null? c'.should parse_to([:and, [:notnull, 'a'], 'b', [:null, 'c']])
   end
 
+  it 'should parse logical operators with a single argument' do
+    '& a'.should parse_to('a')
+    '& & & & a & b & & &'.should parse_to([:and, 'a', 'b'])
+  end
+
   it "should refuse to parse an empty not expression" do
     lambda { ScopedSearch::QueryLanguage::Compiler.parse('!()|*') }.should raise_error(ScopedSearch::QueryNotSupported)
-  end  
+  end
 end
