@@ -31,7 +31,7 @@ module ScopedSearch::QueryLanguage::Parser
     next_token if !root_node && peek_token == :lparen # skip starting :lparen
     expressions << parse_logical_expression until peek_token.nil? || peek_token == :rparen
     next_token if !root_node && peek_token == :rparen # skip final :rparen
-    
+
     return ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(DEFAULT_SEQUENCE_OPERATOR, expressions, root_node)
   end
 
@@ -42,16 +42,21 @@ module ScopedSearch::QueryLanguage::Parser
       when :lparen;         parse_expression_sequence
       when :not;            parse_logical_not_expression
       when :null, :notnull; parse_null_expression
+      when *LOGICAL_INFIX_OPERATORS; parse_logical_infix_expression
       else;                 parse_comparison
     end
 
     if LOGICAL_INFIX_OPERATORS.include?(peek_token)
-      operator = next_token
-      rhs = parse_logical_expression
-      ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(operator, [lhs, rhs])
+      parse_logical_infix_expression([lhs])
     else
       lhs
     end
+  end
+
+  def parse_logical_infix_expression(previous = [])
+    operator = next_token
+    rhs = parse_logical_expression
+    ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(operator, previous + [rhs])
   end
 
   # Parses a NOT expression
