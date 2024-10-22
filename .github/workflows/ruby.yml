@@ -30,6 +30,8 @@ jobs:
           - Gemfile.activerecord60_with_activesupport60
           - Gemfile.activerecord61
           - Gemfile.activerecord61_with_activesupport61
+          - Gemfile.activerecord70
+          - Gemfile.activerecord70_with_activesupport70
 
         exclude:
           - ruby_version: 2.7.1
