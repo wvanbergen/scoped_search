@@ -85,7 +85,24 @@ module ScopedSearch::QueryLanguage::Parser
 
   # Parses a prefix comparison, i.e. without an explicit field: <operator> <value>
   def parse_prefix_comparison
-    return ScopedSearch::QueryLanguage::AST::OperatorNode.new(next_token, [parse_value])
+    token = next_token
+    case token
+    when :in
+      parse_prefix_in(true)
+    when :notin
+      parse_prefix_in(false)
+    else
+      ScopedSearch::QueryLanguage::AST::OperatorNode.new(token, [parse_value])
+    end
+  end
+
+  def parse_prefix_in(inclusion)
+    cmp, log = inclusion ? [:eq, :or] : [:ne, :and]
+    leaves = parse_multiple_values.map do |x|
+      leaf = ScopedSearch::QueryLanguage::AST::LeafNode.new(x)
+      ScopedSearch::QueryLanguage::AST::OperatorNode.new(cmp, [leaf])
+    end
+    ScopedSearch::QueryLanguage::AST::LogicalOperatorNode.new(log, leaves)
   end
 
   # Parses an infix expression, i.e. <field> <operator> <value>
@@ -114,7 +131,7 @@ module ScopedSearch::QueryLanguage::Parser
     value = []
     value << current_token if String === next_token until peek_token.nil? || peek_token == :rparen
     next_token if peek_token == :rparen  # consume the :rparen
-    value.join(',')
+    value
   end
 
   # This can either be a constant value or a field name.
@@ -122,7 +139,7 @@ module ScopedSearch::QueryLanguage::Parser
     if String === peek_token
       ScopedSearch::QueryLanguage::AST::LeafNode.new(next_token)
     elsif ([:in, :notin].include? current_token)
-      value = parse_multiple_values()
+      value = parse_multiple_values().join(',')
       ScopedSearch::QueryLanguage::AST::LeafNode.new(value)
     else
       raise ScopedSearch::QueryNotSupported, "Value expected but found #{peek_token.inspect}"
