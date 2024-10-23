@@ -107,6 +107,21 @@ describe ScopedSearch::QueryLanguage::Parser do
     '& & & & a & b & & &'.should parse_to([:and, 'a', 'b'])
   end
 
+  it 'should parse in and not in operators with no lhs' do
+    '^ a'.should parse_to([:eq, 'a'])
+    '^ a b'.should parse_to([:or, [:eq, 'a'], [:eq, 'b']])
+    '^ a,b'.should parse_to([:or, [:eq, 'a'], [:eq, 'b']])
+
+    '^ (a b)'.should parse_to([:or, [:eq, 'a'], [:eq, 'b']])
+    '^ (a,b)'.should parse_to([:or, [:eq, 'a'], [:eq, 'b']])
+
+    '!^ a'.should parse_to([:ne, 'a'])
+    '!^ a b'.should parse_to([:and, [:ne, 'a'], [:ne, 'b']])
+    '!^ a,b'.should parse_to([:and, [:ne, 'a'], [:ne, 'b']])
+    '!^ (a b)'.should parse_to([:and, [:ne, 'a'], [:ne, 'b']])
+    '!^ (a,b)'.should parse_to([:and, [:ne, 'a'], [:ne, 'b']])
+  end
+
   it "should refuse to parse an empty not expression" do
     lambda { ScopedSearch::QueryLanguage::Compiler.parse('!()|*') }.should raise_error(ScopedSearch::QueryNotSupported)
   end
