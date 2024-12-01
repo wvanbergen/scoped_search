@@ -17,7 +17,7 @@ module ScopedSearch
 
       attr_reader :definition, :field, :only_explicit, :relation, :key_relation, :full_text_search,
                   :key_field, :complete_value, :complete_enabled, :offset, :word_size, :ext_method, :operators,
-                  :validator, :value_translation, :special_values
+                  :validator, :special_values
 
       # Initializes a Field instance given the definition passed to the
       # scoped_search call on the ActiveRecord-based model class.
@@ -129,9 +129,27 @@ module ScopedSearch
         end
       end
 
+      def encrypted?
+        defined?(ActiveRecord::Encryption::EncryptableRecord) &&
+          klass.ancestors.include?(ActiveRecord::Encryption::EncryptableRecord) &&
+          klass.encrypted_attributes.include?(field)
+      end
+
+      def value_translation
+        return @value_translation if @value_translation
+
+        ValueTranslators::Encrypted.new(self) if encrypted?
+      end
+
       # Returns the column type of this field.
       def type
-        @type ||= virtual? ? :virtual : column.type
+        @type ||= if virtual?
+                    :virtual
+                  elsif encrypted?
+                    :encrypted
+                  else
+                    column.type
+                  end
       end
 
       # Returns true if this field is a datetime-like column.
@@ -265,7 +283,7 @@ module ScopedSearch
     # Returns a list of appropriate fields to search in given a search keyword and operator.
     def default_fields_for(value, operator = nil)
 
-      column_types  = [:virtual]
+      column_types  = [:encrypted, :virtual]
       column_types += [:string, :text, :citext]       if [nil, :like, :unlike, :ne, :eq].include?(operator)
       column_types += [:double, :float, :decimal]     if value =~ NUMERICAL_REGXP
       column_types += [:integer]                      if value =~ INTEGER_REGXP
