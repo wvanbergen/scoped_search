@@ -62,6 +62,13 @@ module ScopedSearch
   class QueryNotSupported < ScopedSearch::Exception
   end
 
+  # The specific exception class that is raised when a query is interpreted
+  # as referencing a non-existent database column
+  #
+  # You may want to catch this exception to inform the user.
+  class ColumnNotFound < QueryNotSupported
+  end
+
 end
 
 # Load all lib files
