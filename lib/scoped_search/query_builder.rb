@@ -146,8 +146,22 @@ module ScopedSearch
       # but the field is of datetime type. Change the comparison to return
       # more logical results.
       if field.datetime?
-        span = 1.minute if(value =~ /\A\s*\d+\s+\bminutes?\b\s+\bago\b\s*\z/i)
-        span ||= (timestamp.day_fraction == 0) ? 1.day : 1.hour
+        if value =~ time_unit_regex("minutes?|hours?")
+          span = 1.minute
+        elsif value =~ time_unit_regex("days?|weeks?|months?|years?") || value =~ /\b(today|tomorrow|yesterday)\b/i
+          span = 1.day
+        else
+          tokens = DateTime._parse(value)
+          # find the smallest unit of time given in input and determine span for further adjustment of the search query
+          span = {
+            sec: 1.second,
+            min: 1.minute,
+            hour: 1.hour,
+            mday: 1.day,
+            mon: 1.month
+          }.find { |key, _| tokens[key] }&.last || 1.year
+        end
+
         if [:eq, :ne].include?(operator)
           # Instead of looking for an exact (non-)match, look for dates that
           # fall inside/outside the range of timestamps of that day.
@@ -155,13 +169,13 @@ module ScopedSearch
           field_sql = field.to_sql(operator, &block)
           return ["#{negate}(#{field_sql} >= ? AND #{field_sql} < ?)", timestamp, timestamp + span]
 
-        elsif operator == :gt
+        elsif span >= 1.day && operator == :gt
           # Make sure timestamps on the given date are not included in the results
           # by moving the date to the next day.
           timestamp += span
           operator = :gte
 
-        elsif operator == :lte
+        elsif span >= 1.day && operator == :lte
           # Make sure the timestamps of the given date are included by moving the
           # date to the next date.
           timestamp += span
@@ -318,6 +332,12 @@ module ScopedSearch
       as = reflection.options[:as]
       return unless as
       definition.reflection_by_name(reflection.klass, as).options[:polymorphic]
+    end
+
+    private
+
+    def time_unit_regex(time_unit)
+      /\A\s*\d+\s+\b(?:#{time_unit})\b\s+\b(ago|from\s+now)\b\s*\z/i
     end
 
     # This module gets included into the Field class to add SQL generation.

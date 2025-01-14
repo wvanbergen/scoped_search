@@ -155,4 +155,65 @@ describe ScopedSearch::QueryBuilder do
       lambda { ScopedSearch::QueryBuilder.build_query(@definition, 'test_field = test_val') }.should raise_error(ScopedSearch::QueryNotSupported, /failed with error: test/)
     end
   end
+
+  context 'datetime_test' do
+    before(:each) do
+      @field = double('field')
+      @query_builder = ScopedSearch::QueryBuilder.new(@definition, nil, nil)
+
+      @field.stub(:datetime?).and_return(true)
+      @field.stub(:date?).and_return(false)
+      @field.stub(:to_sql).and_return('started_at')
+
+      [:virtual?, :set?, :temporal?, :relation, :offset].each { |key| @field.stub(key).and_return(false) }
+    end
+
+    it "should return correct SQL literal for equality operator" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2023, 10, 10))
+      result = @query_builder.datetime_test(@field, :eq, '2023-10-10') { |type, value| }
+      result.should eq(["(started_at >= ? AND started_at < ?)", DateTime.new(2023, 10, 10), DateTime.new(2023, 10, 11)])
+    end
+
+    it "should return correct SQL literal for inequality operator" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2023, 10, 10))
+      result = @query_builder.datetime_test(@field, :ne, '2023-10-10') { |type, value| }
+      result.should eq(["NOT (started_at >= ? AND started_at < ?)", DateTime.new(2023, 10, 10), DateTime.new(2023, 10, 11)])
+    end
+
+    it "should return correct SQL literal for greater operator" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2023, 10, 9))
+      result = @query_builder.datetime_test(@field, :gt, '2023-10-9') { |type, value| }
+      result.should eq(["started_at >= ?", DateTime.new(2023, 10, 10)])
+    end
+
+    it "should return correct SQL literal for less than or equal operator" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2023, 10, 10))
+      result = @query_builder.datetime_test(@field, :lte, '2023-10-10') { |type, value| }
+      result.should eq(["started_at < ?", DateTime.new(2023, 10, 11)])
+    end
+
+    it "should return empty array for invalid date" do
+      @definition.stub(:parse_temporal).and_return(nil)
+      result = @query_builder.datetime_test(@field, :eq, 'invalid-date') { |type, value| }
+      result.should eq([])
+    end
+
+    it "should count with 1 month deviation if only year and month is provided" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2024, 1, 1))
+      result = @query_builder.datetime_test(@field, :gt, 'January 2024') { |type, value| }
+      result.should eq(["started_at >= ?", DateTime.new(2024, 2, 1)])
+    end
+
+    it "should not count with deviation if minute is the smallest unit provided" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2023, 10, 10, 13, 0, 0))
+      result = @query_builder.datetime_test(@field, :gt, '2023-10-10 13:00') { |type, value| }
+      result.should eq(["started_at > ?", DateTime.new(2023, 10, 10, 13, 0, 0)])
+    end
+
+    it "should not count with deviation if second is the smallest unit provided" do
+      @definition.stub(:parse_temporal).and_return(DateTime.new(2023, 10, 10, 13, 0, 0, 1))
+      result = @query_builder.datetime_test(@field, :gt, '2023-10-10 13:00:01') { |type, value| }
+      result.should eq(["started_at > ?", DateTime.new(2023, 10, 10, 13, 0, 0, 1)])
+    end
+  end
 end
