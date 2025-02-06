@@ -1,3 +1,4 @@
+require 'logger' # a workaround for https://github.com/rails/rails/issues/54263
 require 'active_record'
 
 # ScopedSearch is the base module for the scoped_search plugin. This file
