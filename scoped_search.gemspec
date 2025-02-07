@@ -31,9 +31,15 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version = '>= 2.0.0'
   gem.add_runtime_dependency('activerecord', '>= 4.2.0')
-  gem.add_development_dependency('logger')
   gem.add_development_dependency('rspec', '~> 3.0')
   gem.add_development_dependency('rake')
+
+  # Rails require these, but don't explicitly depend on them
+  gem.add_development_dependency('base64')
+  gem.add_development_dependency('benchmark')
+  gem.add_development_dependency('bigdecimal')
+  gem.add_development_dependency('logger')
+  gem.add_development_dependency('mutex_m')
 
   gem.rdoc_options << '--title' << gem.name << '--main' << 'README.rdoc' << '--line-numbers' << '--inline-source'
   gem.extra_rdoc_files = ['README.rdoc', 'CHANGELOG.rdoc', 'CONTRIBUTING.rdoc', 'LICENSE']
