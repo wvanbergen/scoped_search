@@ -473,7 +473,7 @@ module ScopedSearch
         # Returns an IS (NOT) NULL SQL fragment
         def to_null_sql(builder, definition, &block)
           field = definition.field_by_name(rhs.value)
-          raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
+          raise ScopedSearch::ColumnNotFound, "Field '#{rhs.value}' not found in #{definition.klass}!" unless field
 
           if field.key_field
             yield(:parameter, rhs.value.to_s.sub(/^.*\./,''))
