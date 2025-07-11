@@ -69,7 +69,7 @@ module ScopedSearch::QueryLanguage::Tokenizer
   # Tokenizes a keyword that is quoted using double quotes. Allows escaping
   # of double quote characters by backslashes.
   def tokenize_quoted_keyword(&block)
-    keyword = ""
+    keyword = String.new
     until next_char.nil? || current_char == '"'
       keyword << (current_char == "\\" ? next_char : current_char)
     end
