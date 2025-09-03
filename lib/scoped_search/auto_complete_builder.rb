@@ -215,7 +215,7 @@ module ScopedSearch
         .distinct
         .map(&field.field)
         .compact
-        .map { |v| v.to_s =~ /\s/ ? "\"#{v.gsub('"', '\"')}\"" : v }
+        .map { |v| v.is_a?(String) ? "\"#{v.gsub('"', '\"')}\"" : v }
     end
 
     def completer_scope(field)

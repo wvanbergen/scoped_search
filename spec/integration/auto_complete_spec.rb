@@ -169,10 +169,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
 
       it "should complete values should contain baz" do
-        Foo.complete_for('explicit = ').should contain('explicit =  baz')
+        Foo.complete_for('explicit = ').should contain('explicit =  "baz"')
       end
 
-      it "should complete values with quotes where required" do
+      it "should complete values with quotes where value is a string" do
         Foo.complete_for('alias = ').should contain('alias =  "temp \"2\""')
       end
     end
