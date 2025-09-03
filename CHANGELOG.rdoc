@@ -6,6 +6,8 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
+- Autocomplete now wraps all strings in quotes, not just those containing whitespace
+
 === Version 4.1.10
 
 - Fix querying through associations in Rails 6.1 (undefined method join_keys) (#201)
