@@ -41,6 +41,10 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         end
       end
 
+      ActiveRecord::Migration.create_table(:bazs, :force => true) do |t|
+        t.integer :foo_id
+      end
+
       class ::Bar < ActiveRecord::Base
         belongs_to :foo
       end
@@ -65,6 +69,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         scoped_search :on => :other_c, :relation => :bars, :rename => 'bars.other_c'.to_sym
       end
 
+      class ::Baz < ActiveRecord::Base
+        belongs_to :foo, -> { where(string: 'foo') }
+
+        scoped_search :on => :string, :relation => :foo, :complete_value => true
+      end
+
       class ::Infoo < ::Foo
       end
 
@@ -83,9 +93,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
     after(:all) do
       ActiveRecord::Migration.drop_table(:foos)
       ActiveRecord::Migration.drop_table(:bars)
+      ActiveRecord::Migration.drop_table(:bazs)
 
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
+      Object.send :remove_const, :Baz
       Object.send :remove_const, :Infoo
 
       ScopedSearch::RSpec::Database.close_connection
@@ -265,6 +277,12 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
       it 'should return filtered for invalid value' do
         Foo.complete_for('int =', value_filter: { qux_id: 99 }).should == []
+      end
+    end
+
+    context 'autocompleting with scopes' do
+      it 'should honor the scope' do
+        ::Baz.complete_for('string =').should == ['string = foo']
       end
     end
   end

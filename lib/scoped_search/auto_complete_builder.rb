@@ -219,8 +219,14 @@ module ScopedSearch
     end
 
     def completer_scope(field)
-      klass = field.klass
-      scope = klass.respond_to?(:completer_scope) ? klass.completer_scope(@options) : klass
+      scope = field.klass
+      scope = scope.completer_scope(@options) if scope.respond_to?(:completer_scope)
+
+      if field.klass != field.definition.klass
+        reflection = field.definition.reflection_by_name(field.definition.klass, field.relation)
+        scope = scope.instance_exec(&reflection.scope) if reflection.try(:has_scope?)
+      end
+
       scope.respond_to?(:reorder) ? scope.reorder(Arel.sql(field.quoted_field)) : scope.scoped(:order => field.quoted_field)
     end
 
