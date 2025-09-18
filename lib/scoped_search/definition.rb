@@ -260,7 +260,7 @@ module ScopedSearch
 
     NUMERICAL_REGXP = /^\-?\d+(\.\d+)?$/
     INTEGER_REGXP = /^\-?\d+$/
-    UUID_REGXP = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/
+    UUID_REGXP = /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i
 
     # Returns a list of appropriate fields to search in given a search keyword and operator.
     def default_fields_for(value, operator = nil)
