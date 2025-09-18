@@ -43,8 +43,9 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         @class.search_for("uuid != #{@record3.uuid}").length.should == 2
       end
 
-      it "should find a record by just specifying the uuid" do
+      it "should find a record by just specifying the uuid (case insensitive)" do
         @class.search_for(@record1.uuid).first.uuid.should == @record1.uuid
+        @class.search_for(@record1.uuid.upcase).first.uuid.should == @record1.uuid
       end
 
       it "should not find a record if the uuid is not a valid uuid" do
