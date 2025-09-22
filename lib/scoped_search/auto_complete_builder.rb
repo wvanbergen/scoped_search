@@ -207,8 +207,7 @@ module ScopedSearch
 
     def complete_value_from_db(field, special_values, val)
       count = 20 - special_values.count
-      completer_scope(field)
-        .where(@options[:value_filter])
+      filtered_completer_scope(field)
         .where(value_conditions(field.quoted_field, val))
         .select(field.quoted_field)
         .limit(count)
@@ -216,6 +215,15 @@ module ScopedSearch
         .map(&field.field)
         .compact
         .map { |v| v.is_a?(String) ? "\"#{v.gsub('"', '\"')}\"" : v }
+    end
+
+    def filtered_completer_scope(field)
+      scope = completer_scope(field)
+      return scope.where(@options[:value_filter]) unless @options[:enhanced_filter]
+      if field.klass.column_names.include?(@options[:enhanced_filter][:has_column])
+        return scope.where(@options[:enhanced_filter][:filter])
+      end
+      scope
     end
 
     def completer_scope(field)

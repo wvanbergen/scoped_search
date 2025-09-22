@@ -267,5 +267,17 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         Foo.complete_for('int =', value_filter: { qux_id: 99 }).should == []
       end
     end
+
+    context 'autocompleting with enhanced_filter' do
+      it 'should return filtered values' do
+        Foo.complete_for('int =', enhanced_filter: { has_column: "int", filter: { qux_id: @qux_2.id } }).should == ['int = 10']
+      end
+      it 'should take precedence over value_filter' do
+        Foo.complete_for('int =', value_filter: { qux_id: @qux_1.id }, enhanced_filter: { has_column: "int", filter: { qux_id: @qux_2.id } }).should == ['int = 10']
+      end
+      it 'should ignore invalid filter' do
+        Foo.complete_for('int =', enhanced_filter: { has_column: "invalid_column_name", filter: { qux_id: @qux_1.id } }).should == ["int = 9", "int = 10", "int = 22"]
+      end
+    end
   end
 end
