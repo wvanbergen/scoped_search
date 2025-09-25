@@ -6,7 +6,12 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
-- Autocomplete now wraps all strings in quotes, not just those containing whitespace
+=== Version 4.3.0
+
+- Prevent scoped_search from modifying an empty string on newer rubies (#229)
+- Autocomplete now wraps all strings in quotes, not just those containing whitespace (#230)
+- UUID search is now case insensitive (#232)
+- Autocomplete now honors scopes set on associations (#231)
 
 === Version 4.1.10
 
