@@ -236,6 +236,17 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       end
     end
 
+    context 'interpreted as a not_null operation' do
+
+      it "should reference the correct column" do
+        @class.search_for('has string').to_sql.should match(/["`]string["`] IS NOT NULL/)
+      end
+
+      it "should raise a specific error with a missing column" do
+        lambda { @class.search_for('has wakka') }.should raise_error(ScopedSearch::ColumnNotFound, "Field 'wakka' not found in #{@class}!")
+      end
+    end
+
     context 'using order' do
       it "sort by string ASC" do
         @class.search_for('', :order => 'string ASC').first.string.should eql('bar')
