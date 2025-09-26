@@ -132,6 +132,7 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
       Object.send :remove_const, :Baz
+      Object.send :remove_const, :Qux
       Object.send :remove_const, :Infoo
       Object.send :remove_const, :Asd
       Object.send :remove_const, :Qwe
@@ -318,11 +319,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'autocompleting with scopes' do
       it 'should honor the scope' do
-        ::Baz.complete_for('foos.string =').should == ['foos.string = "foo"']
+        Baz.complete_for('foos.string =').should == ['foos.string = "foo"']
       end
 
       it 'should honor scope on the through relation' do
-        ::Baz.complete_for('qwes.string =').should == ['qwes.string = "qwe1"']
+        Baz.complete_for('qwes.string =').should == ['qwes.string = "qwe1"']
       end
     end
   end
