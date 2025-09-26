@@ -45,6 +45,16 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
         t.integer :foo_id
       end
 
+      ActiveRecord::Migration.create_table(:asds, :force => true) do |t|
+        t.integer :baz_id
+        t.string :string
+      end
+
+      ActiveRecord::Migration.create_table(:qwes, :force => true) do |t|
+        t.integer :asd_id
+        t.string :string
+      end
+
       class ::Bar < ActiveRecord::Base
         belongs_to :foo
       end
@@ -71,34 +81,61 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
       class ::Baz < ActiveRecord::Base
         belongs_to :foo, -> { where(string: 'foo') }
+        has_one :asd, -> { where(string: 'foo') }
+        has_one :qwe, through: :asd
 
-        scoped_search :on => :string, :relation => :foo, :complete_value => true
+        scoped_search :on => :string, :relation => :foo, :complete_value => true, :rename => 'foos.string'.to_sym
+        scoped_search :on => :string, :relation => :asd, :complete_value => true, :rename => 'asds.string'.to_sym
+        scoped_search :on => :string, :relation => :qwe, :complete_value => true, :rename => 'qwes.string'.to_sym
       end
 
       class ::Infoo < ::Foo
+      end
+
+      class ::Asd < ActiveRecord::Base
+        belongs_to :baz
+        has_one :qwe
+      end
+
+      class ::Qwe < ActiveRecord::Base
+        belongs_to :asd
       end
 
       @qux_1 = Qux.create!()
       @qux_2 = Qux.create!()
       @foo_1 = Foo.create!(:string => 'foo', :another => 'temp 1', :explicit => 'baz', :int => 9  , :date => 'February 8, 2011' , :unindexed => 10, :qux => @qux_1)
       @foo_2 = Foo.create!(:string => 'foo', :another => 'temp 2', :explicit => 'baz', :int => 10  , :date => 'February 8, 2011' , :unindexed => 10, :qux => @qux_2)
-      Foo.create!(:string => 'bar', :another => 'temp "2"', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
+      @foo_3 = Foo.create!(:string => 'bar', :another => 'temp "2"', :explicit => 'baz', :int => 22  , :date => 'February 10, 2011', :unindexed => 10)
       Foo.create!(:string => 'baz', :another => nil,      :explicit => nil  , :int => nil, :date => nil                 , :unindexed => nil)
       20.times { Foo.create!(:explicit => "aaa") }
 
+      @baz_1 = Baz.create!(:foo => @foo_1)
+      @baz_2 = Baz.create!(:foo => @foo_2)
+      Baz.create!(:foo => @foo_3)
+
       Bar.create!(:related => 'lala',         :foo => @foo_1)
       Bar.create!(:related => 'another lala', :foo => @foo_1)
+
+      @asd_1 = Asd.create!(:string => 'foo', :baz => @baz_1)
+      @asd_2 = Asd.create!(:string => 'bar', :baz => @baz_2)
+      Qwe.create!(:asd => @asd_1, :string => 'qwe1')
+      Qwe.create!(:asd => @asd_2, :string => 'qwe2')
     end
 
     after(:all) do
       ActiveRecord::Migration.drop_table(:foos)
       ActiveRecord::Migration.drop_table(:bars)
       ActiveRecord::Migration.drop_table(:bazs)
+      ActiveRecord::Migration.drop_table(:asds)
+      ActiveRecord::Migration.drop_table(:qwes)
 
       Object.send :remove_const, :Foo
       Object.send :remove_const, :Bar
       Object.send :remove_const, :Baz
+      Object.send :remove_const, :Qux
       Object.send :remove_const, :Infoo
+      Object.send :remove_const, :Asd
+      Object.send :remove_const, :Qwe
 
       ScopedSearch::RSpec::Database.close_connection
     end
@@ -282,7 +319,11 @@ ScopedSearch::RSpec::Database.test_databases.each do |db|
 
     context 'autocompleting with scopes' do
       it 'should honor the scope' do
-        ::Baz.complete_for('string =').should == ['string = foo']
+        Baz.complete_for('foos.string =').should == ['foos.string = "foo"']
+      end
+
+      it 'should honor scope on the through relation' do
+        Baz.complete_for('qwes.string =').should == ['qwes.string = "qwe1"']
       end
     end
   end

@@ -207,6 +207,7 @@ module ScopedSearch
 
     def complete_value_from_db(field, special_values, val)
       count = 20 - special_values.count
+
       completer_scope(field)
         .where(@options[:value_filter])
         .where(value_conditions(field.quoted_field, val))
@@ -224,7 +225,9 @@ module ScopedSearch
 
       if field.klass != field.definition.klass
         reflection = field.definition.reflection_by_name(field.definition.klass, field.relation)
-        scope = scope.instance_exec(&reflection.scope) if reflection.try(:has_scope?)
+        sub_scope = reflection.active_record.joins(reflection.name)
+        sub_scope = sub_scope.select("#{field.klass.table_name}.#{field.klass.primary_key}")
+        scope = scope.where(field.klass.primary_key => sub_scope)
       end
 
       scope.respond_to?(:reorder) ? scope.reorder(Arel.sql(field.quoted_field)) : scope.scoped(:order => field.quoted_field)
