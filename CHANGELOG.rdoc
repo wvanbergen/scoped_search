@@ -6,6 +6,9 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
+=== Version 4.3.1
+- Autocomplete now offers only relevant options available through scopes set on associations (#233)
+
 === Version 4.3.0
 
 - Prevent scoped_search from modifying an empty string on newer rubies (#229)
