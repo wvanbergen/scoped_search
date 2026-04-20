@@ -24,26 +24,10 @@ jobs:
           - ruby-head
           - jruby-head
         gemfile:
-          - Gemfile.activerecord52
-          - Gemfile.activerecord52_with_activesupport52
           - Gemfile.activerecord60
           - Gemfile.activerecord60_with_activesupport60
           - Gemfile.activerecord61
           - Gemfile.activerecord61_with_activesupport61
-
-        exclude:
-          - ruby_version: 2.7.1
-            gemfile: Gemfile.activerecord52
-          - ruby_version: 2.7.1
-            gemfile: Gemfile.activerecord52_with_activesupport52
-          - ruby_version: 3.0.0
-            gemfile: Gemfile.activerecord52
-          - ruby_version: 3.0.0
-            gemfile: Gemfile.activerecord52_with_activesupport52
-          - ruby_version: ruby-head
-            gemfile: Gemfile.activerecord52
-          - ruby_version: ruby-head
-            gemfile: Gemfile.activerecord52_with_activesupport52
     services:
       postgres:
         image: postgres:12.1

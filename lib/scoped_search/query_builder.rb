@@ -307,8 +307,7 @@ module ScopedSearch
 
       join_reflections.zip(table_names.zip(join_reflections.drop(1))).reduce(sql) do |acc, (reflection, (previous_table, next_reflection))|
         fk1, pk1 = if reflection.respond_to?(:join_keys)
-                     klass = reflection.method(:join_keys).arity == 1 ? [reflection.klass] : [] # ActiveRecord <5.2 workaround
-                     reflection.join_keys(*klass).values # We are joining the tables "in reverse", so the PK and FK are swapped
+                     reflection.join_keys.values # We are joining the tables "in reverse", so the PK and FK are swapped
                    else
                      [reflection.join_primary_key, reflection.join_foreign_key] #ActiveRecord 6.1
                    end
@@ -426,8 +425,7 @@ module ScopedSearch
       def reflection_keys(reflection)
         pk = reflection.klass.primary_key
         fk = reflection.options[:foreign_key]
-        # activerecord prior to 3.1 doesn't respond to foreign_key method and hold the key name in the reflection primary key
-        fk ||= reflection.respond_to?(:foreign_key) ? reflection.foreign_key : reflection.primary_key_name
+        fk ||= reflection.foreign_key
         reflection.macro == :belongs_to ? [fk, pk] : [pk, fk]
       end
 

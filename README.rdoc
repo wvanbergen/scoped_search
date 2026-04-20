@@ -22,8 +22,8 @@ Add the following line in your Gemfile, and run <tt>bundle install</tt>:
 
   gem "scoped_search"
 
-Scoped search 4.x supports Rails 4.2 to 5.0, with Ruby 2.0.0 or higher. Use
-previous versions, e.g. 3.x to support older versions of Rails or Ruby.
+Scoped search 5.x supports Rails 6.
+Use previous versions to support older versions of Rails or Ruby.
 
 == Usage
 

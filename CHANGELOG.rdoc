@@ -6,6 +6,8 @@ Please add an entry to the "Unreleased changes" section in your pull requests.
 
 === Unreleased changes
 
+- Drop Rails versions older than 6.0
+
 === Version 4.3.1
 - Autocomplete now offers only relevant options available through scopes set on associations (#233)
 
