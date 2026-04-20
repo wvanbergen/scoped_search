@@ -4,6 +4,8 @@ gemspec
 gem 'actionview'
 gem 'activerecord'
 
+gem 'appraisal2'
+
 platforms :jruby do
   gem 'activerecord-jdbcsqlite3-adapter'
   gem 'activerecord-jdbcmysql-adapter'

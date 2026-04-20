@@ -1,0 +1,25 @@
+# Ruby 3 has moved various gems from default gems to bundled gems
+# Prior to activesupport 7.0.9 these were not listed
+# See https://stdgems.org/ for more
+if RUBY_VERSION >= '3.4'
+  gem 'base64'
+  gem 'benchmark'
+  gem 'bigdecimal'
+  gem 'logger'
+  gem 'mutex_m'
+end
+
+group :mysql do
+  gem 'activerecord-jdbcmysql-adapter', platforms: :jruby
+  gem 'mysql2', '> 0.5', platforms: :ruby
+end
+
+group :postgresql do
+  gem 'activerecord-jdbcpostgresql-adapter', platforms: :jruby
+  gem 'pg', '>= 0.18', '< 2.0', platforms: :ruby
+end
+
+group :sqlite do
+  gem 'activerecord-jdbcsqlite3-adapter', platforms: :jruby
+  gem 'sqlite3', '~> 1.4', platforms: :ruby
+end
