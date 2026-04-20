@@ -29,8 +29,9 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
-  gem.required_ruby_version = '>= 2.0.0'
-  gem.add_runtime_dependency('activerecord', '>= 4.2.0')
+  # https://www.fastruby.io/blog/ruby/rails/versions/compatibility-table.html
+  gem.required_ruby_version = '>= 2.5.0'
+  gem.add_runtime_dependency('activerecord', '>= 6.0')
   gem.add_development_dependency('rspec', '~> 3.0')
   gem.add_development_dependency('rake')
 
