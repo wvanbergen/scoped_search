@@ -6,7 +6,8 @@ scoped_search-*.gem
 /coverage
 /classes
 /files
+/gemfiles/*.gemfile
 /spec/database.yml
 .bundle/
-Gemfile*.lock
+*.lock
 .idea/
