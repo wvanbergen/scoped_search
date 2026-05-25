@@ -22,6 +22,7 @@ jobs:
         ruby_version:
           - '2.7'
           - '3.0'
+          - '3.3'
           - ruby-head
           - jruby-head
         appraisal:
@@ -29,6 +30,8 @@ jobs:
           - rails-6.0-activesupport
           - rails-6.1
           - rails-6.1-activesupport
+          - rails-7.0
+          - rails-7.0-activesupport
     services:
       postgres:
         image: postgres:12.1
