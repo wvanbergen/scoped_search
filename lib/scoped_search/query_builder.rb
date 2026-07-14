@@ -493,6 +493,11 @@ module ScopedSearch
           field = definition.field_by_name(rhs.value)
           raise ScopedSearch::QueryNotSupported, "Field '#{rhs.value}' not recognized for searching!" unless field
 
+          if field.virtual?
+            sql_operator = operator == :notnull ? 'IS NOT NULL' : 'IS NULL'
+            return field.to_ext_method_sql(rhs.value, sql_operator, nil, &block)
+          end
+
           if field.key_field
             yield(:parameter, rhs.value.to_s.sub(/^.*\./,''))
           end
