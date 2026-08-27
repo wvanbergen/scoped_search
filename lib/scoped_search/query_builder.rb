@@ -478,7 +478,7 @@ module ScopedSearch
           end
 
           case fragments.length
-            when 0 then nil
+            when 0 then '1=0'
             when 1 then fragments.first
             else "#{fragments.join(' OR ')}"
           end
